@@ -16282,11 +16282,11 @@
 					},
 					"Placement Anchor": {
 						"type": "string",
-						"value": "NpcSpot"
+						"value": "WayhouseKeeperSpot"
 					},
 					"Placement Scene": {
 						"type": "string",
-						"value": "res://world/interiors/kesselford_wayhouse.tscn"
+						"value": "res://world/kesselford.tscn"
 					},
 					"Placement X": {
 						"type": "float",
@@ -16367,7 +16367,7 @@
 					},
 					"Facing": {
 						"type": "string",
-						"value": "west"
+						"value": "east"
 					},
 					"Faction Id": {
 						"type": "string",
@@ -16391,19 +16391,19 @@
 					},
 					"Placement Anchor": {
 						"type": "string",
-						"value": "NpcSpot"
+						"value": "WayhouseKeeperSpot"
 					},
 					"Placement Scene": {
 						"type": "string",
-						"value": "res://world/interiors/kesselford_wayhouse.tscn"
+						"value": "res://world/kesselford.tscn"
 					},
 					"Placement X": {
 						"type": "float",
-						"value": 120.0
+						"value": -128.0
 					},
 					"Placement Y": {
 						"type": "float",
-						"value": 12.0
+						"value": 32.0
 					},
 					"Portrait Id": {
 						"type": "string",

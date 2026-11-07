@@ -140,3 +140,8 @@ msgstr ""
 #: world/hollowmere.tscn:ShrineInscription
 msgid "You cannot interpret the marks."
 msgstr ""
+
+#. DRAFT: owner approval pending (chargen randomize, 2026-11-01).
+#: ui/screens/character_creation.gd
+msgid "RANDOMIZE"
+msgstr ""

@@ -6,6 +6,10 @@ extends Node
 const CUE_HIT := &"hit"
 const CUE_DEFINING_STRIKE := &"defining_strike"
 const CUE_BALANCE_EXTREME := &"balance_extreme"
+## Combat start (owner 2026-11-01, "bar change plus a short cue"). Reuses the heavy bell
+## until a dedicated combat-start sound is authored; the HUD plays it once on entry, never
+## from event replay.
+const CUE_COMBAT_START := &"combat_start"
 
 const SOUND_PATHS: Dictionary = {
 	CUE_HIT: [
@@ -17,6 +21,7 @@ const SOUND_PATHS: Dictionary = {
 	],
 	CUE_DEFINING_STRIKE: ["res://assets/audio/sfx/impactGlass_heavy_003.ogg"],
 	CUE_BALANCE_EXTREME: ["res://assets/audio/sfx/impactBell_heavy_004.ogg"],
+	CUE_COMBAT_START: ["res://assets/audio/sfx/impactBell_heavy_002.ogg"],
 }
 
 var _rng := RandomNumberGenerator.new()
@@ -41,6 +46,14 @@ func consume_event(event: CombatEvent) -> void:
 		index = (index + _rng.randi_range(1, paths.size() - 1)) % paths.size()
 	_last_variant_by_cue[cue] = index
 	_play_one_shot(paths[index])
+
+
+## Plays a named cue once, outside the event stream (the HUD's combat-start cue).
+func play_cue(cue: StringName) -> void:
+	var paths := sound_paths_for_cue(cue)
+	if paths.is_empty():
+		return
+	_play_one_shot(paths[0])
 
 
 static func cue_for_event(event: CombatEvent) -> StringName:

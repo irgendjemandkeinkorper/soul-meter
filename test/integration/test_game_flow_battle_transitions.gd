@@ -138,19 +138,23 @@ func test_bog_wight_is_fought_on_the_field_and_the_proof_unlocks_after_victory()
 	assert_bool(get_tree().paused).is_false()
 	assert_object(Battle._current_field_map()).is_same(_field)
 	assert_int(_field_scene.get_instance_id()).is_equal(field_id)
-	assert_int(UIManager._stack.size()).is_equal(1)
-	var hud := UIManager._stack.back() as Screen
-	var interface := hud.find_child("BattleInterface", true, false) as BattleInterface
+	# One bar, both modes (owner 2026-11-01): no full-screen HUD layer; the field HUD's bar
+	# grows its combat parts and hosts the one BattleInterface.
+	assert_int(UIManager._stack.size()).is_equal(0)
+	var hud := _field.field_hud()
+	assert_object(hud).is_not_null()
+	assert_bool(hud.visible).is_true()
+	assert_bool(hud.combat_active()).is_true()
+	var interface := hud.battle_interface
 	assert_object(interface).is_not_null()
 	assert_int(hud.find_children("BattleInterface", "", true, false).size()).is_equal(1)
 	assert_object(_field.combat_overlay()).is_not_null()
-	assert_bool((hud.get_node("Backdrop") as ColorRect).visible).is_false()
-	assert_bool(interface.tactical_data_visible()).is_false()
-	# The command dock toggles the region in the one interface, not another HUD.
-	(hud.get("_tactical_data_button") as Button).pressed.emit()
-	assert_bool(interface.tactical_data_visible()).is_true()
-	(hud.get("_tactical_data_button") as Button).pressed.emit()
-	assert_bool(interface.tactical_data_visible()).is_false()
+	assert_bool(interface.breakdown_visible()).is_false()
+	# The bar's button toggles the breakdown popover of the one interface, not another HUD.
+	(hud.combat_bar.get("_breakdown_button") as Button).pressed.emit()
+	assert_bool(interface.breakdown_visible()).is_true()
+	(hud.combat_bar.get("_breakdown_button") as Button).pressed.emit()
+	assert_bool(interface.breakdown_visible()).is_false()
 	await _capture_bog_wight_hud()
 
 	var foe := hostile.battle_actor()
@@ -179,10 +183,10 @@ func test_bog_wight_is_fought_on_the_field_and_the_proof_unlocks_after_victory()
 
 	# #473: ENCOUNTER RESOLVED waits until the field has presented the finishing beats.
 	var outcome_deadline := Time.get_ticks_msec() + 60000
-	while not bool(hud.call("outcome_shown")) and Time.get_ticks_msec() < outcome_deadline:
+	while not hud.combat_bar.outcome_shown() and Time.get_ticks_msec() < outcome_deadline:
 		await get_tree().process_frame
-	assert_bool(bool(hud.call("outcome_shown"))).is_true()
-	var outcome := hud.get("_outcome_box") as VBoxContainer
+	assert_bool(hud.combat_bar.outcome_shown()).is_true()
+	var outcome := hud.combat_bar.get("_outcome_box") as VBoxContainer
 	(outcome.get_child(outcome.get_child_count() - 1) as Button).pressed.emit()
 	await get_tree().process_frame
 	if _state_is_active(BATTLE_STATE):

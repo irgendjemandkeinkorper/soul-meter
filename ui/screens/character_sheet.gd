@@ -1,17 +1,29 @@
 extends Screen
-## FR-604 character sheet (#100): identity, attributes, skills with their derivation
-## surfaced (FR-205 tooltip + recent-check log), the Wheel widget, and the #98
-## advancement point-spend surface. Member list on the left mirrors ui/screens/party.gd.
+## FR-604 character sheet (#100), and since U3 (owner-approved plan, 2026-11-01) the one party
+## screen: P opens it. The roster sits on the left. The selected person has two tabs:
+## - Summary: condition, DRAMGID attributes, equipped kit, bio, a companion's personal
+##   quest (FR-505), injuries, the portrait, the Wheel and perks.
+## - Skills: the FR-205 derivation, the #98 point spend and the recent-check log.
+## The separate Party screen it replaces repeated the roster with one HP bar and a bio.
 
 const WheelWidgetScript := preload("res://ui/components/wheel_widget.gd")
 const PartyMemberVisualsScript := preload("res://actors/party_followers/party_member_visuals.gd")
 const TreatmentNoticeScene := preload("res://ui/components/treatment_notice.tscn")
 const TreatmentNoticeScript := preload("res://ui/components/treatment_notice.gd")
+const InventoryScreenScript := preload("res://ui/screens/inventory.gd")
+
+const TAB_SUMMARY := &"summary"
+const TAB_SKILLS := &"skills"
 
 var _member_list: ItemList
+var _sheet_header: VBoxContainer
+var _tab_row: HBoxContainer
+var _tab_buttons: Dictionary = {}
 var _sheet_column: VBoxContainer
 var _selected_member: PartyMember
 var _treatment_notice: TreatmentNoticeScript
+## The open tab survives a member switch and the rebuild a purchase or a pick triggers.
+var _tab: StringName = TAB_SUMMARY
 
 
 func _uses_ledger_style() -> bool:
@@ -32,19 +44,50 @@ func _build() -> void:
 	_member_list = ItemList.new()
 	_member_list.name = "MemberList"
 	_member_list.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_member_list.custom_minimum_size = Vector2(240, 0)
+	# Wide enough for "Vex the Unbowed" beside its bust; the level moved to the tooltip
+	# and the sheet's own identity line, so a long name is no longer cut off.
+	_member_list.custom_minimum_size = Vector2(320, 0)
 	_member_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_member_list.fixed_icon_size = Vector2i(64, 64)
 	_member_list.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	row.add_child(_ledger_panel(_member_list, "PartyLedger", true))
 	_treatment_notice.dismissed.connect(_member_list.grab_focus)
 
+	var person := VBoxContainer.new()
+	person.name = "PersonColumn"
+	person.theme_type_variation = "LedgerColumn"
+	person.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	person.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_child(_ledger_panel(person, "PersonLedger"))
+
+	_sheet_header = VBoxContainer.new()
+	_sheet_header.name = "SheetHeader"
+	_sheet_header.theme_type_variation = "JournalEntry"
+	person.add_child(_sheet_header)
+
+	_tab_row = HBoxContainer.new()
+	_tab_row.name = "SheetTabs"
+	_tab_row.theme_type_variation = "LedgerRow"
+	person.add_child(_tab_row)
+	var group := ButtonGroup.new()
+	for tab: StringName in [TAB_SUMMARY, TAB_SKILLS]:
+		var button := Button.new()
+		button.name = "Tab_%s" % tab
+		button.text = "SUMMARY" if tab == TAB_SUMMARY else "SKILLS"
+		button.theme_type_variation = "SheetTab"
+		button.toggle_mode = true
+		button.button_group = group
+		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		button.pressed.connect(_on_tab_pressed.bind(tab))
+		_tab_row.add_child(button)
+		_tab_buttons[tab] = button
+
 	var scroll := ScrollContainer.new()
 	scroll.follow_focus = true
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_child(_ledger_panel(scroll, "PersonLedger"))
+	person.add_child(scroll)
 
 	_sheet_column = VBoxContainer.new()
 	_sheet_column.name = "SheetColumn"
@@ -53,15 +96,16 @@ func _build() -> void:
 	scroll.add_child(_sheet_column)
 
 	for member in GameState.party:
-		_member_list.add_item(
-			"%s  (Lv %d)" % [member.display_name, member.level],
-			PartyMemberVisualsScript.ensure_portrait(member)
+		var index := _member_list.add_item(
+			member.display_name, PartyMemberVisualsScript.bust_texture(member)
 		)
+		_member_list.set_item_tooltip(index, "Level %d" % member.level)
 	_member_list.item_selected.connect(_on_selected)
 	if GameState.party.size() > 0:
 		_member_list.select(0)
 		_on_selected(0)
 	else:
+		_tab_row.visible = false
 		var empty := Label.new()
 		empty.text = "(no party)"
 		_sheet_column.add_child(empty)
@@ -77,6 +121,30 @@ func select_member(member_id: String) -> void:
 			return
 
 
+## Opens a tab by id (`&"summary"` / `&"skills"`), for callers that land on a page directly.
+func show_tab(tab: StringName) -> void:
+	if not _tab_buttons.has(tab):
+		return
+	_tab = tab
+	_apply_tab()
+
+
+func _on_tab_pressed(tab: StringName) -> void:
+	show_tab(tab)
+
+
+func _apply_tab() -> void:
+	for tab: StringName in _tab_buttons:
+		(_tab_buttons[tab] as Button).set_pressed_no_signal(tab == _tab)
+	var summary := _sheet_column.get_node_or_null("SummaryPage") as Control
+	var skills := _sheet_column.get_node_or_null("SkillsPage") as Control
+	if summary != null:
+		summary.visible = _tab == TAB_SUMMARY
+	if skills != null:
+		skills.visible = _tab == TAB_SKILLS
+	_settle_content(_sheet_column)
+
+
 func _on_selected(idx: int) -> void:
 	if _selected_member != GameState.party[idx]:
 		_treatment_notice.clear_notice()
@@ -86,9 +154,10 @@ func _on_selected(idx: int) -> void:
 
 
 func _rebuild_sheet() -> void:
-	for child in _sheet_column.get_children():
-		_sheet_column.remove_child(child)
-		child.queue_free()
+	for box: VBoxContainer in [_sheet_header, _sheet_column]:
+		for child in box.get_children():
+			box.remove_child(child)
+			child.queue_free()
 	var member := _selected_member
 	if member == null:
 		return
@@ -101,37 +170,46 @@ func _rebuild_sheet() -> void:
 		"%s, %s" % [member.display_name, member.epithet]
 		if not member.epithet.is_empty() else member.display_name
 	)
-	_sheet_column.add_child(name_label)
+	_sheet_header.add_child(name_label)
 
 	var identity := Label.new()
+	identity.name = "SheetIdentity"
 	identity.text = "%s  •  %s  •  Level %d" % [member.race, member.char_class, member.level]
 	identity.theme_type_variation = "MutedLabel"
 	identity.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_sheet_column.add_child(identity)
+	_sheet_header.add_child(identity)
 
-	var calling_bits: Array[String] = []
-	for pair: Array in [
-		["Discipline", member.discipline], ["Background", member.background],
-		["Flaw", member.flaw], ["Mastery", member.starting_mastery],
-	]:
-		if not str(pair[1]).is_empty():
-			calling_bits.append("%s: %s" % [pair[0], pair[1]])
-	if not calling_bits.is_empty():
-		var calling := Label.new()
-		calling.text = "  •  ".join(calling_bits)
-		calling.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		calling.theme_type_variation = "MutedLabel"
-		_sheet_column.add_child(calling)
+	# The Skills tab says when there is something to spend, so the summary need not.
+	(_tab_buttons[TAB_SKILLS] as Button).text = (
+		"SKILLS  ·  %d TO SPEND" % member.advancement_points
+		if member.advancement_points > 0 else "SKILLS"
+	)
 
-	# Two columns: the wheel sits beside the skills instead of below the fold —
-	# on a 1080p sheet the single-column layout cut the wheel at the scroll edge
-	# while the right half of the sheet stayed empty.
+	var summary := VBoxContainer.new()
+	summary.name = "SummaryPage"
+	summary.theme_type_variation = "LedgerColumn"
+	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sheet_column.add_child(summary)
+	var skills := VBoxContainer.new()
+	skills.name = "SkillsPage"
+	skills.theme_type_variation = "LedgerColumn"
+	skills.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sheet_column.add_child(skills)
+
+	_build_summary(summary, member)
+	_build_skills(skills, member)
+	_apply_tab()
+
+
+func _build_summary(page: VBoxContainer, member: PartyMember) -> void:
+	# Two columns: the portrait, the Wheel and the perks stand beside the person's record.
 	var body := HBoxContainer.new()
 	body.name = "SheetBody"
 	body.theme_type_variation = "MirrorPairRow"
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_sheet_column.add_child(body)
+	page.add_child(body)
 	var main_column := VBoxContainer.new()
+	main_column.name = "SummaryColumn"
 	main_column.theme_type_variation = "LedgerColumn"
 	main_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(main_column)
@@ -146,16 +224,20 @@ func _rebuild_sheet() -> void:
 	var portrait := TextureRect.new()
 	portrait.name = "MemberPortrait"
 	portrait.texture = PartyMemberVisualsScript.ensure_portrait(member)
+	portrait.tooltip_text = member.display_name
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	portrait_frame.add_child(portrait)
 
+	main_column.add_child(_condition(member))
+
 	# --- Attributes (fixed after creation, owner 2026-08-24) ---
 	if not member.attributes.is_empty():
 		main_column.add_child(_section("Attributes"))
 		var attribute_grid := GridContainer.new()
+		attribute_grid.name = "AttributeGrid"
 		attribute_grid.columns = 3
 		attribute_grid.theme_type_variation = "LedgerGrid"
 		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
@@ -171,68 +253,43 @@ func _rebuild_sheet() -> void:
 			attribute_grid.add_child(cell)
 		main_column.add_child(attribute_grid)
 
-	# --- Skills + advancement spend (#98) ---
-	main_column.add_child(_section("Skills"))
-	var points_label := Label.new()
-	points_label.name = "AdvancementPoints"
-	points_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	points_label.text = (
-		"Advancement points: %d   (granted at story milestones)" % member.advancement_points
-	)
-	main_column.add_child(points_label)
+	var calling_bits: Array[String] = []
+	for pair: Array in [
+		["Discipline", member.discipline], ["Background", member.background],
+		["Flaw", member.flaw], ["Mastery", member.starting_mastery],
+	]:
+		if not str(pair[1]).is_empty():
+			calling_bits.append("%s: %s" % [pair[0], pair[1]])
+	if not calling_bits.is_empty():
+		var calling := Label.new()
+		calling.name = "Calling"
+		calling.text = "  •  ".join(calling_bits)
+		calling.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		calling.theme_type_variation = "MutedLabel"
+		main_column.add_child(calling)
 
-	var skill_grid := GridContainer.new()
-	skill_grid.name = "SkillGrid"
-	skill_grid.columns = 3
-	skill_grid.theme_type_variation = "LedgerGrid"
-	main_column.add_child(skill_grid)
-	for group: String in DramgidSchema.SKILL_GROUPS:
-		var group_skills := _listed_skills(group, member)
-		if group_skills.is_empty():
-			continue
-		var heading := Label.new()
-		heading.name = "SkillGroup_%s" % group
-		heading.theme_type_variation = "HeadingLabel"
-		heading.text = DramgidSchema.group_label(group)
-		skill_grid.add_child(heading)
-		# The grid is three columns wide and a heading fills one of them, so two
-		# spacers keep the rows under a heading aligned with the rows above it.
-		skill_grid.add_child(Control.new())
-		skill_grid.add_child(Control.new())
+	_render_equipped(main_column, member)
 
-		for skill_id: String in group_skills:
-			var label := Label.new()
-			label.text = DramgidSchema.skill_label(skill_id)
-			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			skill_grid.add_child(label)
+	if not member.bio.is_empty():
+		var bio := Label.new()
+		bio.name = "MemberBio"
+		bio.text = member.bio
+		bio.theme_type_variation = "QuoteLabel"
+		bio.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		main_column.add_child(bio)
 
-			var effective := SkillCheck.preview(skill_id, member, 0.0)
-			var percent_label := Label.new()
-			percent_label.name = "Percent_%s" % skill_id
-			percent_label.theme_type_variation = "StatLabel"
-			percent_label.text = "%d%%" % int(effective)
-			# FR-205: the derivation is one hover away, in the ratified formula's own terms.
-			percent_label.tooltip_text = _derivation_tooltip(member, skill_id, effective)
-			skill_grid.add_child(percent_label)
+	# FR-505: a companion's personal quest is talked through here; there is no field NPC.
+	var quest_button := Button.new()
+	quest_button.name = "PersonalQuestButton"
+	quest_button.text = "Talk to %s" % member.display_name
+	quest_button.visible = not QuestRegistry.companion_quest_dialogue_for(member.id).is_empty()
+	quest_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	quest_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	quest_button.pressed.connect(_on_quest_button_pressed)
+	main_column.add_child(quest_button)
 
-			var buy := Button.new()
-			buy.name = "Buy_%s" % skill_id
-			var cost := Advancement.step_cost(member, skill_id)
-			if not Advancement.is_purchasable(member, skill_id):
-				# A Tone the member does not hold is not theirs to raise. It only
-				# appears here at all when it already carries progress, and then the
-				# sheet has to show that progress without offering to add to it.
-				buy.text = "not held"
-				buy.disabled = true
-			elif cost < 0:
-				buy.text = "at cap"
-				buy.disabled = true
-			else:
-				buy.text = "+5%%  (%d pt)" % cost
-				buy.disabled = not Advancement.can_buy(member, skill_id)
-			buy.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-			buy.pressed.connect(_on_buy_pressed.bind(skill_id))
-			skill_grid.add_child(buy)
+	# --- Injuries (called-shots 10C): serious records and qualified field treatment ---
+	_render_injuries(main_column, member)
 
 	# --- The Wheel (FR-604) ---
 	side_column.add_child(_section("The Wheel"))
@@ -253,28 +310,153 @@ func _rebuild_sheet() -> void:
 	# --- Perks (#285): picks at levels 2 / 4 / 6 ---
 	_render_perks(side_column, member)
 
-	# --- Injuries (called-shots 10C): serious records and qualified field treatment ---
-	_render_injuries(main_column, member)
+
+## HP and Breath as the field HUD shows them: a meter with its exact numbers beside it.
+func _condition(member: PartyMember) -> GridContainer:
+	var grid := GridContainer.new()
+	grid.name = "Condition"
+	grid.columns = 3
+	grid.theme_type_variation = "LedgerGrid"
+	for row: Array in [
+		["HP", member.hp, member.max_hp, DS.METER_HEALTH_A, DS.METER_HEALTH_B],
+		["Breath", member.breath, member.breath_max, DS.METER_BREATH_A, DS.METER_BREATH_B],
+	]:
+		var label := Label.new()
+		label.text = str(row[0]).to_upper()
+		label.theme_type_variation = "EyebrowLabel"
+		grid.add_child(label)
+		var meter := MeterBar.new()
+		meter.name = "%sMeter" % row[0]
+		meter.fill_start = row[3]
+		meter.fill_end = row[4]
+		meter.value = clampf(float(row[1]) / float(row[2]), 0.0, 1.0) if int(row[2]) > 0 else 0.0
+		meter.custom_minimum_size.x = 320.0
+		meter.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		grid.add_child(meter)
+		var numbers := Label.new()
+		numbers.name = "%sNumbers" % row[0]
+		numbers.text = "%d / %d" % [int(row[1]), int(row[2])]
+		numbers.theme_type_variation = "StatLabel"
+		grid.add_child(numbers)
+	return grid
+
+
+## What the person carries into a fight: their own equipment (per member since P1.4,
+## `PartyMember.equipped_slots`); a class Kit names the ARMS skill it trains.
+func _render_equipped(column: VBoxContainer, member: PartyMember) -> void:
+	var lines: PackedStringArray = []
+	for slot_name: StringName in InventoryScreenScript.EQUIPMENT_SLOTS:
+		var proto_id := str(member.equipped_slots.get(String(slot_name), ""))
+		if not proto_id.is_empty():
+			lines.append("%s  ·  %s" % [
+				String(slot_name).to_upper(),
+				ItemLocalization.text(proto_id, "name", proto_id.get_file().capitalize()),
+			])
+	if not member.kit_weapon_skill.is_empty():
+		lines.append("KIT  ·  %s" % DramgidSchema.skill_label(member.kit_weapon_skill))
+	if lines.is_empty():
+		return
+	column.add_child(_section("Equipped"))
+	var equipped := Label.new()
+	equipped.name = "Equipped"
+	equipped.text = "\n".join(lines)
+	equipped.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(equipped)
+
+
+func _build_skills(page: VBoxContainer, member: PartyMember) -> void:
+	var points_label := Label.new()
+	points_label.name = "AdvancementPoints"
+	points_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	points_label.text = (
+		"Advancement points: %d   (granted at story milestones)" % member.advancement_points
+	)
+	page.add_child(points_label)
+
+	# U3: the +5% column only exists while there is a point to spend; with none it was
+	# twenty-odd dim buttons offering nothing. Each group is its own block, and the blocks
+	# flow side by side, so the whole slate reads without scrolling past one long column.
+	var can_spend := member.advancement_points > 0
+	var flow := HFlowContainer.new()
+	flow.name = "SkillGroups"
+	flow.theme_type_variation = "LedgerFlow"
+	flow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	page.add_child(flow)
+	for group: String in DramgidSchema.SKILL_GROUPS:
+		var group_skills := _listed_skills(group, member)
+		if group_skills.is_empty():
+			continue
+		var block := VBoxContainer.new()
+		block.name = "SkillGroupBlock_%s" % group
+		block.theme_type_variation = "JournalEntry"
+		block.custom_minimum_size.x = 440.0 if can_spend else 300.0
+		flow.add_child(block)
+		var heading := Label.new()
+		heading.name = "SkillGroup_%s" % group
+		heading.theme_type_variation = "HeadingLabel"
+		heading.text = DramgidSchema.group_label(group)
+		block.add_child(heading)
+		var skill_grid := GridContainer.new()
+		skill_grid.name = "SkillGrid_%s" % group
+		skill_grid.columns = 3 if can_spend else 2
+		skill_grid.theme_type_variation = "LedgerGrid"
+		block.add_child(skill_grid)
+
+		for skill_id: String in group_skills:
+			var label := Label.new()
+			label.text = DramgidSchema.skill_label(skill_id)
+			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			skill_grid.add_child(label)
+
+			var effective := SkillCheck.preview(skill_id, member, 0.0)
+			var percent_label := Label.new()
+			percent_label.name = "Percent_%s" % skill_id
+			percent_label.theme_type_variation = "StatLabel"
+			percent_label.text = "%d%%" % int(effective)
+			# FR-205: the derivation is one hover away, in the ratified formula's own terms.
+			percent_label.tooltip_text = _derivation_tooltip(member, skill_id, effective)
+			skill_grid.add_child(percent_label)
+
+			if not can_spend:
+				continue
+			var buy := Button.new()
+			buy.name = "Buy_%s" % skill_id
+			var cost := Advancement.step_cost(member, skill_id)
+			if not Advancement.is_purchasable(member, skill_id):
+				# A Tone the member does not hold is not theirs to raise. It only
+				# appears here at all when it already carries progress, and then the
+				# sheet has to show that progress without offering to add to it.
+				buy.text = "not held"
+				buy.disabled = true
+			elif cost < 0:
+				buy.text = "at cap"
+				buy.disabled = true
+			else:
+				buy.text = "+5%%  (%d pt)" % cost
+				buy.disabled = not Advancement.can_buy(member, skill_id)
+			buy.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			buy.pressed.connect(_on_buy_pressed.bind(skill_id))
+			skill_grid.add_child(buy)
 
 	# --- Recent checks (FR-205, toggleable for Archivists) ---
-	main_column.add_child(_section("Recent Checks"))
+	page.add_child(_section("Recent Checks"))
 	var toggle := CheckButton.new()
 	toggle.name = "CheckMathToggle"
 	toggle.text = "Show check math"
 	toggle.button_pressed = bool(GameState.get_setting("interface", "show_check_math", true))
 	toggle.toggled.connect(_on_check_math_toggled)
-	main_column.add_child(toggle)
+	page.add_child(toggle)
 	if toggle.button_pressed:
 		var checks := SkillCheck.recent_checks()
 		if checks.is_empty():
 			var none := Label.new()
 			none.text = "(no checks made yet)"
 			none.modulate = Color(1, 1, 1, 0.5)
-			main_column.add_child(none)
+			page.add_child(none)
 		else:
 			var log_column := VBoxContainer.new()
 			log_column.name = "CheckLog"
-			main_column.add_child(log_column)
+			page.add_child(log_column)
 			for index in range(checks.size() - 1, -1, -1):
 				var entry: Dictionary = checks[index]
 				var line := Label.new()
@@ -294,6 +476,21 @@ func _rebuild_sheet() -> void:
 				log_column.add_child(line)
 
 
+## FR-505: opens the companion's personal-quest dialogue, mirroring how
+## actors/npc/npc.gd opens the balloon for a field NPC.
+func _on_quest_button_pressed() -> void:
+	if _selected_member == null:
+		return
+	var dialogue_path := QuestRegistry.companion_quest_dialogue_for(_selected_member.id)
+	if dialogue_path.is_empty():
+		return
+	var dialogue := load(dialogue_path) as DialogueResource
+	if dialogue == null:
+		push_error("Companion '%s' could not load dialogue '%s'." % [_selected_member.id, dialogue_path])
+		return
+	DialogueManager.show_dialogue_balloon(dialogue, "start")
+
+
 const PRACTITIONER_REASONS: Array[String] = [
 	"unknown_practitioner", "practitioner_down", "unqualified", "practitioner_injured",
 ]
@@ -308,7 +505,15 @@ var _treatment_status: Label
 ## and a field-treatment button carrying the exact supply cost from `InjuryTreatment.quote`.
 ## The pick defaults to the first qualified party member so the common case is one press.
 func _render_injuries(column: VBoxContainer, patient: PartyMember) -> void:
-	column.add_child(_section("Injuries"))
+	var rows := InjuryTreatment.treatable_rows(GameState).filter(
+		func(row: Dictionary) -> bool: return row["member"] == patient
+	)
+	# U3: the summary names injuries only when there are some. The status line stays, hidden,
+	# so a treatment receipt still has somewhere to land after the last injury is cured.
+	var heading := _section("Injuries")
+	heading.name = "InjuriesHeading"
+	heading.visible = not rows.is_empty()
+	column.add_child(heading)
 	_treatment_status = Label.new()
 	_treatment_status.name = "TreatmentStatus"
 	_treatment_status.visible = false
@@ -319,15 +524,7 @@ func _render_injuries(column: VBoxContainer, patient: PartyMember) -> void:
 	if _selected_member != _choice_owner:
 		_practitioner_choice.clear()
 		_choice_owner = _selected_member
-	var rows := InjuryTreatment.treatable_rows(GameState).filter(
-		func(row: Dictionary) -> bool: return row["member"] == patient
-	)
 	if rows.is_empty():
-		var none := Label.new()
-		none.name = "NoInjuries"
-		none.text = "(no serious injuries)"
-		none.modulate = Color(1, 1, 1, 0.5)
-		column.add_child(none)
 		return
 	for row: Dictionary in rows:
 		for card_id: String in InjuryTreatment.field_cards():

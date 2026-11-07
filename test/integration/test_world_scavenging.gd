@@ -30,13 +30,12 @@ const EXPECTED_PLACEMENTS := {
 	"res://world/interiors/iron_companies.tscn":
 	["iron-companies-locked-supply-crate", "iron-companies-supply-crate"],
 	"res://world/interiors/item_shop.tscn": ["item-shop-backroom-crate", "item-shop-latch-crate"],
-	"res://world/interiors/kesselford_chandlery.tscn":
-	["kesselford-chandlery-braced-supply-crate", "kesselford-chandlery-locked-supply-crate"],
-	"res://world/interiors/kesselford_wayhouse.tscn":
-	["kesselford-wayhouse-braced-supply-crate", "kesselford-wayhouse-locked-supply-crate"],
 	"res://world/interiors/players_house.tscn": ["players-house-provisions"],
 	"res://world/interiors/river_shrine.tscn": ["river-shrine-offering-box"],
 	"res://world/interiors/shrine_undercroft.tscn": ["shrine-undercroft-offering-box"],
+	# The Wayhouse and Chandlery interiors retired into walk-in buildings on the map (item 35).
+	"res://world/kesselford.tscn":
+	["kesselford-chandlery-braced-supply-crate", "kesselford-chandlery-locked-supply-crate", "kesselford-wayhouse-braced-supply-crate", "kesselford-wayhouse-locked-supply-crate"],
 	"res://world/long_verge.tscn":
 	["long-verge-camp-cache", "long-verge-cart-store", "long-verge-column-store", "long-verge-crate-store", "long-verge-shoulder-store", "long-verge-west-cache"],
 	"res://world/test_room.tscn": ["wilds-glade-cache", "wilds-west-cache"],

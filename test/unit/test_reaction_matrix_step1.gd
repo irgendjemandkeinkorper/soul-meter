@@ -3,6 +3,20 @@ extends GdUnitTestSuite
 ## Firebreak on objects, Douse (L2), Wet refusing ignition (H2), Reclaim on burning vs ruined
 ## material (M4), Sever on a Firebreak (Z6), and the material checkpoint order.
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
+
 const NO_FIZZLE := {"fizzle": {"harmonic_accord": 100.0, "pitch": 10}}
 
 
