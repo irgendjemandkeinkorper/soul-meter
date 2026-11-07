@@ -111,8 +111,9 @@ static func from_party_member(member: PartyMember, party_index: int) -> BattleAc
 	actor.display_name = member.display_name
 	actor.hp = member.hp
 	actor.max_hp = member.max_hp
-	actor.attack = member.attack
-	actor.defense = member.defense
+	var equipment := member.equipment_bonus()
+	actor.attack = member.attack + int(equipment["attack"])
+	actor.defense = member.defense + int(equipment["defense"])
 	actor.attributes = member.attributes.duplicate(true)
 	actor.party_index = party_index
 	actor.source_member = member

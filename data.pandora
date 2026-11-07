@@ -1323,9 +1323,17 @@
 				"_index": 0,
 				"_name": "Taubstummer Axe",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 3
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 90
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": -1
 					},
 					"Description": {
 						"type": "string",
@@ -1368,9 +1376,17 @@
 				"_index": 0,
 				"_name": "Captured Reflection",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 70
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -1413,9 +1429,17 @@
 				"_index": 0,
 				"_name": "Soul Gauge",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 60
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -1458,9 +1482,17 @@
 				"_index": 0,
 				"_name": "Loam Bread",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 8
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -1503,9 +1535,17 @@
 				"_index": 0,
 				"_name": "Cinder-Ink Vial",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 24
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -1548,9 +1588,17 @@
 				"_index": 0,
 				"_name": "QUINE Shard",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 120
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -5957,9 +6005,17 @@
 				"_index": 0,
 				"_name": "Bitterleaf Poultice",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 14
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6002,9 +6058,17 @@
 				"_index": 0,
 				"_name": "Loam-Smoked Eel",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 10
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6047,9 +6111,17 @@
 				"_index": 0,
 				"_name": "Salted Riverfish",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 7
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6092,9 +6164,17 @@
 				"_index": 0,
 				"_name": "Hearthloaf",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 5
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6137,9 +6217,17 @@
 				"_index": 0,
 				"_name": "Scribe's Vellum",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 9
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6182,9 +6270,17 @@
 				"_index": 0,
 				"_name": "Binding Thread",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 6
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6227,9 +6323,17 @@
 				"_index": 0,
 				"_name": "Iron Rivets",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 11
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6272,9 +6376,17 @@
 				"_index": 0,
 				"_name": "Grave Salt",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 18
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6317,9 +6429,17 @@
 				"_index": 0,
 				"_name": "Lamp Oil",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 7
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6362,9 +6482,17 @@
 				"_index": 0,
 				"_name": "Votive Cinder",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 12
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6407,9 +6535,17 @@
 				"_index": 0,
 				"_name": "Lockpick Roll",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 22
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6452,9 +6588,17 @@
 				"_index": 0,
 				"_name": "Surveyor's Chalk",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 9
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6497,9 +6641,17 @@
 				"_index": 0,
 				"_name": "Field Needle",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 13
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -6542,9 +6694,17 @@
 				"_index": 0,
 				"_name": "Roadwarden Spear",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 1
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 55
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 1
 					},
 					"Description": {
 						"type": "string",
@@ -6587,9 +6747,17 @@
 				"_index": 0,
 				"_name": "Forge Hammer",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 2
+					},
 					"Base Price": {
 						"type": "int",
 						"value": 42
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
 					},
 					"Description": {
 						"type": "string",
@@ -22751,12 +22919,26 @@
 				"_id": "609.0",
 				"_name": "Effect Value",
 				"_type": "int"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": 0,
+				"_id": "631.0",
+				"_name": "Attack Bonus",
+				"_type": "int"
+			},
+			{
+				"_category_id": "46",
+				"_default_value": 0,
+				"_id": "632.0",
+				"_name": "Defense Bonus",
+				"_type": "int"
 			}
 		]
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 630.0
+			"default": 632.0
 		}
 	},
 	"_version": 1
