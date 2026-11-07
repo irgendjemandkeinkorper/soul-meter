@@ -10,6 +10,17 @@
     "flavour": "Bitter first. Better second.",
     "image": "res://assets/generated/sprites/items/bitterleaf_poultice--icon.png"
   },
+  "consumables/cloth_bandage": {
+    "name": "Cloth Bandage",
+    "description": "A clean strip of cloth rolled tightly for binding a small wound.",
+    "base_price": 10,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.2,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/cloth_bandage--icon.png"
+  },
   "consumables/hearthloaf": {
     "name": "Hearthloaf",
     "description": "A soft brown loaf baked for the same-day market.",
@@ -42,6 +53,17 @@
     "rarity": "common",
     "flavour": "Smoke, salt, and a trace of the city beneath the city.",
     "image": "res://assets/generated/sprites/items/loam_smoked_eel--icon.png"
+  },
+  "consumables/road_crusts": {
+    "name": "Road Crusts",
+    "description": "Dry brown loaf ends wrapped for a long walk.",
+    "base_price": 5,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.2,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/road_crusts--icon.png"
   },
   "consumables/salted_riverfish": {
     "name": "Salted Riverfish",
@@ -76,6 +98,50 @@
     "flavour": "The soul is a held line. Hold it.",
     "image": "res://assets/generated/sprites/items/cinder_ink_vial--icon.png"
   },
+  "materials/cut_reeds": {
+    "name": "Cut Reeds",
+    "description": "A hand-sized bundle of dried reeds, trimmed and tied at the butt.",
+    "base_price": 6,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.3,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/cut_reeds--icon.png"
+  },
+  "materials/ferry_line": {
+    "name": "Ferry Line",
+    "description": "A short coil of rough cord with both ends tightly bound.",
+    "base_price": 8,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.4,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/ferry_line--icon.png"
+  },
+  "materials/forge_coal": {
+    "name": "Forge Coal",
+    "description": "A small sack of coal chips, black dust worked into the seams.",
+    "base_price": 8,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 5,
+    "weight": 0.5,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/forge_coal--icon.png"
+  },
+  "materials/grain_meal": {
+    "name": "Grain Meal",
+    "description": "A paper packet of coarsely ground grain, dust caught in every fold.",
+    "base_price": 6,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 5,
+    "weight": 0.5,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/grain_meal--icon.png"
+  },
   "materials/grave_salt": {
     "name": "Grave Salt",
     "description": "Dark mineral salt used to preserve herbs and mark uneasy thresholds.",
@@ -109,6 +175,28 @@
     "flavour": "The bottle promises six hours. Wind negotiates.",
     "image": "res://assets/generated/sprites/items/lamp_oil--icon.png"
   },
+  "materials/lamp_wicks": {
+    "name": "Lamp Wicks",
+    "description": "A bundle of trimmed wicks wrapped against the damp.",
+    "base_price": 6,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.1,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/lamp_wicks--icon.png"
+  },
+  "materials/leather_offcuts": {
+    "name": "Leather Offcuts",
+    "description": "Trimmed leather scraps bundled for straps and small repairs.",
+    "base_price": 6,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.2,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/leather_offcuts--icon.png"
+  },
   "materials/loamroot_sprig": {
     "name": "Loamroot Sprig",
     "description": "A pale root cutting, still warm from the Loam. Iris wants a few for the grove.",
@@ -120,6 +208,39 @@
     "flavour": "It roots wherever it lands. That is the trouble with it.",
     "image": "res://assets/generated/sprites/items/loamroot_sprig--icon.png"
   },
+  "materials/net_cord": {
+    "name": "Net Cord",
+    "description": "A short hank of fine cord with the old knots worked loose.",
+    "base_price": 6,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.2,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/net_cord--icon.png"
+  },
+  "materials/repair_splints": {
+    "name": "Repair Splints",
+    "description": "Thin wooden strips bundled for patching cracked handles and cases.",
+    "base_price": 6,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.2,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/repair_splints--icon.png"
+  },
+  "materials/sackcloth": {
+    "name": "Sackcloth",
+    "description": "A folded square of coarse sacking with the old seam picked out.",
+    "base_price": 6,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.2,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/sackcloth--icon.png"
+  },
   "materials/scribes_vellum": {
     "name": "Scribe's Vellum",
     "description": "A trimmed vellum folio sized for contracts and field notes.",
@@ -130,6 +251,17 @@
     "rarity": "common",
     "flavour": "Margins cost extra. Consequences do not.",
     "image": "res://assets/generated/sprites/items/scribes_vellum--icon.png"
+  },
+  "materials/stopper_wax": {
+    "name": "Stopper Wax",
+    "description": "A small cake of plain wax for sealing the necks of flasks.",
+    "base_price": 6,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 10,
+    "weight": 0.1,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/stopper_wax--icon.png"
   },
   "relics/captured_reflection": {
     "name": "Captured Reflection",
@@ -164,6 +296,17 @@
     "flavour": "Not bought. Not quite given.",
     "image": "res://assets/generated/sprites/items/votive_cinder--icon.png"
   },
+  "tools/blasting_charge": {
+    "name": "Blasting Charge",
+    "description": "A packed stone-breaker charge with a length of slow cord. Set it in a seam, light it and get clear.",
+    "base_price": 0,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 3,
+    "weight": 1.5,
+    "rarity": "uncommon",
+    "flavour": "The trial keeps a few for doors that will not answer to anything else.",
+    "image": "res://assets/generated/sprites/items/blasting_charge--icon.png"
+  },
   "tools/field_needle": {
     "name": "Field Needle",
     "description": "A heavy repair needle kept in a fitted wooden case.",
@@ -174,6 +317,17 @@
     "rarity": "common",
     "flavour": "For canvas, hide, and emergencies no one describes at supper.",
     "image": "res://assets/generated/sprites/items/field_needle--icon.png"
+  },
+  "tools/grain_scoop": {
+    "name": "Grain Scoop",
+    "description": "A small wooden scoop, its lip worn smooth by grain.",
+    "base_price": 10,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 1,
+    "weight": 0.3,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/grain_scoop--icon.png"
   },
   "tools/lockpick_roll": {
     "name": "Lockpick Roll",
@@ -186,6 +340,39 @@
     "flavour": "Sold for lawful doors, naturally.",
     "image": "res://assets/generated/sprites/items/lockpick_roll--icon.png"
   },
+  "tools/map_case": {
+    "name": "Map Case",
+    "description": "A narrow leather case with a rubbed flap and a dry lining.",
+    "base_price": 13,
+    "size": "Vector2i(1, 2)",
+    "max_stack_size": 1,
+    "weight": 0.2,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/map_case--icon.png"
+  },
+  "tools/netting_needle": {
+    "name": "Netting Needle",
+    "description": "A flat wooden needle with a slot for carrying net cord.",
+    "base_price": 13,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 1,
+    "weight": 0.1,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/netting_needle--icon.png"
+  },
+  "tools/rivet_punch": {
+    "name": "Rivet Punch",
+    "description": "A short iron punch with a head flattened by repeated blows.",
+    "base_price": 13,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 1,
+    "weight": 0.3,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/rivet_punch--icon.png"
+  },
   "tools/soul_gauge": {
     "name": "Soul Gauge",
     "description": "A brass-and-glass dial that reads a soul's integrity — and what magic has spent.",
@@ -196,6 +383,17 @@
     "rarity": "rare",
     "flavour": "The needle is honest. That is the problem.",
     "image": "res://assets/generated/sprites/items/soul_gauge--icon.png"
+  },
+  "tools/stitching_thimble": {
+    "name": "Stitching Thimble",
+    "description": "A small metal finger cap, its crown pitted by a heavy needle.",
+    "base_price": 9,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 1,
+    "weight": 0.1,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/stitching_thimble--icon.png"
   },
   "tools/surveyors_chalk": {
     "name": "Surveyor's Chalk",
@@ -208,6 +406,17 @@
     "flavour": "A line is only useful if someone agrees where it begins.",
     "image": "res://assets/generated/sprites/items/surveyors_chalk--icon.png"
   },
+  "tools/tent_pegs": {
+    "name": "Tent Pegs",
+    "description": "A pair of short wooden pegs with old cord marks below the heads.",
+    "base_price": 9,
+    "size": "Vector2i(1, 1)",
+    "max_stack_size": 5,
+    "weight": 0.3,
+    "rarity": "common",
+    "flavour": "",
+    "image": "res://assets/generated/sprites/items/tent_pegs--icon.png"
+  },
   "weapons/forge_hammer": {
     "name": "Forge Hammer",
     "description": "A balanced smith's hammer heavy enough for desperate field use.",
@@ -218,6 +427,7 @@
     "rarity": "common",
     "flavour": "A tool until the moment it is not.",
     "equip_slot": "main_hand",
+    "attack_bonus": 2,
     "image": "res://assets/generated/sprites/items/forge_hammer--icon.png"
   },
   "weapons/roadwarden_spear": {
@@ -230,6 +440,8 @@
     "rarity": "common",
     "flavour": "Long enough to make a roadside disagreement reconsider.",
     "equip_slot": "main_hand",
+    "attack_bonus": 1,
+    "defense_bonus": 1,
     "image": "res://assets/generated/sprites/items/roadwarden_spear--icon.png"
   },
   "weapons/taubstummer_axe": {
@@ -242,6 +454,8 @@
     "rarity": "mythic",
     "flavour": "It does not ring when struck. Nothing it touches does.",
     "equip_slot": "main_hand",
+    "attack_bonus": 3,
+    "defense_bonus": -1,
     "image": "res://assets/generated/sprites/items/taubstummer_axe--icon.png"
   }
 }

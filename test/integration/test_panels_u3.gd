@@ -8,6 +8,7 @@ const SHEET := "res://ui/screens/character_sheet.tscn"
 
 var _party_before: Array[PartyMember] = []
 var _inventory_before: Dictionary
+## Equipment is per member since P1.4: PartyMember -> its equipped_slots before the test.
 var _equipped_before: Dictionary
 var _quest_pools_before: Dictionary
 var _quest_resources_before: Dictionary
@@ -21,7 +22,9 @@ func before_test() -> void:
 	get_tree().paused = false
 	_party_before = GameState.party.duplicate()
 	_inventory_before = GameState.inventory.serialize()
-	_equipped_before = GameState.equipped_slots.duplicate(true)
+	_equipped_before = {}
+	for member: PartyMember in GameState.party:
+		_equipped_before[member] = member.equipped_slots.duplicate(true)
 	_quest_pools_before = QuestRegistry.to_dict().duplicate(true)
 	_quest_resources_before = {}
 	for quest: Quest in QuestRegistry.ALL_QUESTS:
@@ -36,7 +39,8 @@ func after_test() -> void:
 	get_tree().paused = false
 	GameState.party = _party_before
 	GameState.inventory.deserialize(_inventory_before)
-	GameState.equipped_slots = _equipped_before
+	for member: PartyMember in _equipped_before:
+		member.equipped_slots = _equipped_before[member]
 	for quest: Quest in QuestRegistry.ALL_QUESTS:
 		if _quest_resources_before.has(quest.id):
 			quest.deserialize(_quest_resources_before[quest.id])
@@ -143,8 +147,9 @@ func test_plus_buttons_appear_only_with_points_to_spend() -> void:
 
 
 func test_the_summary_lists_the_heros_equipment() -> void:
-	GameState.party = [_hero(0)]
-	GameState.equipped_slots = {"main": ItemIds.WEAPONS_TAUBSTUMMER_AXE}
+	var hero := _hero(0)
+	hero.equipped_slots = {"main": ItemIds.WEAPONS_TAUBSTUMMER_AXE}
+	GameState.party = [hero]
 	var runner := scene_runner(SHEET)
 	await runner.simulate_frames(2)
 	var equipped := runner.find_child("Equipped", true, false) as Label
@@ -206,7 +211,7 @@ func test_standing_with_a_faction_lists_it_beside_its_reasons() -> void:
 
 func test_inventory_actions_wait_for_a_selection_and_selection_is_a_violet_edge() -> void:
 	GameState.inventory.clear()
-	GameState.equipped_slots.clear()
+	GameState.set_party([_hero(0)])
 	var item := GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_HEARTHLOAF)
 	var runner := scene_runner("res://ui/screens/inventory.tscn")
 	await runner.simulate_frames(2)
@@ -226,7 +231,7 @@ func test_an_item_can_be_dragged_with_the_mouse_from_the_bag_to_its_slot() -> vo
 	# Playtest 2026-11-02: dragging did nothing. The slot's frame took the press, so GLoot's
 	# draggable wrapper never saw it.
 	GameState.inventory.clear()
-	GameState.equipped_slots.clear()
+	GameState.set_party([_hero(0)])
 	var axe := GameState.inventory.create_and_add_item(ItemIds.WEAPONS_TAUBSTUMMER_AXE)
 	var runner := scene_runner("res://ui/screens/inventory.tscn")
 	await runner.simulate_frames(3)
@@ -237,34 +242,36 @@ func test_an_item_can_be_dragged_with_the_mouse_from_the_bag_to_its_slot() -> vo
 
 	await _drag(runner, from, to)
 
-	assert_object(axe.get_inventory()).is_same(screen.find_child("EquipmentInventory_%s" % slot_name, true, false))
+	# P1.4: the item stays in the bag; the member's slot records it and the rail shows it.
+	assert_object(GameState.equipped_item(GameState.party[0], slot_name)).is_same(axe)
+	assert_bool(GameState.inventory.has_item(axe)).is_true()
 
 
 func test_dragging_onto_a_filled_slot_swaps_the_old_item_back_to_the_bag() -> void:
 	GameState.inventory.clear()
-	GameState.equipped_slots.clear()
+	GameState.set_party([_hero(0)])
 	var axe := GameState.inventory.create_and_add_item(ItemIds.WEAPONS_TAUBSTUMMER_AXE)
 	var runner := scene_runner("res://ui/screens/inventory.tscn")
 	await runner.simulate_frames(3)
 	var screen := _on_top(runner.scene()) as InventoryScreen
 	var slot_name := InventoryScreen.slot_of(axe)
-	var slot := screen.find_child("EquipmentInventory_%s" % slot_name, true, false) as Inventory
+	var hero: PartyMember = GameState.party[0]
 	screen._on_item_selected(axe)
 	screen._equip_selected()
-	assert_object(axe.get_inventory()).is_same(slot)
+	assert_object(GameState.equipped_item(hero, slot_name)).is_same(axe)
 	var second := GameState.inventory.create_and_add_item(ItemIds.WEAPONS_TAUBSTUMMER_AXE)
 	await runner.simulate_frames(2)
 
 	await _drag(runner, _draggable_for(screen.find_child("BagGrid", true, false), second).get_global_rect().get_center(),
 		(screen.find_child("Equipment_%s" % slot_name, true, false) as Control).get_global_rect().get_center())
 
-	assert_object(second.get_inventory()).is_same(slot)
-	assert_object(axe.get_inventory()).is_same(GameState.inventory)
+	assert_object(GameState.equipped_item(hero, slot_name)).is_same(second)
+	assert_object(GameState.equipment_owner(axe)).is_null()
 
 
 func test_an_item_can_be_dragged_to_another_cell_of_the_bag() -> void:
 	GameState.inventory.clear()
-	GameState.equipped_slots.clear()
+	GameState.set_party([_hero(0)])
 	var loaf := GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_HEARTHLOAF)
 	var runner := scene_runner("res://ui/screens/inventory.tscn")
 	await runner.simulate_frames(3)
@@ -282,7 +289,7 @@ func test_an_item_can_be_dragged_to_another_cell_of_the_bag() -> void:
 
 func test_a_click_on_a_bag_item_selects_it() -> void:
 	GameState.inventory.clear()
-	GameState.equipped_slots.clear()
+	GameState.set_party([_hero(0)])
 	var loaf := GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_HEARTHLOAF)
 	var runner := scene_runner("res://ui/screens/inventory.tscn")
 	await runner.simulate_frames(3)

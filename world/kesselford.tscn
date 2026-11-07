@@ -1,4 +1,4 @@
-[gd_scene load_steps=113 format=3]
+[gd_scene load_steps=114 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
 [ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
@@ -41,6 +41,7 @@
 [ext_resource type="Resource" path="res://world/buildings/layouts/cottage.tres" id="17_cottage"]
 
 [ext_resource type="Resource" path="res://world/buildings/layouts/warehouse.tres" id="18_warehouse"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="99_chest"]
 
 [sub_resource type="RectangleShape2D" id="shape_h"]
 size = Vector2(3000, 40)
@@ -365,6 +366,23 @@ position = Vector2(180, 900)
 
 [node name="OutdoorTownsfolk" type="Node" parent="."]
 script = ExtResource("10_townsfolk")
+npc_pockets = {
+"kesselford-bell-ringer": {
+"pocket_id": "kesselford-bell-ringer-purse",
+"pocket_gp": 9,
+"pocket_faction": "wayfare-menders"
+},
+"kesselford-ferry-keeper": {
+"pocket_id": "kesselford-ferry-keeper-purse",
+"pocket_gp": 9,
+"pocket_faction": "wayfare-menders"
+},
+"kesselford-mender-pair-junior": {
+"pocket_id": "kesselford-mender-pair-junior-purse",
+"pocket_gp": 9,
+"pocket_faction": "wayfare-menders"
+}
+}
 
 [node name="KesselfordDressing" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -921,3 +939,46 @@ target_scene = "res://world/long_verge.tscn"
 label_text = "MOOR TRACK TO THE LONG VERGE"
 spawn_id = &"from_kesselford"
 
+[node name="WayhouseLockedSupplyCrate" parent="." instance=ExtResource("99_chest")]
+position = Vector2(1180, 340)
+display_name = "Supply Crate"
+prompt_text = "Open"
+interaction_flag = "loot_opened_kesselford_wayhouse_locked_supply_crate"
+container_id = "kesselford-wayhouse-locked-supply-crate"
+owned_by_faction = "wayfare-menders"
+loot_table_id = &"kesselford-ferry-stores"
+lock_skill = "slip"
+lock_modifier = 0.0
+
+[node name="WayhouseBracedSupplyCrate" parent="." instance=ExtResource("99_chest")]
+position = Vector2(988, 340)
+display_name = "Supply Crate"
+prompt_text = "Open"
+interaction_flag = "loot_opened_kesselford_wayhouse_braced_supply_crate"
+container_id = "kesselford-wayhouse-braced-supply-crate"
+owned_by_faction = "wayfare-menders"
+loot_table_id = &"kesselford-ferry-stores"
+lock_skill = "strain"
+lock_modifier = 0.0
+
+[node name="ChandleryLockedSupplyCrate" parent="." instance=ExtResource("99_chest")]
+position = Vector2(1980, 548)
+display_name = "Supply Crate"
+prompt_text = "Open"
+interaction_flag = "loot_opened_kesselford_chandlery_locked_supply_crate"
+container_id = "kesselford-chandlery-locked-supply-crate"
+owned_by_faction = "wayfare-menders"
+loot_table_id = &"kesselford-ferry-stores"
+lock_skill = "slip"
+lock_modifier = 0.0
+
+[node name="ChandleryBracedSupplyCrate" parent="." instance=ExtResource("99_chest")]
+position = Vector2(2044, 580)
+display_name = "Supply Crate"
+prompt_text = "Open"
+interaction_flag = "loot_opened_kesselford_chandlery_braced_supply_crate"
+container_id = "kesselford-chandlery-braced-supply-crate"
+owned_by_faction = "wayfare-menders"
+loot_table_id = &"kesselford-ferry-stores"
+lock_skill = "strain"
+lock_modifier = 0.0

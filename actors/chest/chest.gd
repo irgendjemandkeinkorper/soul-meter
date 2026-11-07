@@ -85,6 +85,7 @@ func _apply_table_search() -> void:
 ## draw loop, where they would be re-rolled per row.
 func _resolve_table_skills() -> Dictionary:
 	var outcomes := {}
+	var zone_delta := FieldMap.zone_delta_for(self)
 	for skill: String in LootTableRegistry.skills_required(loot_table_id):
 		if not DramgidSchema.is_skill(skill):
 			push_warning(
@@ -96,7 +97,8 @@ func _resolve_table_skills() -> Dictionary:
 		var check: Dictionary = SkillCheck.resolve(
 			skill,
 			null,
-			LootTableRegistry.modifier_for_skill(loot_table_id, skill),
+			LootTableRegistry.modifier_for_skill(loot_table_id, skill)
+			- SkillCheck.loom_penalty(skill, zone_delta),
 			"loot-%s" % container_id
 		)
 		outcomes[skill] = bool(check.get("success", false))
@@ -130,11 +132,11 @@ func _refresh_prompt() -> void:
 	if _prompt == null:
 		return
 	if not _is_unlocked():
-		_prompt.text = "LOCKED — " + locked_message
+		_prompt.text = "LOCKED — " + tr(locked_message)
 	elif not container_id.is_empty() and GameState.loot_container_contents(container_id).is_empty():
 		_prompt.text = "E — EMPTY"
 	else:
-		_prompt.text = "E — " + prompt_text
+		_prompt.text = "E — " + tr(prompt_text)
 
 
 func _refresh_visual() -> void:

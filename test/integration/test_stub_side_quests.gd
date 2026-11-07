@@ -64,10 +64,15 @@ func test_a_stub_carries_no_outcome_a_ledger_write_could_use() -> void:
 
 
 func test_stubs_stay_out_of_the_resolvable_side_quest_count() -> void:
-	# `ui/screens/chapter_complete.gd` renders "RESOLVED n / DOM_SIDE_QUESTS.size()".
+	# `ui/screens/chapter_complete.gd` renders "RESOLVED n / resolvable_side_quests().size()".
 	# Six unfinishable threads in that denominator would report the player failed
 	# six quests they were never given a way to finish.
 	assert_int(QuestRegistry.DOM_SIDE_QUESTS.size()).is_equal(10)
+	assert_int(QuestRegistry.resolvable_side_quests().size()).is_equal(
+		QuestRegistry.DOM_SIDE_QUESTS.size() + QuestRegistry.FIELD_SIDE_QUESTS.size()
+	)
+	for stub: StubSideQuest in QuestRegistry.STUB_SIDE_QUESTS:
+		assert_bool(QuestRegistry.resolvable_side_quests().has(stub)).is_false()
 	for stub: StubSideQuest in QuestRegistry.STUB_SIDE_QUESTS:
 		assert_bool(QuestRegistry.DOM_SIDE_QUESTS.has(stub)).override_failure_message(
 			"stub '%s' leaked into the resolvable side-quest count" % stub.stable_id

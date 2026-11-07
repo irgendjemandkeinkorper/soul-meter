@@ -323,7 +323,8 @@ static func effect_of(tokens: Array) -> Dictionary:
 			return {"kind": &"infamy", "delta": _arg_number(call_token, 1)}
 		["SkillCheck", "resolve"]:
 			return {"kind": &"check", "skill": _arg_string(call_token, 0)}
-		["GameState", "set_soul_meter"]:
+		# P1.1 (Soul trace) moved dialogue onto the cause-carrying setter; the delta is arg 0 in both.
+		["GameState", "set_soul_meter"], ["GameState", "set_soul_meter_with_cause"]:
 			var delta: Variant = _soul_delta(_arg_tokens(call_token, 0))
 			return {} if delta == null else {"kind": &"soul", "delta": float(delta)}
 	return {}

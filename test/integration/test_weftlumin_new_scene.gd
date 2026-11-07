@@ -42,6 +42,11 @@ func after_test() -> void:
 	WorldClock.from_dict(_world_clock_before)
 	_remove_tree(WeftluminSceneTemplate.package_dir(PACKAGE))
 	_remove_tree(BAKE_ROOT)
+	# Removing only the package leaves `user://weftlumin` behind, and `test_weftlumin_inert`
+	# asserts it is absent (the same fix as `test_weftlumin_cli`). Prune it while empty so the two
+	# suites pass in either order; `remove_absolute` never removes a directory that holds anything.
+	if DirAccess.dir_exists_absolute(WeftluminSceneTemplate.SCRATCH_ROOT):
+		DirAccess.remove_absolute(WeftluminSceneTemplate.SCRATCH_ROOT)
 
 
 func test_params_are_checked_before_anything_is_written() -> void:

@@ -20,6 +20,11 @@ const IDLE_AMPLITUDE := 1.25
 const IDLE_PERIOD := 2.8
 const IDLE_ROTATION_DEGREES := 0.4
 
+## Scene-owned field opportunities keyed by an EXISTING outdoor roster id.
+## Values use NPC's pocket_* properties; identity, placement and dialogue still
+## come from the generated roster. An empty map preserves the ordinary spawner.
+@export var npc_pockets: Dictionary = {}
+
 var _spawned_npcs: Array[NPC] = []
 var _idle_sprites: Array[Sprite2D] = []
 var _idle_origins: Array[Vector2] = []
@@ -170,11 +175,27 @@ func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray, town_id
 		npc.set_meta(&"idle_phase", idle_phase)
 		npc.set_meta(&"model_index", model_index)
 		_apply_isometric_visual(npc, npc_id, facing)
+		_configure_pocket(npc, npc_id)
 		town.add_child(npc)
 		_set_generated_interaction_radius(npc)
 		_register_idle(npc, idle_phase)
 		npc.add_to_group(GENERATED_GROUP)
 		_spawned_npcs.append(npc)
+
+
+func _configure_pocket(npc: NPC, npc_id: String) -> void:
+	var value: Variant = npc_pockets.get(npc_id, {})
+	if not value is Dictionary:
+		return
+	var pocket: Dictionary = value
+	if String(pocket.get("pocket_id", "")).is_empty():
+		return
+	npc.pocket_id = String(pocket["pocket_id"])
+	npc.pocket_skill = String(pocket.get("pocket_skill", "slip"))
+	npc.pocket_modifier = float(pocket.get("pocket_modifier", 0.0))
+	npc.pocket_item_id = String(pocket.get("pocket_item_id", ""))
+	npc.pocket_gp = int(pocket.get("pocket_gp", 0))
+	npc.pocket_faction = String(pocket.get("pocket_faction", ""))
 
 
 func _apply_isometric_visual(npc: NPC, unit_id: String, facing: String = "east") -> void:

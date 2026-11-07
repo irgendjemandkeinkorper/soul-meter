@@ -152,11 +152,11 @@ func test_reset_clears_runtime_quest_pool_membership_and_progress() -> void:
 
 
 func test_chapter_one_ledger_counts_only_committed_side_quests() -> void:
-	# Chapter One's ledger renders "RESOLVED <completed> / <DOM_SIDE_QUESTS.size()>".
+	# Chapter One's ledger renders "RESOLVED <completed> / <resolvable_side_quests().size()>".
 	# The denominator is deliberately committed-only so a loaded campaign cannot
 	# move Chapter One's goalpost — which means the NUMERATOR has to be
 	# committed-only too. completed_side_quests() reports the runtime-aware
-	# universe, so a resolved campaign quest would otherwise render "11 / 10".
+	# universe, so a resolved campaign quest would otherwise render "12 / 11".
 	var quest: DomSideQuest = _runtime_quest("campaign/ledger-inflation")
 	assert_bool(QuestRegistry.register_runtime_quests([quest])).is_true()
 	QuestRegistry.offer(quest)
@@ -178,7 +178,7 @@ func test_chapter_one_ledger_counts_only_committed_side_quests() -> void:
 		.override_failure_message(
 			"Chapter One's ledger must not count a campaign quest; got:\n%s" % ledger
 		) \
-		.contains("RESOLVED  0 / %d" % QuestRegistry.DOM_SIDE_QUESTS.size())
+		.contains("RESOLVED  0 / %d" % QuestRegistry.resolvable_side_quests().size())
 	assert_str(ledger) \
 		.override_failure_message("a campaign quest must not appear in Chapter One's readbacks") \
 		.not_contains(quest.quest_name.to_upper())

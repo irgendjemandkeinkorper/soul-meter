@@ -76,7 +76,7 @@ func execute_command(raw_command: String) -> bool:
 			if args.size() != 1:
 				return _usage("help")
 			_append_line("flag <name> [true|false]  |  flags [filter]")
-			_append_line("soul <value>  |  gp <value>")
+			_append_line("soul <value>  |  soul trace  |  gp <value>")
 			_append_line("rep <faction> <delta>  |  standing <faction>")
 			_append_line("renown <delta>  |  infamy <delta>")
 			_append_line("why <faction|renown|infamy>")
@@ -147,12 +147,18 @@ func _command_flags(args: PackedStringArray) -> bool:
 
 
 func _command_soul(args: PackedStringArray) -> bool:
+	if args.size() == 2 and args[1].to_lower() == "trace":
+		var entries := GameState.soul_trace_entries()
+		_append_line("Soul trace (%d):" % entries.size())
+		for entry: Dictionary in entries:
+			_append_line(JSON.stringify(entry))
+		return true
 	if args.size() != 2 or not args[1].is_valid_float():
 		return _usage("soul <value>")
 	var value := args[1].to_float()
 	if is_nan(value) or is_inf(value):
 		return _usage("soul <value>")
-	GameState.set_soul_meter(value)
+	GameState.set_soul_meter_with_cause(value, "dev_console:soul")
 	_append_line("Set Soul Meter to %s." % GameState.soul_meter)
 	return true
 
