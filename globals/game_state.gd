@@ -566,8 +566,8 @@ func vendor_trade_status(vendor_id: String) -> Dictionary:
 ## barter modifier applied at only one of the two sites is invisible until a
 ## player notices the total does not match.
 ##
-## Barter reads the party leader, not the protagonist: the person doing the
-## talking is the one at the counter.
+## Barter uses SkillCheck's default subject (the protagonist), even when the
+## party is reordered. The shop must name that same person in its readout.
 func barter_ratio() -> float:
 	# The subject is left to SkillCheck rather than picked here. #415 originally
 	# read `party[0]`, which is not the same thing as the protagonist — the
@@ -586,12 +586,15 @@ func available_vendor_stock(vendor_id: String) -> Array[Dictionary]:
 		return []
 	_ensure_vendor_stock(vendor_id)
 	var result: Array[Dictionary] = []
+	var barter := barter_ratio()
 	for row: Dictionary in VendorData.stock_for(vendor_id):
 		var item_id := str(row.get("id", ""))
 		row["quantity"] = vendor_item_quantity(vendor_id, item_id)
-		var barter := barter_ratio()
 		row["buy_price"] = VendorData.price_for(vendor_id, item_id, true, &"", barter)
 		row["sell_price"] = VendorData.price_for(vendor_id, item_id, false, &"", barter)
+		# Keep the vendor and reputation band; remove only the Sway modifier.
+		row["base_buy_price"] = VendorData.price_for(vendor_id, item_id, true)
+		row["base_sell_price"] = VendorData.price_for(vendor_id, item_id, false)
 		result.append(row)
 	return result
 

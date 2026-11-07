@@ -7,6 +7,30 @@ msgstr ""
 "Project-Id-Version: SoulMeter\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
+#: ui/screens/shop.gd
+msgid "BARTER  ·  %s  ·  SWAY %s%%  ·  BUY ×%.2f / SELL ×%.2f"
+msgstr ""
+
+#: ui/screens/shop.gd
+msgid "NO LEADER"
+msgstr ""
+
+#: ui/screens/shop.gd
+msgid "NO BARTER ADJUSTMENT"
+msgstr ""
+
+#: ui/screens/shop.gd
+msgid "BASE BUY  ·  %d SILVER"
+msgstr ""
+
+#: ui/screens/shop.gd
+msgid "BASE SELL  ·  %d SILVER"
+msgstr ""
+
+#: ui/screens/shop.gd
+msgid "BASE OFFER  ·  %d SILVER"
+msgstr ""
+
 #: dialogue/marshal_coiljaw.dialogue
 msgctxt "dialogue"
 msgid "Dorthkor's road-drum stopped halfway through the breach warning. Demons first. Then one clean beat in a dead company's cadence."
