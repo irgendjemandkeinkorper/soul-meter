@@ -26,7 +26,13 @@ func test_hammer_changes_committed_damage_by_exactly_two_and_nothing_else() -> v
 	var armed := _strike(true, false)
 	assert_bool(bare["hit"]).is_true()
 	assert_bool(armed["hit"]).is_true()
-	assert_int(armed["damage"] - bare["damage"]).is_equal(2)
+	# The hammer's +2 lands before a critical (item 33) multiplies the mitigated hit. Both
+	# strikes share the fixture's deterministic roll, so they crit together or not at all;
+	# the on-hit preview never crits, so it carries the uncritted damage.
+	assert_bool(armed["critical"]).is_equal(bare["critical"])
+	assert_int(armed["damage_on_hit"] - bare["damage_on_hit"]).is_equal(2)
+	assert_int(bare["damage"]).is_equal(Resolution.critical_damage(bare["damage_on_hit"], bare["critical"]))
+	assert_int(armed["damage"]).is_equal(Resolution.critical_damage(armed["damage_on_hit"], armed["critical"]))
 	assert_int(armed["hit_chance"]).is_equal(bare["hit_chance"])
 	assert_int(armed["ap_spent"]).is_equal(bare["ap_spent"])
 	assert_int(armed["ct_cost"]).is_equal(bare["ct_cost"])
@@ -85,6 +91,8 @@ func _strike(equipped: bool, force_miss: bool) -> Dictionary:
 	assert_dict(result["resolution"]).is_equal(forecast["resolution"])
 	return {
 		"damage": before_hp - defender.hp,
+		"damage_on_hit": int(forecast["damage_on_hit"]),
+		"critical": bool(result["resolution"].get("critical", false)),
 		"hit": result["resolution"]["hit"],
 		"hit_chance": result["resolution"]["hit_chance"],
 		"ap_spent": before_ap - actor.action_points,
