@@ -19,11 +19,12 @@ The owner chose on 2026-11-07 to land the backlog before new roadmap content. So
 | #588 | `claude/fix-weftlumin-scratch-leak` | main | test-only fix for the red CI below | clean | green | 19 |
 | #586 | `claude/land-chargen` | main | #550, #557, #561, #563 | clean | green after `c6d043f7` (same patch as #588) | 19 |
 | #587 | `claude/land-ui` | #586 → main | #558, #559, #560, #562 | clean (with #586) | no test job (stacked) | 19, after #586 |
-| #589 | `claude/land-phase1` | #587 → #586 → main | #529, #541–#549, and #583 (whose Pandora item collided with P1.2f) | clean (with #587) | no test job (stacked) | 19, after #587 |
+| #589 | `claude/land-phase1` | #587 → #586 → main | #529, #541–#549, and #583 (whose Pandora item collided with P1.2f); fixes for three fallouts found by the full tree | clean (with #587) | no test job (stacked) | 19, after #587 |
 | #591 | `claude/land-rest` | #589 → … → main | #527, #528, #551, #566 | clean (with #589) | no test job (stacked) | 19, after #589 |
-| #590 | `claude/set-piece-seat-reach` (draft) | main | T1: set-piece seats stay on the party's side of a wall | clean, also after the whole chain | pending | 19, last |
+| #590 | `claude/set-piece-seat-reach` (draft) | main | T1: set-piece seats stay on the party's side of a wall | clean, also after the whole chain | green after `94c0a93d` (same patch as #588) | 19, last |
+| #593 | `claude/blocking-paint-clock` | main | Long Verge paymaster reachable in the afternoon (owner: beside the Split Stone); `test_blocking_paint` no longer depends on the clock an earlier suite left | clean, also in landing order | running | 19, first batch |
 
-Each landing PR's body lists its conflict resolutions and the tests run. The full test tree was run locally on `claude/land-rest`, the top of the chain; the result is in #591's body.
+Each landing PR's body lists its conflict resolutions and the tests run. The full test tree was run locally on `claude/land-rest`, the top of the chain. In CI's order (one headless process), with #593 merged: 3,073 cases, 0 failures, 0 orphans. Details are in #591's body.
 
 ## Every other open PR
 
@@ -59,7 +60,7 @@ Each landing PR's body lists its conflict resolutions and the tests run. The ful
 
 ### The red CI on 2026-11-07
 
-#583, #585 and #586 failed on one test, `test_weftlumin_inert.gd > test_bootstrap_is_inert` (line 75). None of them touch weftlumin. `test_weftlumin_new_scene` left an empty `user://weftlumin` behind, and the inert test fails whenever the new_scene suite runs first. The suite order changed on 2026-11-07. #588 fixes the test, and the same commit was cherry-picked onto all three PRs.
+#583, #585, #586 and later #590 failed on one test, `test_weftlumin_inert.gd > test_bootstrap_is_inert` (line 75). None of them touch weftlumin. `test_weftlumin_new_scene` left an empty `user://weftlumin` behind, and the inert test fails whenever the new_scene suite runs first. The suite order changed on 2026-11-07. #588 fixes the test, and the same commit was cherry-picked onto all four PRs.
 
 #551's red run (2026-11-01) predates this. Its own conflicts and two merge fallouts are resolved in #591.
 
@@ -67,7 +68,7 @@ Each landing PR's body lists its conflict resolutions and the tests run. The ful
 
 This is a suggestion for the owner; nothing here was merged.
 
-1. **#588** (test fix), **#583** (Trial Hall) and **#585** (capped runner), in any order. #583 also rides in #589, because its Blasting Charge took Pandora id 613, which P1.2f also uses (it is 633 there). Merging #583 first or letting #589 bring it both merge cleanly; checked by trial merges in sequence (appendix A).
+1. **#588** (test fix), **#583** (Trial Hall), **#585** (capped runner) and **#593** (paymaster; clock-independent blocking test), in any order. Without #593, `test_blocking_paint` fails in the chain's whole-tree order. #583 also rides in #589, because its Blasting Charge took Pandora id 613, which P1.2f also uses (it is 633 there). Merging #583 first or letting #589 bring it both merge cleanly; checked by trial merges in sequence (appendix A).
 2. **#586**, then **#587**, #589 and #591, in that order. Each stacked PR retargets to `main` when the branch below it is merged and deleted; if GitHub does not do it, set the base to `main` by hand.
 3. Close the originals each landing PR names, as "landed by #…": #550, #557, #561, #563 (#586); #558, #559, #560, #562 (#587); #529, #541–#549 (#589); #527, #528, #551, #566 (#591).
 4. **Before deleting `docs/roadmap-2026-10-30`** (#528's branch), retarget #538 and #539 to `main`, or they lose their base. Both are the owner's art lane.
@@ -100,7 +101,7 @@ for row in $(python3 -c "import json; [print(f\"{p['number']}:{p['headRefName']}
 done
 ```
 
-The landing order was checked the same way, merging in sequence into one detached worktree without aborting between steps: `#588, #583, #585, #586, #587, #589, #591, #590`: clean at every step.
+The landing order was checked the same way, merging in sequence into one detached worktree without aborting between steps: `#588, #583, #585, #593, #586, #587, #589, #591, #590`: clean at every step.
 
 With git 2.38 or later, `git merge-tree --write-tree origin/main origin/<head>` gives the same answer without a worktree.
 
