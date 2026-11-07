@@ -275,6 +275,16 @@ msgstr ""
 msgid "ITEM_RELICS_VOTIVE_CINDER_DESC"
 msgstr ""
 
+#. tools/blasting_charge — display name
+#. English source: Blasting Charge
+msgid "ITEM_TOOLS_BLASTING_CHARGE_NAME"
+msgstr ""
+
+#. tools/blasting_charge — description
+#. English source: A packed stone-breaker charge with a length of slow cord. Set it in a seam, light it and get clear.
+msgid "ITEM_TOOLS_BLASTING_CHARGE_DESC"
+msgstr ""
+
 #. tools/field_needle — display name
 #. English source: Field Needle
 msgid "ITEM_TOOLS_FIELD_NEEDLE_NAME"

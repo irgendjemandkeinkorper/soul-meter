@@ -144,8 +144,12 @@ func test_every_baked_definition_loads_with_the_registry_values() -> void:
 		assert_int(definition.thinning_tier).is_equal(int(row["thinning_tier"]))
 		assert_str(String(definition.weather_default)).is_equal(String(row["weather_default"]))
 		assert_str(definition.respawn_policy).is_equal(String(row["respawn_policy"]))
-		# Until E3.3b, canon's no-combat flag must agree with what FieldMap derives.
-		assert_bool(bool(row["no_combat_zone"])).is_equal(definition.scene_path.begins_with("res://world/interiors/"))
+		# Until E3.3b, canon's no-combat flag must agree with what FieldMap derives, less the
+		# interiors opened to fights (the Lower Trial Hall's side rooms, rulings of 2026-11-04).
+		assert_bool(bool(row["no_combat_zone"])).is_equal(
+			definition.scene_path.begins_with("res://world/interiors/")
+			and definition.scene_path != "res://world/interiors/lower_trial_hall.tscn"
+		)
 		assert_array(WeftluminLocationsKind.runtime_notes(row)).is_empty()
 
 

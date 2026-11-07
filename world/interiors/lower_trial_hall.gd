@@ -1,6 +1,12 @@
 extends Node2D
 ## Coordinates the Lower Trial Hall tutorial beats while leaving interaction,
 ## dialogue, battle, and travel behavior in their existing shared actors.
+##
+## The hall is ten rooms on one plan (owner rulings 2026-11-04): the entry and its lever, the
+## warden's court, the key alcove, a west room and a store with side-room fights, the store's
+## locked door (SLIP it quietly or force it and wake the store), a gallery with an annex, a
+## blast door only a blasting charge opens, the keeper's hall and the stair out. A completed
+## gauntlet (by fight, the aide's skip or the keeper's talk) opens every gate.
 
 signal trial_encounter_started(encounter_id: StringName)
 
@@ -11,6 +17,19 @@ const WARDEN_CLEARED_FLAG := "tutorial_warden_cleared"
 const SKILL_DOOR_FLAG := "tutorial_skill_door_open"
 const KEEPER_FIGHT_REQUESTED_FLAG := "tutorial_keeper_fight_requested"
 const KEEPER_STARTED_FLAG := "tutorial_keeper_started"
+const STORE_DOOR_FLAG := "trial_store_door_open"
+const STORE_ALARM_FLAG := "trial_store_alarm"
+const BLAST_CHARGE_FLAG := "trial_blast_charge_set"
+const BLAST_DOOR_FLAG := "trial_blast_door_open"
+## PROVISIONAL OWNER-BALANCE SURFACE: the slow cord's burn once the charge is set.
+const BLAST_FUSE_SECONDS := 3.0
+## A side room's pair of wardens -> the flag that keeps them gone once both are down. Their
+## encounter has no `defeated_flag` (it is the court's set-piece too), so the hall keeps it.
+const ROOM_CLEARED_FLAGS := {
+	"WestWardens": "trial_west_cleared",
+	"StoreWardens": "trial_store_cleared",
+	"AnnexWardens": "trial_annex_cleared",
+}
 const WARDEN_ENCOUNTER_ID := &"trial-warden"
 const KEEPER_ENCOUNTER_ID := &"trial-keeper"
 
@@ -29,6 +48,10 @@ var _blocking: BlockingLayer
 @onready var _skill_door_visual: Polygon2D = $SkillDoor/Visual
 @onready var _keeper_gate_shape: CollisionShape2D = $KeeperGate/CollisionShape2D
 @onready var _keeper_gate_visual: Polygon2D = $KeeperGate/Visual
+@onready var _store_door_shape: CollisionShape2D = $StoreDoor/CollisionShape2D
+@onready var _store_door_visual: Polygon2D = $StoreDoor/Visual
+@onready var _blast_door_shape: CollisionShape2D = $BlastDoor/CollisionShape2D
+@onready var _blast_door_visual: Polygon2D = $BlastDoor/Visual
 @onready var _entrance_instruction: Label = $EntranceInstruction
 
 
@@ -37,6 +60,10 @@ func _ready() -> void:
 	Battle.battle_ended.connect(_on_battle_ended)
 	_warden_trigger.body_entered.connect(_on_warden_trigger_body_entered)
 	_capture_gate_tiles()
+	_bind_side_rooms()
+	# A fuse does not survive a save: a charge set before the load has already gone off.
+	if GameState.flag_is_true(BLAST_CHARGE_FLAG):
+		GameState.set_flag(BLAST_DOOR_FLAG, true)
 	_refresh_progression()
 	if GameState.flag_is_true(KEEPER_FIGHT_REQUESTED_FLAG):
 		request_keeper_encounter()
@@ -102,7 +129,8 @@ func _on_warden_trigger_body_entered(body: Node2D) -> void:
 
 
 func _on_battle_ended(result: BattleResult) -> void:
-	if result.encounter_id != _active_trial_encounter:
+	# A side room's fight is an ambient session with no encounter id: not a trial beat.
+	if _active_trial_encounter == &"" or result.encounter_id != _active_trial_encounter:
 		return
 	var resolved_encounter: StringName = _active_trial_encounter
 	_active_trial_encounter = &""
@@ -124,13 +152,51 @@ func _on_flag_changed(flag: String, value: Variant) -> void:
 	if flag == KEEPER_FIGHT_REQUESTED_FLAG and bool(value):
 		# "Fight me, then." sets the flag mid-conversation; the fight opens once it closes.
 		GameFlow.after_conversation(request_keeper_encounter)
+	if flag == BLAST_CHARGE_FLAG and bool(value) and not GameState.flag_is_true(BLAST_DOOR_FLAG):
+		_light_fuse()
 	if flag in [
 		OPENING_COMPLETE_FLAG,
 		INTERACTION_GATE_FLAG,
 		WARDEN_STARTED_FLAG,
 		SKILL_DOOR_FLAG,
+		STORE_DOOR_FLAG,
+		BLAST_DOOR_FLAG,
 	]:
 		_refresh_progression()
+
+
+## The cord burns BLAST_FUSE_SECONDS, then the door goes. The seam glows while it burns.
+func _light_fuse() -> void:
+	var glow := create_tween()
+	glow.tween_property(_blast_door_visual, "modulate", Color(1.6, 0.9, 0.5, 1.0), BLAST_FUSE_SECONDS)
+	get_tree().create_timer(BLAST_FUSE_SECONDS).timeout.connect(
+		func() -> void: GameState.set_flag(BLAST_DOOR_FLAG, true)
+	)
+
+
+## Retires a side room whose pair is already down, and otherwise watches the pair so the room
+## stays cleared once both fall.
+func _bind_side_rooms() -> void:
+	for group_name: String in ROOM_CLEARED_FLAGS:
+		var group := get_node_or_null(group_name)
+		if group == null:
+			continue
+		if GameState.flag_is_true(ROOM_CLEARED_FLAGS[group_name]):
+			group.queue_free()
+			continue
+		for hostile: Node in group.get_children():
+			if hostile is Hostile:
+				(hostile as Hostile).downed.connect(_on_side_warden_downed.bind(group_name))
+
+
+func _on_side_warden_downed(_hostile: Hostile, group_name: String) -> void:
+	var group := get_node_or_null(group_name)
+	if group == null:
+		return
+	for hostile: Node in group.get_children():
+		if hostile is Hostile and (hostile as Hostile).state != Hostile.State.DOWNED:
+			return
+	GameState.set_flag(ROOM_CLEARED_FLAGS[group_name], true)
 
 
 func _refresh_progression() -> void:
@@ -146,6 +212,14 @@ func _refresh_progression() -> void:
 		completed or GameState.flag_is_true(SKILL_DOOR_FLAG),
 	)
 	_set_gate_open(_keeper_gate_shape, _keeper_gate_visual, completed)
+	var store_open := completed or GameState.flag_is_true(STORE_DOOR_FLAG)
+	_set_gate_open(_store_door_shape, _store_door_visual, store_open)
+	var blast_open := completed or GameState.flag_is_true(BLAST_DOOR_FLAG)
+	_set_gate_open(_blast_door_shape, _blast_door_visual, blast_open)
+	if store_open and has_node("StoreDoorLatch"):
+		get_node("StoreDoorLatch").queue_free()
+	if blast_open and has_node("BlastSeam"):
+		get_node("BlastSeam").queue_free()
 	_warden_trigger.set_deferred(
 		"monitoring",
 		not completed and not GameState.flag_is_true(WARDEN_STARTED_FLAG),
@@ -170,7 +244,8 @@ func _capture_gate_tiles() -> void:
 	if _blocking == null or ground == null:
 		return
 	var shapes: Array[CollisionShape2D] = [
-		_interaction_gate_shape, _skill_door_shape, _keeper_gate_shape,
+		_interaction_gate_shape, _skill_door_shape, _keeper_gate_shape, _store_door_shape,
+		_blast_door_shape,
 	]
 	var gates: Array = shapes.map(func(shape: CollisionShape2D) -> Node: return shape.get_parent())
 	var walls := SolidFootprints.ground_cells(self, ground, gates)

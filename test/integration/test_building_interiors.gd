@@ -9,6 +9,10 @@ const WALL_TEXTURE_PATH := "res://assets/generated/sprites/world/dom-interior-wa
 const COUNTER_TEXTURE_PATH := "res://assets/generated/sprites/interior/dom-interior-counter--bar.png"
 const SHARED_INTERIOR_SCENE_PATH := "res://world/interiors/building_interior.tscn"
 const MAX_SOLID_PROP_FOOTPRINT_SIZE := Vector2(120.0, 48.0)
+## Interiors drawn as a walk-in rooms plan rather than one dressed room (owner rulings of
+## 2026-11-04 for the Lower Trial Hall): their solids are the plan's walls and furniture, not
+## SolidProps, and their arrival is a room of the plan, not a spot below a back-wall exit door.
+const ROOMS_PLAN_INTERIORS: Array[String] = ["res://world/interiors/lower_trial_hall.tscn"]
 ## The 1.2–1.4 door band was ratified (#210) against the unscaled player art.
 ## UnitArt later shrank field actors (0.55, then a per-texture factor to the
 ## 112 px adult height, owner decisions 2026-08-31 / 2026-10-05) while
@@ -160,7 +164,8 @@ func test_all_registered_interiors_load_with_collision_spawns_exit_and_placement
 			String(BuildingTransitionRegistry.exit_for(entry.building_id).id)
 		)
 		assert_vector(spawn_entry.global_position).is_equal(entry.destination_spawn_position)
-		assert_float(spawn_entry.global_position.y).is_greater_equal(door_sprite.global_position.y + 40.0)
+		if not entry.destination_scene in ROOMS_PLAN_INTERIORS:
+			assert_float(spawn_entry.global_position.y).is_greater_equal(door_sprite.global_position.y + 40.0)
 		diagnostics.clear()
 		saves.has_pending_player_position = false
 		saves.pending_spawn_id = entry.spawn_id
@@ -220,6 +225,8 @@ func test_entry_spawns_clear_exit_door_art() -> void:
 	paths.append(SHARED_INTERIOR_SCENE_PATH)
 	paths.append(GameFlow.TAVERN_SCENE)
 	for path: String in paths:
+		if path in ROOMS_PLAN_INTERIORS:
+			continue
 		var interior := auto_free(load(path).instantiate()) as Node2D
 		var spawn := interior.find_child("SpawnEntry", true, false) as Marker2D
 		var door := interior.find_child("ExitDoorSprite", true, false) as Sprite2D
@@ -281,9 +288,15 @@ func test_all_registered_concrete_interiors_meet_dressing_contract() -> void:
 				.is_empty()
 
 		var solid_props := dressing.get_node_or_null("SolidProps") as Node2D
-		assert_object(solid_props) \
-			.override_failure_message("Dressing has no SolidProps layer: %s" % scene_path) \
-			.is_not_null()
+		if scene_path in ROOMS_PLAN_INTERIORS:
+			assert_object(solid_props).override_failure_message(
+				"A rooms plan keeps its solids in the plan: %s" % scene_path
+			).is_null()
+			solid_props = null
+		else:
+			assert_object(solid_props) \
+				.override_failure_message("Dressing has no SolidProps layer: %s" % scene_path) \
+				.is_not_null()
 		if solid_props != null:
 			var static_props := solid_props.find_children("*", "StaticBody2D", true, false)
 			assert_array(static_props) \
