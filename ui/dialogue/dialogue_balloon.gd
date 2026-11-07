@@ -74,6 +74,7 @@ func _ready() -> void:
 	get_tree().call_group(&"field_hud", &"set_conversation_open", true)
 	get_tree().call_group(&"field_map", &"set_world_labels_muted", true)
 	get_tree().paused = true
+	GameFlow.notify_dialogue_opened()
 
 
 func _exit_tree() -> void:

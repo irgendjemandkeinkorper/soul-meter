@@ -104,6 +104,10 @@ var travel_plan: TravelPlan = null
 ## Non-empty exactly while the demo owns the sandbox.
 var _class_demo_snapshot: Dictionary = {}
 var _class_demo_pending := false
+## Open dialogue balloons (each one reports its open and close). A fight a conversation asks
+## for waits in `_after_conversation` until the last one closes and the tree is unpaused.
+var _open_conversations := 0
+var _after_conversation: Array[Callable] = []
 
 @onready var chart: StateChart = $StateChart
 
@@ -728,7 +732,41 @@ func _end_class_demo() -> void:
 	SaveGame.end_runtime_sandbox()
 
 
+func notify_dialogue_opened() -> void:
+	_open_conversations += 1
+
+
 func notify_dialogue_closed() -> void:
+	_open_conversations = maxi(0, _open_conversations - 1)
+	if _open_conversations == 0 and not _after_conversation.is_empty():
+		var actions := _after_conversation.duplicate()
+		_after_conversation.clear()
+		_run_after_conversation.call_deferred(actions)
+	_check_chapter_complete()
+
+
+func conversation_open() -> bool:
+	return _open_conversations > 0
+
+
+## Runs `action` now, or once the open conversation closes. A conversation that asks for a
+## fight ("Fight me, then.") must not open it under the balloon: the balloon pauses the tree
+## and the battle HUD covers it, so its last line could never be dismissed (owner playtest
+## 2026-11-02, the Trial Keeper).
+func after_conversation(action: Callable) -> void:
+	if conversation_open():
+		_after_conversation.append(action)
+	else:
+		action.call()
+
+
+func _run_after_conversation(actions: Array[Callable]) -> void:
+	for action: Callable in actions:
+		if action.is_valid():
+			action.call()
+
+
+func _check_chapter_complete() -> void:
 	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
 		send_event.call_deferred("chapter_complete")
 
@@ -830,8 +868,7 @@ func _complete_scene_load() -> void:
 		if _target_scene == CLASS_DEMO_SCENE:
 			_open_class_demo.call_deferred()
 	SaveGame.flush_pending_autosave.call_deferred()
-	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
-		notify_dialogue_closed()
+	_check_chapter_complete()
 
 
 ## F1 (#281): the first accepted alert on a field opens the ambient session. Battle only
