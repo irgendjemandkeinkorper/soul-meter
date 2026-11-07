@@ -21217,6 +21217,14 @@
 				"_index": 0,
 				"_name": "Blasting Charge",
 				"_property_overrides": {
+					"Attack Bonus": {
+						"type": "int",
+						"value": 0
+					},
+					"Defense Bonus": {
+						"type": "int",
+						"value": 0
+					},
 					"Description": {
 						"type": "string",
 						"value": "A packed stone-breaker charge with a length of slow cord. Set it in a seam, light it and get clear."
