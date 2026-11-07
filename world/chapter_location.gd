@@ -4,6 +4,7 @@ extends Node2D
 
 
 func _ready() -> void:
+	GroundBlend.apply(self)
 	var definition := LocationRegistry.by_scene(scene_file_path)
 	if arrival_flag.is_empty() and definition != null:
 		arrival_flag = definition.arrival_flag

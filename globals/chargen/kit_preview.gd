@@ -57,7 +57,7 @@ static func group_of(action: CombatAction, resource: ClassResource, held: Array[
 		return &""
 	if not KitGate.ledger_refusal(action, resource).is_empty():
 		return &""
-	if not action.class_resource_action.is_empty() or action.effect_payload.has("requires_patron"):
+	if KitGate.is_class_command(action):
 		return CLASS
 	if not String(action.element_id).is_empty():
 		return TONES if held.has(action.element_id) else OTHER_TONES

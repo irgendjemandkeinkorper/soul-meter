@@ -2,6 +2,20 @@ extends GdUnitTestSuite
 ## Light substrate (Exposed, Veiled, Witness Light fields, Noonday), the Sul/Vekh and fist
 ## cards on it, and the Witness Weaver kit (Term of Witness, Term of Daylight, Noon Contract).
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
+
 const NO_FIZZLE := {"fizzle": {"harmonic_accord": 100.0, "pitch": 10}}
 
 

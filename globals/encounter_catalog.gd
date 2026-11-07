@@ -35,10 +35,15 @@ const _SPOILS_STREAM_OFFSET := 7_000_019
 
 static var _definitions: Dictionary = {}
 static var _runtime_definitions: Dictionary = {}
+## Debug-build encounters (the 5v5 class demo) sit beside the runtime set instead of replacing
+## it, so opening the demo never unloads an authored campaign package's encounters.
+static var _debug_definitions: Dictionary = {}
 
 
 static func definition(encounter_id: StringName) -> Dictionary:
 	_ensure_loaded()
+	if _debug_definitions.has(String(encounter_id)):
+		return (_debug_definitions[String(encounter_id)] as Dictionary).duplicate(true)
 	var runtime_row: Variant = _runtime_definitions.get(String(encounter_id))
 	if _runtime_definitions.has(String(encounter_id)) and runtime_row is Dictionary:
 		return (runtime_row as Dictionary).duplicate(true)
@@ -73,6 +78,22 @@ static func register_runtime_encounters(definitions: Dictionary) -> bool:
 
 static func clear_runtime_encounters() -> void:
 	_runtime_definitions.clear()
+
+
+## Debug builds only. Refuses an id the committed or runtime set already owns.
+static func register_debug_encounter(encounter_id: StringName, definition_row: Dictionary) -> bool:
+	_ensure_loaded()
+	var key := String(encounter_id)
+	if not OS.is_debug_build() or key.is_empty():
+		return false
+	if _definitions.has(key) or _runtime_definitions.has(key):
+		return false
+	_debug_definitions[key] = definition_row.duplicate(true)
+	return true
+
+
+static func clear_debug_encounter(encounter_id: StringName) -> void:
+	_debug_definitions.erase(String(encounter_id))
 
 
 static func has_committed(encounter_id: String) -> bool:
@@ -134,6 +155,10 @@ static func make_actor(unit_id: StringName, group_id: StringName = &"") -> Battl
 
 
 static func _actor_from_row(row: Dictionary) -> BattleActor:
+	if row.has("class_id"):
+		# A class row (debug class demo only) is a whole legal character of that class, so the
+		# enemy fights with that class's kit through KitAI (`source_member` is set).
+		return BattleActor.from_party_member(ClassDemo.member(str(row["class_id"])), -1)
 	var actor := BattleActor.new()
 	actor.archetype_id = StringName(row.get("id", ""))
 	actor.display_name = str(row.get("display_name", "Enemy"))

@@ -4,8 +4,9 @@
 [ext_resource type="Script" path="res://ui/hud/balance_arcs.gd" id="2_balance"]
 [ext_resource type="Script" path="res://ui/hud/eclipse_pips.gd" id="3_pips"]
 
+; Owner 2026-11-01: tactical data lives in the breakdown popover, so the two rows stack
+; vertically and every column is as narrow as its content. Node names and paths are kept.
 [node name="TacticalDataRegion" type="PanelContainer"]
-custom_minimum_size = Vector2(0, 210)
 theme_type_variation = &"BattleHudPanel"
 script = ExtResource("1_hud")
 
@@ -17,12 +18,11 @@ theme_type_variation = &"BattleHudMargin"
 layout_mode = 2
 theme_type_variation = &"BattleHudColumn"
 
-[node name="PrimaryRow" type="HBoxContainer" parent="Margin/Columns"]
+[node name="PrimaryRow" type="VBoxContainer" parent="Margin/Columns"]
 layout_mode = 2
-theme_type_variation = &"BattleHudRow"
+theme_type_variation = &"BattleHudColumn"
 
 [node name="InitiativeColumn" type="VBoxContainer" parent="Margin/Columns/PrimaryRow"]
-custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"BattleHudColumn"
@@ -36,9 +36,9 @@ text = "INITIATIVE"
 layout_mode = 2
 theme_type_variation = &"StatLabel"
 text = "Awaiting event"
+autowrap_mode = 2
 
 [node name="BalanceColumn" type="VBoxContainer" parent="Margin/Columns/PrimaryRow"]
-custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"BattleHudColumn"
@@ -47,22 +47,19 @@ theme_type_variation = &"BattleHudColumn"
 layout_mode = 2
 theme_type_variation = &"EyebrowLabel"
 text = "CHAOS  /  BALANCE  /  ORDER"
-horizontal_alignment = 1
 
 [node name="BalanceValue" type="Label" parent="Margin/Columns/PrimaryRow/BalanceColumn"]
 layout_mode = 2
 theme_type_variation = &"StatLabel"
 text = "BALANCE  0"
-horizontal_alignment = 1
 
 [node name="BalanceArcs" type="Control" parent="Margin/Columns/PrimaryRow/BalanceColumn"]
-custom_minimum_size = Vector2(300, 48)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("2_balance")
 
 [node name="APColumn" type="VBoxContainer" parent="Margin/Columns/PrimaryRow"]
-custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"BattleHudColumn"
@@ -71,10 +68,9 @@ theme_type_variation = &"BattleHudColumn"
 layout_mode = 2
 theme_type_variation = &"EyebrowLabel"
 text = "ACTION POINTS"
-horizontal_alignment = 2
 
 [node name="APPips" type="Control" parent="Margin/Columns/PrimaryRow/APColumn"]
-custom_minimum_size = Vector2(240, 28)
+custom_minimum_size = Vector2(0, 22)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("3_pips")
@@ -83,15 +79,13 @@ script = ExtResource("3_pips")
 layout_mode = 2
 theme_type_variation = &"StatLabel"
 text = "AP  0 / 0"
-horizontal_alignment = 2
 
-[node name="SecondaryRow" type="HBoxContainer" parent="Margin/Columns"]
+[node name="SecondaryRow" type="VBoxContainer" parent="Margin/Columns"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_type_variation = &"BattleHudRow"
+theme_type_variation = &"BattleHudColumn"
 
 [node name="ZonesColumn" type="VBoxContainer" parent="Margin/Columns/SecondaryRow"]
-custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"BattleHudColumn"
@@ -105,13 +99,12 @@ text = "ZONES"
 layout_mode = 2
 theme_type_variation = &"MutedLabel"
 text = "Awaiting zone event"
+autowrap_mode = 2
 
 [node name="CheckColumn" type="VBoxContainer" parent="Margin/Columns/SecondaryRow"]
-custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"BattleHudColumn"
-alignment = 1
 
 [node name="CheckMathToggle" type="Button" parent="Margin/Columns/SecondaryRow/CheckColumn"]
 custom_minimum_size = Vector2(0, 32)
@@ -126,11 +119,9 @@ text = "CHECK MATH  ON"
 visible = false
 layout_mode = 2
 theme_type_variation = &"StatLabel"
-horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="WeaknessesColumn" type="VBoxContainer" parent="Margin/Columns/SecondaryRow"]
-custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"BattleHudColumn"
@@ -139,10 +130,9 @@ theme_type_variation = &"BattleHudColumn"
 layout_mode = 2
 theme_type_variation = &"EyebrowLabel"
 text = "DISCOVERED WEAKNESSES"
-horizontal_alignment = 2
 
 [node name="Weaknesses" type="Label" parent="Margin/Columns/SecondaryRow/WeaknessesColumn"]
 layout_mode = 2
 theme_type_variation = &"MutedLabel"
 text = "None discovered"
-horizontal_alignment = 2
+autowrap_mode = 2

@@ -173,6 +173,19 @@ var _actions: Dictionary = {}
 var _abilities: Dictionary = {}
 var _tactical_tables: TacticalTables
 var _sequence := 0
+## This fight's dice (owner 2026-11-02, item 33: fresh dice every fight). Battle sets it from
+## `FightDice.draw()` before `start()`; the controller itself never draws (it stays RNG-free).
+## It salts every roll key in `forecast_context()`, so forecast and commit still agree; 0 keeps
+## the historical keys, which is what a controller built directly (a test) rolls.
+var fight_seed := 0
+## AI vs AI (owner 2026-11-02: "I'd like the 5v5 demo to be fully ai automated"). When set, the
+## party's turns are KitAI's as well: the HUD's autopilot calls `autoplay_step()` once the field
+## has finished presenting, so every beat is still seen. Battle sets it from the encounter.
+var autoplay_allies := false
+## A fair mirror match (the AI-vs-AI demo). Two party-side edges are evened: the Balance band's
+## party-only effects reach both sides, and speed ties alternate sides instead of seating the
+## whole party first, with the fight's dice choosing who leads. Ordinary fights leave it off.
+var even_sides := false
 ## Seam v2 (#223 follow-up): effects queued by class resources for a later scheduler boundary.
 ## Fired by `_fire_due_deferred()` from `_drive_scheduler()` — the one place turns advance — and
 ## applied through `_apply_resolution_writes()`, the same path Resolution writes take.
@@ -373,14 +386,26 @@ func _advance_weather(ticks_elapsed: int) -> void:
 		})
 
 
+## `tile_state_at()`'s terrain rows by cell, for the snapshot it was built from.
+var _terrain_index: Dictionary = {}
+var _terrain_index_source: Array[Dictionary] = []
+
+
 func tile_state_at(cell: Vector2i) -> TileState:
 	if _tile_by_cell.has(cell):
 		return _tile_by_cell[cell]
 	if battlefield == null:
 		return null
-	for terrain: Dictionary in battlefield.tiles_snapshot():
-		if Vector2i(int(terrain.get("x", 0)), int(terrain.get("y", 0))) != cell:
-			continue
+	# One index per terrain snapshot: a scan per touched cell grew with the map, and hexes
+	# (owner item 34) put about 4.6 rows where one cell was.
+	var rows := battlefield.tiles_snapshot()
+	if not is_same(rows, _terrain_index_source):
+		_terrain_index_source = rows
+		_terrain_index = {}
+		for row: Dictionary in rows:
+			_terrain_index[Vector2i(int(row.get("x", 0)), int(row.get("y", 0)))] = row
+	if _terrain_index.has(cell):
+		var terrain: Dictionary = _terrain_index[cell]
 		var tile := TileState.create(
 			_encounter_id, cell.x, cell.y,
 			int(terrain.get("height_delta", 0)), bool(terrain.get("cover", false))
@@ -452,7 +477,7 @@ func start(
 	_attach_class_resources(allies)
 	_attach_class_resources(enemies)
 	battlefield.setup(allies, enemies)
-	scheduler.setup(allies + enemies)
+	scheduler.setup(_even_seating() if even_sides else allies + enemies)
 	_reset_tile_states()
 	_apply_balance_band(false)
 	state = State.ROUND_START
@@ -619,6 +644,18 @@ func query_action(
 	var actor := active_actor()
 	if state != State.ALLY_TURN or actor == null or not actor.is_alive():
 		return _blocked(&"turn_state", "No party combatant can act right now.", {})
+	return query_action_for(actor, action, target, options)
+
+
+## The gates `query_action` runs, for any acting combatant: the player's party on its turn, or
+## a class-kit enemy on its own (combat polish 2026-11-02). Side words are relative to `actor`:
+## an "ally" target is on the actor's side and an "enemy" target is on the other side. Only
+## the player's side pays the Soul Gauge.
+func query_action_for(
+	actor: BattleActor, action: CombatAction, target: BattleActor = null, options: Dictionary = {}
+) -> Dictionary:
+	if actor == null or not actor.is_alive():
+		return _blocked(&"turn_state", "No combatant can act right now.", {})
 	if action == null:
 		return _blocked(&"action", "Unknown combat action.", {"type": &"known_action"})
 	if action.requires_voice:
@@ -647,7 +684,7 @@ func query_action(
 		if not command_refusal.is_empty():
 			return _kit_blocked(command_refusal)
 	if action.requires_ally_target():
-		if target == null or not target.is_alive() or not allies.has(target):
+		if target == null or not target.is_alive() or not _friends_of(actor).has(target):
 			return _blocked(&"no_target", "%s requires an explicit living ally target." % action.display_name, {"type": &"living_ally"})
 	if not action.effect_id.is_empty() or not action.effect_payload.is_empty() or action.targets_cells():
 		var effect_gate := _query_effect_gate(actor, action, options)
@@ -667,10 +704,10 @@ func query_action(
 			return _allowed({"cells_pending": int(action.effect_payload.get("cell_count", 3))})
 		return _query_cell_action(actor, action, options, target)
 	if action.targets_any_side():
-		if target == null or not target.is_alive() or (not allies.has(target) and not enemies.has(target)):
+		if target == null or not target.is_alive() or (not _friends_of(actor).has(target) and not _foes_of(actor).has(target)):
 			return _blocked(&"no_target", "%s requires a living creature target." % action.display_name, {"type": &"living_target"})
 	if not action.class_resource_action.is_empty():
-		if action.requires_enemy_target() and (target == null or not target.is_alive() or not enemies.has(target)):
+		if action.requires_enemy_target() and (target == null or not target.is_alive() or not _foes_of(actor).has(target)):
 			return _blocked(&"no_target", "%s requires a living enemy target." % action.display_name, {"type": &"living_enemy"})
 		var command_gate := _class_resource_of(actor).query_command(
 			action.class_resource_action, target.combat_id if target != null else &"",
@@ -679,7 +716,7 @@ func query_action(
 		if not bool(command_gate.get("allowed", false)):
 			return command_gate
 		var command_soul := _class_soul_cost(actor, action)
-		if _soul_meter() < command_soul:
+		if _pays_soul(actor) and _soul_meter() < command_soul:
 			return _blocked(&"soul", "Requires %d Soul." % int(command_soul), {
 				"type": &"soul", "minimum": command_soul,
 			})
@@ -766,8 +803,25 @@ func submit_action(
 		last_refusal = query.duplicate(true)
 		_emit_event(&"action_refused", active_actor(), target, {"action_id": action_id, "reason": query})
 		return query
+	var outcome := _commit_for(active_actor(), action, target, options, query)
+	if bool(outcome.get("_commit_refused", false)):
+		outcome.erase("_commit_refused")
+		return outcome
+	if action.kind == CombatAction.Kind.RESOLUTION:
+		_finish(ResultState.VICTORY, action.outcome_id)
+		return _allowed(outcome)
+	_drive_scheduler()
+	return _allowed(outcome)
 
-	var actor := active_actor()
+
+## Commits and resolves an action `query_action_for` already allowed, for any actor, and emits
+## its event. It never drives the scheduler: the player's submit does that afterwards, and a
+## class-kit enemy is already inside the drive loop. Returns the outcome, or the scheduler's
+## refusal (with "allowed": false) when the commit itself is refused.
+func _commit_for(
+	actor: BattleActor, action: CombatAction, target: BattleActor, options: Dictionary, query: Dictionary
+) -> Dictionary:
+	var action_id := action.id
 	var committed_action := _priced_move_action(action, query, options, actor)
 	committed_action = CalledShot.priced_action(
 		committed_action, StringName(str(options.get("aim_location", "")))
@@ -778,7 +832,9 @@ func submit_action(
 		# defensive re-check (e.g. a race between query and submit), not duplicated UX.
 		last_refusal = commit_result.duplicate(true)
 		_emit_event(&"action_refused", actor, target, {"action_id": action_id, "reason": commit_result})
-		return commit_result
+		var refused := commit_result.duplicate(true)
+		refused["_commit_refused"] = true
+		return refused
 	var resolved_options := options.duplicate(true)
 	if query.has("resolution"):
 		resolved_options["_resolution"] = query["resolution"]
@@ -794,7 +850,7 @@ func submit_action(
 		_refrain_uses[String(actor.combat_id)] = int(_refrain_uses.get(String(actor.combat_id), 0)) + 1
 	if committed_action.kind == CombatAction.Kind.PASS and not committed_action.class_resource_action.is_empty():
 		var command_soul := _class_soul_cost(actor, committed_action)
-		if command_soul > 0.0:
+		if command_soul > 0.0 and _pays_soul(actor):
 			_set_soul_meter(_soul_meter() - command_soul)
 		_class_resource_of(actor).execute_command(
 			committed_action.class_resource_action,
@@ -816,11 +872,7 @@ func submit_action(
 	_emit_event(&"action_resolved", actor, target, outcome)
 	last_refusal.clear()
 	scheduler.release(actor)
-	if action.kind == CombatAction.Kind.RESOLUTION:
-		_finish(ResultState.VICTORY, action.outcome_id)
-		return _allowed(outcome)
-	_drive_scheduler()
-	return _allowed(outcome)
+	return outcome
 
 
 func submit_speech(
@@ -980,6 +1032,7 @@ func snapshot() -> Dictionary:
 	return {
 		"state": state,
 		"encounter_id": _encounter_id,
+		"fight_seed": fight_seed,
 		"round": round_number,
 		"balance": balance,
 		"revealed_until_round": revealed_until_round,
@@ -1018,22 +1071,71 @@ func _movement_snapshot() -> Dictionary:
 	var capabilities: Dictionary = battlefield.capabilities()
 	if not bool(capabilities.get("cells", false)) or state != State.ALLY_TURN:
 		return {}
+	var raw_budget := _move_budget(actor)
+	return {
+		"action_id": ACTION_MOVE,
+		"per_cell_ap_cost": maxi(1, action.ap_cost),
+		"remaining_ap": actor.action_points,
+		"ct_budget": raw_budget,
+		"reachable": _reachable_for(actor, raw_budget),
+	}
+
+
+## The actor's move budget in path cost units, before injuries.
+func _move_budget(actor: BattleActor) -> int:
+	var action := action_by_id(ACTION_MOVE)
 	var base_move_cost := maxi(1, rules.move_ct_cost if rules != null else 1)
-	var per_cell_ap := maxi(1, action.ap_cost)
+	var per_cell_ap := maxi(1, action.ap_cost if action != null else 1)
 	# Under charge time the budget is the actor's banked charge (owner ruling 2026-10-10,
 	# #281 G6a); the AP economy keeps its per-cell AP budget. A scheduler that prices moves
 	# by charge exposes `move_ct_budget()`, so the controller never names a concrete scheduler.
 	var raw_budget := int(actor.action_points / per_cell_ap) * base_move_cost
 	if scheduler != null and scheduler.has_method("move_ct_budget"):
 		raw_budget = int(scheduler.call("move_ct_budget", actor))
-	var ct_budget := int(float(raw_budget) / CombatInjury.move_cost_multiplier(actor))
+	return raw_budget
+
+
+## `begin_reach_memo()`'s stands: `{actor_id, budget, rows}`, or empty.
+var _reach_memo: Dictionary = {}
+
+
+## While a caller plans many walk-ins for one actor on a board nothing changes (KitAI tries
+## every attack against the nearest foes), the stands it can reach are the same for each try:
+## `_reachable_for()` prices them once. Nothing may move between begin and end. On hexes a
+## turn's reach holds about three times the stands, and pricing them again for every try was
+## most of an AI turn (owner item 34).
+func begin_reach_memo() -> void:
+	_reach_memo = {"rows": {}}
+
+
+func end_reach_memo() -> void:
+	_reach_memo = {}
+
+
+## Every destination `actor` can afford to walk to now, each priced by the same move gate a
+## submit runs: `{destination, ap_cost, ct_cost, path, path_cells}`.
+func _reachable_for(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
+	if not _reach_memo.is_empty() and actor != null:
+		var key := "%s|%d" % [actor.combat_id, raw_budget]
+		var rows: Dictionary = _reach_memo["rows"]
+		if not rows.has(key):
+			rows[key] = _price_reachable(actor, raw_budget)
+		return (rows[key] as Array[Dictionary]).duplicate()
+	return _price_reachable(actor, raw_budget)
+
+
+func _price_reachable(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
 	var reachable: Array[Dictionary] = []
+	var action := action_by_id(ACTION_MOVE)
+	if actor == null or action == null or battlefield == null:
+		return reachable
+	var ct_budget := int(float(raw_budget) / CombatInjury.move_cost_multiplier(actor))
 	# Every quote below starts from the actor's cell: one shared search, not one per cell (#282).
 	var memo := battlefield.has_method("begin_path_memo")
 	if memo:
 		battlefield.call("begin_path_memo", actor, ct_budget)
 	for destination: StringName in battlefield.reachable_positions(actor, ct_budget):
-		var query := move_query(destination)
+		var query := query_action_for(actor, action, null, {"destination": destination})
 		if not bool(query.get("allowed", false)):
 			continue
 		reachable.append({
@@ -1045,13 +1147,159 @@ func _movement_snapshot() -> Dictionary:
 		})
 	if memo:
 		battlefield.call("end_path_memo")
-	return {
-		"action_id": ACTION_MOVE,
-		"per_cell_ap_cost": per_cell_ap,
-		"remaining_ap": actor.action_points,
-		"ct_budget": raw_budget,
-		"reachable": reachable,
-	}
+	return reachable
+
+
+## Refusals a walk can cure: out of reach, not adjacent, blocked sight, too high, wrong side.
+const _APPROACHABLE_REFUSALS: Array[StringName] = [
+	&"position", &"blocked_by_range", &"blocked_by_elevation", &"blocked_by_obstacle",
+	&"blocked_by_occupancy", &"facing",
+]
+
+
+## Combat polish 2026-11-02 (owner: "click on a target outside melee range and have the unit
+## walk up adjacent and attack"). When `action` on `target` is refused only for where `actor`
+## stands, this finds the cheapest reachable cell from which every gate `query_action_for`
+## runs passes, and prices walk and action as one order (AP round economy: under charge time
+## a walk spends the banked charge an action needs, so the planner stays out of it).
+##
+## Returns {} when no walk is needed, or none can help and the refusal is not about distance
+## (the action's own reason stands). Otherwise `{allowed: true, destination, cell,
+## path_cells, move_ap, action_ap, total_ap, remaining_ap}`; or, ruled "preview, then
+## refuse", blocked_by `approach_ap` with the totals when the walk is affordable but walk +
+## action is not, and `approach_out_of_reach` when a distance refusal has no affordable cure.
+func approach_plan(
+	actor: BattleActor, action: CombatAction, target: BattleActor, options: Dictionary = {}
+) -> Dictionary:
+	if actor == null or action == null or target == null or battlefield == null:
+		return {}
+	if rules != null and rules.use_charge_time:
+		return {}
+	if not bool(battlefield.capabilities().get("cells", false)):
+		return {}
+	if action.kind == CombatAction.Kind.MOVE or action.targets_cells() or target == actor:
+		return {}
+	var direct := query_action_for(actor, action, target, options)
+	if bool(direct.get("allowed", false)):
+		return {}
+	if not _APPROACHABLE_REFUSALS.has(StringName(str(direct.get("blocked_by", "")))):
+		return {}
+	var action_ap := CalledShot.priced_action(
+		action, StringName(str(options.get("aim_location", "")))
+	).ap_cost
+	var best := {}
+	var short := {}
+	# Try the stands in `_cheaper_approach()`'s order: the first that allows the action is the
+	# cheapest approach, affordable or not, so the probing stops there. On hexes a turn's reach
+	# holds about three times as many stands as on cells (owner item 34).
+	var rows := _reachable_for(actor, _move_budget(actor))
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a.get("ap_cost", 0)) != int(b.get("ap_cost", 0)):
+			return int(a.get("ap_cost", 0)) < int(b.get("ap_cost", 0))
+		var a_len := (a.get("path_cells", []) as Array).size()
+		var b_len := (b.get("path_cells", []) as Array).size()
+		if a_len != b_len:
+			return a_len < b_len
+		return String(a["destination"]) < String(b["destination"])
+	)
+	for row: Dictionary in rows:
+		var described: Dictionary = battlefield.describe_position(StringName(row["destination"]))
+		if not described.has("cell"):
+			continue
+		var cell: Vector2i = described["cell"]
+		battlefield.probe_cell(actor, cell)
+		var gate := query_action_for(actor, action, target, options)
+		battlefield.clear_probe(actor)
+		if not bool(gate.get("allowed", false)):
+			continue
+		var move_ap := int(row.get("ap_cost", 0))
+		var entry := {
+			"destination": row["destination"], "cell": {"x": cell.x, "y": cell.y},
+			"path_cells": row.get("path_cells", []), "move_ap": move_ap,
+			"action_ap": action_ap, "total_ap": move_ap + action_ap,
+		}
+		if move_ap + action_ap <= actor.action_points:
+			best = entry
+		else:
+			short = entry
+		break
+	if not best.is_empty():
+		best["remaining_ap"] = actor.action_points - int(best["total_ap"])
+		best["needs_move"] = true
+		return _allowed(best)
+	if not short.is_empty():
+		# The refusal carries the order it priced (path, totals) so the hover can draw it.
+		var refusal := _blocked(
+			&"approach_ap",
+			"Move %d + %s %d = %d AP; %d AP left." % [
+				int(short["move_ap"]), action.display_name, action_ap, int(short["total_ap"]), actor.action_points,
+			],
+			{"type": &"ap", "required": int(short["total_ap"]), "available": actor.action_points},
+		)
+		refusal.merge(short)
+		return refusal
+	# Nothing reachable helps. Distance refusals say so ("out of reach this turn"); sight,
+	# height and facing keep their own reason, which says more than "out of reach".
+	if StringName(str(direct.get("blocked_by", ""))) in [&"position", &"blocked_by_range"]:
+		return _blocked(
+			&"approach_out_of_reach", "%s is out of reach this turn." % target.display_name, {"type": &"reach"},
+		)
+	return {}
+
+
+## Lower total AP, then the shorter path, then the lexically first destination (deterministic).
+static func _cheaper_approach(current: Dictionary, entry: Dictionary) -> Dictionary:
+	if current.is_empty():
+		return entry
+	if int(entry["total_ap"]) != int(current["total_ap"]):
+		return entry if int(entry["total_ap"]) < int(current["total_ap"]) else current
+	var entry_len := (entry["path_cells"] as Array).size()
+	var current_len := (current["path_cells"] as Array).size()
+	if entry_len != current_len:
+		return entry if entry_len < current_len else current
+	return entry if String(entry["destination"]) < String(current["destination"]) else current
+
+
+## The player's side of approach_plan: the active party member, on its turn, with the forecast
+## it would see from the destination (`forecast` and `context`, for the hover quote).
+func approach_query(action: CombatAction, target: BattleActor, options: Dictionary = {}) -> Dictionary:
+	var actor := active_actor()
+	if state != State.ALLY_TURN or actor == null:
+		return {}
+	var plan := approach_plan(actor, action, target, options)
+	if not bool(plan.get("allowed", false)):
+		return plan
+	var cell := Vector2i(int(plan["cell"]["x"]), int(plan["cell"]["y"]))
+	battlefield.probe_cell(actor, cell)
+	plan["forecast"] = forecast_action(action, target, options)
+	plan["context"] = forecast_context(actor, target, action, options)
+	battlefield.clear_probe(actor)
+	return plan
+
+
+## Walk into reach, then act, as one order. Falls through to submit_action when no walk is
+## needed. The walk resolves first (its own beat, holds and hazards included); the action is
+## then re-queried from where the unit really stands, so anything the walk changed is honoured.
+func submit_approach(action_id: StringName, target: BattleActor, options: Dictionary = {}) -> Dictionary:
+	var actor := active_actor()
+	var action := action_by_id(action_id)
+	var plan := approach_query(action, target, options)
+	if plan.is_empty():
+		return submit_action(action_id, target, options)
+	if not bool(plan.get("allowed", false)):
+		last_refusal = plan.duplicate(true)
+		_emit_event(&"action_refused", actor, target, {"action_id": action_id, "reason": plan})
+		return plan
+	var moved := submit_action(ACTION_MOVE, null, {"destination": plan["destination"]})
+	if not bool(moved.get("allowed", false)):
+		return moved
+	if state != State.ALLY_TURN or active_actor() != actor or not actor.is_alive():
+		return _blocked(
+			&"approach_interrupted",
+			"%s's walk ended before %s." % [actor.display_name, action.display_name],
+			{"type": &"turn"},
+		)
+	return submit_action(action_id, target, options)
 
 
 func _turn_order_snapshot() -> Array[Dictionary]:
@@ -1263,12 +1511,15 @@ static func calculate_damage(
 			"CombatController.calculate_damage: Resolution refused (%s) — %s"
 			% [result.get("blocked_by", ""), result.get("message", "")]
 		)
-	return maxi(
-		1,
-		raw_damage
-		- target.effective_defense()
-		- int(target.balance_effects.get("defense_bonus", 0))
-		- cover_bonus,
+	return Resolution.critical_damage(
+		maxi(
+			1,
+			raw_damage
+			- target.effective_defense()
+			- int(target.balance_effects.get("defense_bonus", 0))
+			- cover_bonus,
+		),
+		bool(result.get("critical", false)),
 	)
 
 
@@ -1337,6 +1588,9 @@ func _drive_scheduler() -> void:
 		if actor.side == &"ally":
 			state = State.ALLY_TURN
 			if not is_continuation:
+				# Autoplay counts a turn's KitAI steps and commands like a kit enemy's.
+				_kit_steps.erase(actor.combat_id)
+				_kit_used.erase(actor.combat_id)
 				_emit_event(&"turn_started", actor, null, turn_payload)
 				_class_resource_of(actor).on_turn_start()
 				for other: BattleActor in allies:
@@ -1352,6 +1606,11 @@ func _drive_scheduler() -> void:
 			_emit_event(&"enemy_turn_started", actor, null, turn_payload)
 		if actor != _last_turn_actor or int(result.get("ticks_elapsed", 0)) != 0:
 			_class_resource_of(actor).on_turn_start()
+			_kit_steps.erase(actor.combat_id)
+			_kit_used.erase(actor.combat_id)
+			for other: BattleActor in enemies:
+				if other != actor and other.is_alive():
+					_class_resource_of(other).on_ally_turn_start(actor.combat_id)
 		_last_turn_actor = actor
 		_last_side = &"enemy"
 		_resolve_enemy_actor(actor)
@@ -1419,6 +1678,9 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
 ## which enemy this is and when. Grid-capable battlefields plan a legal move before committing;
 ## attack affordability is checked only after a target is in range.
 func _resolve_enemy_actor(actor: BattleActor) -> void:
+	if KitAI.runs(actor):
+		_resolve_kit_enemy(actor)
+		return
 	var enemy_action := action_by_id(&"enemy-strike")
 	# #285 slice 5: the turn executes the enemy's plan, so a locked (read) intent and an unread
 	# enemy run the same path. The lock is spent by this turn whatever it does.
@@ -1480,6 +1742,141 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 	_emit_event(&"action_resolved", actor, target, outcome)
 	scheduler.release(actor)
 	_change_balance(actor.balance_affinity * actor.balance_pressure, actor)
+
+
+## Steps a class-kit enemy may take in one turn before it must pass: a guard against any
+## zero-cost loop, well above what an AP turn affords.
+const _KIT_MAX_STEPS := 8
+var _kit_steps: Dictionary = {}  ## combat_id -> steps taken this turn
+var _kit_used: Dictionary = {}  ## combat_id -> class command ids used this turn
+
+
+## Combat polish 2026-11-02 ("AI runs 5"): one step of a class-kit enemy's turn, planned by
+## KitAI through the same gates as the player's bar and committed by the same path. The drive
+## loop asks again while the actor has AP; a step that cannot be taken passes the turn.
+func _resolve_kit_enemy(actor: BattleActor) -> void:
+	var steps := int(_kit_steps.get(actor.combat_id, 0))
+	if steps >= _KIT_MAX_STEPS:
+		_force_pass(actor)
+		return
+	_kit_steps[actor.combat_id] = steps + 1
+	var used: Array = _kit_used.get(actor.combat_id, [])
+	var plan := KitAI.plan_step(self, actor, used)
+	var action: CombatAction = null
+	var target: BattleActor = null
+	var options: Dictionary = {}
+	match str(plan.get("kind", "pass")):
+		"act":
+			action = plan["action"] as CombatAction
+			target = plan.get("target") as BattleActor
+			options = plan.get("options", {})
+		"move":
+			action = action_by_id(ACTION_MOVE)
+			options = {"destination": plan["destination"]}
+		_:
+			_force_pass(actor)
+			return
+	var gate := query_action_for(actor, action, target, options)
+	if not bool(gate.get("allowed", false)):
+		_emit_event(&"action_refused", actor, target, {"action_id": action.id, "reason": gate})
+		_force_pass(actor)
+		return
+	if target != null and target != actor:
+		_face_toward(actor, target)
+	var outcome := _commit_for(actor, action, target, options, gate)
+	if bool(outcome.get("_commit_refused", false)):
+		_force_pass(actor)
+		return
+	if not action.class_resource_action.is_empty():
+		used.append(action.id)
+		_kit_used[actor.combat_id] = used
+
+
+## Seat order for an even match: the sides alternate, and the fight's dice pick the side that
+## takes the first seat (speed ties go to the lower seat).
+func _even_seating() -> Array[BattleActor]:
+	var lead := allies if fight_seed % 2 == 0 else enemies
+	var follow := enemies if lead == allies else allies
+	var seating: Array[BattleActor] = []
+	for index in maxi(lead.size(), follow.size()):
+		if index < lead.size():
+			seating.append(lead[index])
+		if index < follow.size():
+			seating.append(follow[index])
+	return seating
+
+
+## One KitAI step of the active ally's turn under autoplay: act, walk, or end the turn, through
+## the same `submit_action()` / `end_turn()` a player uses. False when there is nothing to do.
+func autoplay_step() -> bool:
+	if not autoplay_allies or state != State.ALLY_TURN:
+		return false
+	var actor := active_actor()
+	if actor == null:
+		return false
+	var steps := int(_kit_steps.get(actor.combat_id, 0))
+	if steps >= _KIT_MAX_STEPS:
+		_autoplay_pass(actor)
+		return true
+	_kit_steps[actor.combat_id] = steps + 1
+	var used: Array = _kit_used.get(actor.combat_id, [])
+	var plan := KitAI.plan_step(self, actor, used)
+	var result := {}
+	match str(plan.get("kind", "pass")):
+		"act":
+			var action := plan["action"] as CombatAction
+			var target := plan.get("target") as BattleActor
+			if target != null and target != actor:
+				_face_toward(actor, target)
+			result = submit_action(action.id, target, plan.get("options", {}))
+			if bool(result.get("allowed", false)) and not action.class_resource_action.is_empty():
+				used.append(action.id)
+				_kit_used[actor.combat_id] = used
+		"move":
+			result = submit_action(ACTION_MOVE, null, {"destination": plan["destination"]})
+		_:
+			_autoplay_pass(actor)
+			return true
+	if not bool(result.get("allowed", false)) and state == State.ALLY_TURN and active_actor() == actor:
+		_autoplay_pass(actor)
+	return true
+
+
+## Ends an autoplayed turn. Charge time can refuse a third consecutive wait; the kit enemy's
+## bounded pass then ends it anyway, so autoplay can never stall on one actor.
+func _autoplay_pass(actor: BattleActor) -> void:
+	if end_turn():
+		return
+	_force_pass(actor)
+	_drive_scheduler()
+
+
+## The actor's own side and the other side (read-only views for KitAI and the presentation).
+func friends_of(actor: BattleActor) -> Array[BattleActor]:
+	return _friends_of(actor)
+
+
+func foes_of(actor: BattleActor) -> Array[BattleActor]:
+	return _foes_of(actor)
+
+
+## Expected damage of `action` on `target` from the forecast the player sees (hit chance x
+## damage on hit, plus the injury weight). -1 when no forecast applies.
+func attack_value(actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary = {}) -> float:
+	return _enemy_attack_value(actor, target, action, options)
+
+
+func forecast_damage_on_hit(context: Dictionary, target: BattleActor) -> int:
+	return _forecast_damage_on_hit(context, target)
+
+
+func breath_room(actor: BattleActor) -> int:
+	return _breath_room(actor)
+
+
+## Every destination `actor` can afford to walk to now (any side), priced like a submit.
+func reachable_for(actor: BattleActor) -> Array[Dictionary]:
+	return _reachable_for(actor, _move_budget(actor))
 
 
 ## #285 slice 5: the enemy's next action, written down before its turn as `{kind, action_id,
@@ -1683,7 +2080,7 @@ func _enemy_position_score(
 	var candidate_cell: Vector2i = candidate.get("cell", Vector2i.ZERO)
 	var target_cell: Vector2i = target_position.get("cell", Vector2i.ZERO)
 	var delta := candidate_cell - target_cell
-	var distance := maxi(absi(delta.x), absi(delta.y))
+	var distance := GridMetric.distance(candidate_cell, target_cell)
 	var score := int(candidate.get("elevation", 0)) * 1000 - distance
 	if distance <= 1:
 		score += 500
@@ -1745,19 +2142,11 @@ func _face_toward(actor: BattleActor, target: BattleActor) -> void:
 
 
 func _facing_for_delta(delta: Vector2i) -> StringName:
-	if delta == Vector2i.ZERO:
-		return &""
-	var order: Array[StringName] = [&"e", &"se", &"s", &"sw", &"w", &"nw", &"n", &"ne"]
-	var angle := atan2(delta.y, delta.x)
-	var index := int(round(angle / (PI / 4.0)))
-	index = ((index % order.size()) + order.size()) % order.size()
-	return order[index]
+	return GridBattlefieldModel.facing_for_delta(delta)
 
 
 func _opposite_facing(facing: StringName) -> StringName:
-	var order: Array[StringName] = [&"e", &"se", &"s", &"sw", &"w", &"nw", &"n", &"ne"]
-	var index := order.find(facing)
-	return &"" if index == -1 else order[(index + 4) % order.size()]
+	return GridBattlefieldModel.opposite_facing(facing)
 
 
 ## An enemy that cannot afford its action or cannot reach a target still has to leave
@@ -1889,7 +2278,9 @@ func _apply_action(
 			var movement := battlefield.move(actor, action.destination)
 			result.merge(movement, true)
 			result["path_cells"] = _describe_path_cells(result.get("path", []))
-			result["message"] = "%s moves to %s." % [actor.display_name, action.destination]
+			# The log names the walk's length; `destination` is the grid's internal position key.
+			var steps := maxi(0, (result.get("path", []) as Array).size() - 1)
+			result["message"] = "%s moves %s." % [actor.display_name, GridMetric.steps_text(steps)]
 			if bool(movement.get("allowed", false)):
 				result["hazard"] = _hazard_on_path(actor, result["path_cells"])
 				# Threads read this: a Daylight contract fires on a MOVE ending inside its field.
@@ -2087,6 +2478,7 @@ func _finalize_resolution_damage(
 			- int(target.balance_effects.get("defense_bonus", 0))
 			- cover_bonus,
 		)
+		damage = Resolution.critical_damage(damage, bool(finalized.get("critical", false)))
 	finalized["damage"] = damage
 	var writes: Array = finalized.get("writes", [])
 	for write: Dictionary in writes:
@@ -2219,7 +2611,8 @@ func _apply_resolution_writes(
 				# tagged quest outcome. Combat may spend it and may never return it, so this
 				# write is clamped to a decrease rather than trusted. `Resolution` only ever
 				# emits a spend here; the clamp is the guard, not the mechanism.
-				_set_soul_meter(minf(float(write.get("after", _soul_meter())), _soul_meter()))
+				if _pays_soul(actor):
+					_set_soul_meter(minf(float(write.get("after", _soul_meter())), _soul_meter()))
 			&"tile_state":
 				if not apply_tile_writes:
 					continue
@@ -2349,9 +2742,21 @@ func _resolve_attack(
 		"damage": total_damage,
 		"resolution": committed_resolution,
 		"positioning": positional_results,
-		"message": "%s uses %s for %d damage."
-		% [actor.display_name, action.display_name, total_damage],
+		"message": _attack_message(actor, target, action, committed_resolution, total_damage),
 	}
+
+
+## The log line for a committed attack. Owner 2026-11-02 (item 33): a rolled miss reads as a
+## dodge and a critical says so; every other line is the historical wording.
+func _attack_message(
+	actor: BattleActor, target: BattleActor, action: CombatAction, resolution: Dictionary, damage: int
+) -> String:
+	var rolled := int(resolution.get("hit_roll", 0)) > 0
+	if rolled and not bool(resolution.get("hit", true)) and not bool(resolution.get("fizzled", false)):
+		return "%s uses %s; %s dodges." % [actor.display_name, action.display_name, target.display_name]
+	if bool(resolution.get("critical", false)):
+		return "%s uses %s: critical hit for %d damage." % [actor.display_name, action.display_name, damage]
+	return "%s uses %s for %d damage." % [actor.display_name, action.display_name, damage]
 
 
 ## #209 forecast parity: the same Resolution context an actual strike will use — same
@@ -2440,6 +2845,7 @@ func forecast_context(
 		"battle_id": battle_id,
 		"tick": resolution_seed,
 		"seed": resolution_seed,
+		"fight_seed": fight_seed,
 		"unit": {
 			"id": String(actor.combat_id),
 			"harmony": actor.attribute_value(&"harmony"),
@@ -2469,7 +2875,9 @@ func forecast_context(
 		"facing": positional_context.get("facing", {}),
 		"height_advantage_steps": int(positional_context.get("height_advantage_steps", 0)),
 		"to_hit_enabled": not positional_context.is_empty(),
-		"soul_meter": _soul_meter(),
+		# Only the player's side spends the Gauge; a class-kit enemy has none, so it cannot
+		# overreach past its Breath.
+		"soul_meter": _soul_meter() if _pays_soul(actor) else 0.0,
 		"fizzle": _fizzle_context(actor, options),
 		"caster_context": (options.get("caster_context", {}) as Dictionary).duplicate(true),
 		"positioning": {
@@ -2497,8 +2905,8 @@ func forecast_context(
 		deep_merge(context, overrides)
 	# #285 slice 4: an ally's resource may add to this actor's cast (Debt of Arms' paid bonus).
 	# Same call at forecast and commit, like the owner's own channel above.
-	if allies.has(actor):
-		for other: BattleActor in allies:
+	if allies.has(actor) or enemies.has(actor):
+		for other: BattleActor in _friends_of(actor):
 			if other == actor:
 				continue
 			var ally_overrides := _class_resource_of(other).on_ally_cast_forecast(actor.combat_id, context.duplicate(true))
@@ -2974,7 +3382,7 @@ func _apply_balance_band(emit_change: bool = true) -> void:
 	var affected_ids: Array[StringName] = []
 	for actor: BattleActor in allies + enemies:
 		var actor_effects := effects
-		if not bool(band.get("global", false)) and actor not in allies:
+		if not bool(band.get("global", false)) and actor not in allies and not even_sides:
 			actor_effects = {}
 		actor.apply_balance_band(balance_band_id, actor_effects)
 		affected_ids.append(actor.combat_id)
@@ -3319,7 +3727,8 @@ func delay_actor(actor_id: StringName, ct: int) -> Dictionary:
 
 
 ## #285 slice 3: how many OTHER living allies of `actor_id` stand within `radius` cells
-## (Chebyshev, the grid's own measure). A model without cells counts allies sharing the zone.
+## (`GridMetric`: Chebyshev cells, or hex steps with the radius converted). A model without
+## cells counts allies sharing the zone.
 func allies_within(actor_id: StringName, radius: int) -> int:
 	var actor := _actor_by_id(actor_id)
 	if actor == null:
@@ -3332,8 +3741,7 @@ func allies_within(actor_id: StringName, radius: int) -> int:
 			continue
 		var cell: Variant = battlefield.cell_of(other) if battlefield != null else null
 		if origin is Vector2i and cell is Vector2i:
-			var delta: Vector2i = (cell as Vector2i) - (origin as Vector2i)
-			if maxi(absi(delta.x), absi(delta.y)) <= radius:
+			if GridMetric.distance(cell as Vector2i, origin as Vector2i) <= GridMetric.radius(radius):
 				count += 1
 		elif origin == null and battlefield != null and battlefield.position_of(other) == battlefield.position_of(actor):
 			count += 1
@@ -3438,8 +3846,19 @@ func _query_effect_gate(actor: BattleActor, action: CombatAction, options: Dicti
 	return _allowed()
 
 
-## Creature-targeted effect geometry: payload range in Chebyshev cells, plus the pull rule
-## (target exactly two cells away on a cardinal, middle cell free).
+## Open ground a shove or a drag can cross: on the grid, passable, and nobody standing there.
+func _open_cell(cell: Vector2i) -> bool:
+	var query := battlefield.cell_query(cell)
+	return (
+		bool(query.get("allowed", false)) and bool(query.get("passable", false))
+		and StringName(query.get("occupant_id", &"")) == &""
+	)
+
+
+## Creature-targeted effect geometry: payload range in authored cells (`GridMetric.reach`), plus
+## the pull rule (target exactly two cells away on a cardinal, middle cell free). On hexes the
+## same ground: a pull takes a target four hexes away on a hex axis to the touching hex, and a
+## push shoves two hexes. PROVISIONAL (owner item 34).
 func _query_effect_target(actor: BattleActor, target: BattleActor, action: CombatAction) -> Dictionary:
 	if not bool(battlefield.capabilities().get("cells", false)):
 		return _allowed()
@@ -3447,8 +3866,7 @@ func _query_effect_target(actor: BattleActor, target: BattleActor, action: Comba
 	var to: Variant = _actor_cell(target)
 	if not (from is Vector2i) or not (to is Vector2i):
 		return _allowed()
-	var delta: Vector2i = (to as Vector2i) - (from as Vector2i)
-	var distance := maxi(absi(delta.x), absi(delta.y))
+	var distance := GridMetric.distance(from as Vector2i, to as Vector2i)
 	if bool(action.effect_payload.get("self_only", false)) and target != actor:
 		return _blocked(
 			&"target", "%s prepares only its user." % action.display_name, {"type": &"self"},
@@ -3458,10 +3876,10 @@ func _query_effect_target(actor: BattleActor, target: BattleActor, action: Comba
 			&"facing", "%s needs the target's side or rear, or a Blindside Bite on a Blinded target." % action.display_name,
 			{"type": &"side_or_rear"},
 		)
-	var range_cells := int(action.effect_payload.get("range", 0))
+	var range_cells := GridMetric.reach(int(action.effect_payload.get("range", 0)))
 	if range_cells > 0 and distance > range_cells:
 		return _blocked(
-			&"blocked_by_range", "%s reaches %d cells; the target is %d away." % [action.display_name, range_cells, distance],
+			&"blocked_by_range", "%s reaches %s; the target is %d away." % [action.display_name, GridMetric.steps_text(range_cells), distance],
 			{"type": &"range", "range": range_cells, "distance": distance},
 		)
 	if action.effect_id == EFFECT_SECOND_BREATH or action.effect_id == EFFECT_OPENED_SLUICE:
@@ -3479,33 +3897,45 @@ func _query_effect_target(actor: BattleActor, target: BattleActor, action: Comba
 			)
 		return _allowed()
 	if action.effect_id == EFFECT_PUSH:
-		var away: Vector2i = (to as Vector2i) + delta.sign()
+		var shove := GridMetric.step_toward(from as Vector2i, to as Vector2i)
+		var away: Vector2i = (to as Vector2i) + shove * GridMetric.radius(1)
+		# On hexes the shove crosses one hex on the way; it must be open ground.
+		for passed in range(1, GridMetric.radius(1)):
+			if not _open_cell((to as Vector2i) + shove * passed):
+				away = (to as Vector2i) + shove * passed
+				break
 		var push_cell := battlefield.cell_query(away)
 		if not bool(push_cell.get("allowed", false)):
 			return _blocked(
-				&"push_destination", "There is no open cell to shove %s into." % target.display_name,
+				&"push_destination", "There is no open %s to shove %s into." % [GridMetric.step_word(1), target.display_name],
 				{"type": &"open_cell", "cell": {"x": away.x, "y": away.y}},
 			)
 		return _allowed({"push_destination": away})
 	if action.effect_id != EFFECT_PULL:
 		return _allowed()
-	var cardinal := (delta.x == 0) != (delta.y == 0)
-	if not cardinal or distance != 2:
+	var line_step := GridMetric.straight_step(from as Vector2i, to as Vector2i)
+	var pull_distance := GridMetric.reach(2)
+	if line_step == Vector2i.ZERO or distance != pull_distance:
 		return _blocked(
-			&"pull_geometry", "%s needs an enemy exactly two cells away on a straight line." % action.display_name,
-			{"type": &"cardinal_distance", "distance": 2},
+			&"pull_geometry", "%s needs an enemy exactly %s away on a straight line." % [action.display_name, GridMetric.spelled_steps_text(pull_distance)],
+			{"type": &"cardinal_distance", "distance": pull_distance},
 		)
-	var destination: Vector2i = (to as Vector2i) - delta.sign()
+	var destination: Vector2i = (from as Vector2i) + line_step
 	var cell := battlefield.cell_query(destination)
-	if not bool(cell.get("allowed", false)):
+	var dragged_clear := true
+	# On hexes the target is dragged across the hexes between; they must be open ground.
+	for passed in range(2, pull_distance):
+		if not _open_cell((from as Vector2i) + line_step * passed):
+			dragged_clear = false
+	if not bool(cell.get("allowed", false)) or not dragged_clear:
 		return _blocked(
-			&"pull_destination", "The cell between you is not open.",
+			&"pull_destination", "The %s between you %s not open." % [GridMetric.step_word(pull_distance - 1), "is" if pull_distance <= 2 else "are"],
 			{"type": &"open_cell", "cell": {"x": destination.x, "y": destination.y}},
 		)
 	if not bool(action.effect_payload.get("allow_marked_destination", false)):
 		if fire.is_burning_cell(destination) or _mark_cells().has(destination):
 			return _blocked(
-				&"pull_destination", "Only the Herd can drag someone onto a filed cell.",
+				&"pull_destination", "Only the Herd can drag someone onto a filed %s." % GridMetric.step_word(1),
 				{"type": &"unmarked_cell", "cell": {"x": destination.x, "y": destination.y}},
 			)
 	return _allowed({"pull_destination": destination})
@@ -3519,13 +3949,13 @@ func _query_cell_action(
 	var cells: Array[Vector2i] = FireField.cells_from_data(options.get("cells", []))
 	if cells.is_empty():
 		return _blocked(
-			&"no_target", "%s needs target cells." % action.display_name,
+			&"no_target", "%s needs target %s." % [action.display_name, GridMetric.step_word()],
 			{"type": &"cells", "count": int(action.effect_payload.get("cell_count", 3))},
 		)
 	var origin: Variant = _actor_cell(actor)
 	if not (origin is Vector2i):
 		return _blocked(&"position", "%s is not standing on the grid." % actor.display_name, {"type": &"cells"})
-	var range_cells := int(action.effect_payload.get("range", 0))
+	var range_cells := GridMetric.reach(int(action.effect_payload.get("range", 0)))
 	var count := int(action.effect_payload.get("cell_count", 3))
 	var distinct: Array[Vector2i] = []
 	for cell: Vector2i in cells:
@@ -3533,15 +3963,14 @@ func _query_cell_action(
 			distinct.append(cell)
 	if distinct.size() != count:
 		return _blocked(
-			&"cell_count", "%s marks exactly %d distinct cells." % [action.display_name, count],
+			&"cell_count", "%s marks exactly %d distinct %s." % [action.display_name, count, GridMetric.step_word(count)],
 			{"type": &"cells", "count": count},
 		)
 	for cell: Vector2i in distinct:
-		var delta: Vector2i = cell - (origin as Vector2i)
-		var distance := maxi(absi(delta.x), absi(delta.y))
+		var distance := GridMetric.distance(cell, origin as Vector2i)
 		if range_cells > 0 and distance > range_cells:
 			return _blocked(
-				&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells],
+				&"blocked_by_range", "%s reaches %s." % [action.display_name, GridMetric.steps_text(range_cells)],
 				{"type": &"range", "range": range_cells, "cell": {"x": cell.x, "y": cell.y}},
 			)
 		var legality := battlefield.cell_query(cell)
@@ -3553,14 +3982,14 @@ func _query_cell_action(
 		)
 		if not bool(legality.get("in_bounds", false)) or (not bool(legality.get("passable", false)) and not across_timber):
 			return _blocked(
-				&"cell_illegal", "That cell cannot hold a working.",
+				&"cell_illegal", "That %s cannot hold a working." % GridMetric.step_word(1),
 				{"type": &"open_cell", "cell": {"x": cell.x, "y": cell.y}},
 			)
 	match action.effect_id:
 		EFFECT_FIRE_LINE, EFFECT_SENTENCE_OF_ASH:
 			if not FireField.is_cardinal_line(distinct):
 				return _blocked(
-					&"line_shape", "%s burns three cells in a straight, touching line." % action.display_name,
+					&"line_shape", "%s burns three %s in a straight, touching line." % [action.display_name, GridMetric.step_word(3)],
 					{"type": &"cardinal_line", "count": count},
 				)
 		EFFECT_ECLIPSE, EFFECT_ECLIPSE_FEAST:
@@ -3584,7 +4013,7 @@ func _query_cell_action(
 	if bool(action.effect_payload.get("contract_target", false)):
 		# A cell working that also binds a creature (Term of Daylight): the contract half needs a
 		# living enemy at touch and a free Thread; the field half is the cells above.
-		if target == null or not target.is_alive() or not enemies.has(target):
+		if target == null or not target.is_alive() or not _foes_of(actor).has(target):
 			return _blocked(&"no_target", "%s needs a living enemy to bind." % action.display_name, {"type": &"living_enemy"})
 		var touch := battlefield.target_query(actor, target, &"melee")
 		if not bool(touch.get("allowed", false)):
@@ -4048,19 +4477,16 @@ func _tide_mode(action: CombatAction, options: Dictionary) -> String:
 ## Other living allies inside the refuge with Breath to fill, nearest to the center first.
 func _refuge_recipients(caster: BattleActor, center: Vector2i, radius: int, limit: int) -> Array[BattleActor]:
 	var found: Array[BattleActor] = []
-	for ally: BattleActor in _living(allies):
+	for ally: BattleActor in _living(_friends_of(caster)):
 		if ally == caster or _breath_room(ally) <= 0:
 			continue
 		var at: Variant = _actor_cell(ally)
 		if not (at is Vector2i):
 			continue
-		var delta: Vector2i = (at as Vector2i) - center
-		if maxi(absi(delta.x), absi(delta.y)) <= radius:
+		if GridMetric.distance(at as Vector2i, center) <= GridMetric.radius(radius):
 			found.append(ally)
 	found.sort_custom(func(a: BattleActor, b: BattleActor) -> bool:
-		var da: Vector2i = (_actor_cell(a) as Vector2i) - center
-		var db: Vector2i = (_actor_cell(b) as Vector2i) - center
-		return maxi(absi(da.x), absi(da.y)) < maxi(absi(db.x), absi(db.y)))
+		return GridMetric.distance(_actor_cell(a) as Vector2i, center) < GridMetric.distance(_actor_cell(b) as Vector2i, center))
 	if found.size() > limit:
 		found.resize(limit)
 	return found
@@ -4119,8 +4545,7 @@ func _apply_refuge(
 	for creature: BattleActor in _living(allies) + _living(enemies):
 		var at: Variant = _actor_cell(creature)
 		if at is Vector2i:
-			var delta: Vector2i = (at as Vector2i) - center
-			if maxi(absi(delta.x), absi(delta.y)) <= radius:
+			if GridMetric.distance(at as Vector2i, center) <= GridMetric.radius(radius):
 				inside.append(creature)
 	var restores_and_quenches := action.effect_id == EFFECT_GREAT_CONFLUENCE or action.effect_id == EFFECT_FLOODGATE
 	if mode == "A" or restores_and_quenches:
@@ -4137,7 +4562,7 @@ func _apply_refuge(
 		var soaked: Array[String] = []
 		for creature: BattleActor in inside:
 			var washed := action.effect_id == EFFECT_WASH_THE_GEARS and cancelled.has(String(creature.combat_id))
-			if allies.has(creature) or FireField.is_burning(creature) or washed:
+			if _friends_of(actor).has(creature) or FireField.is_burning(creature) or washed:
 				_apply_douse(actor, creature)
 				soaked.append(String(creature.combat_id))
 		out["soaked"] = soaked
@@ -4153,14 +4578,14 @@ func _discharge_jam(actor: BattleActor, center: Vector2i, radius: int) -> Dictio
 		return {}
 	var breaker := resource as FickahRuleBreaker
 	var nearest: BattleActor = null
-	var nearest_distance := radius + 1
-	for enemy: BattleActor in _living(enemies):
+	var radius_steps := GridMetric.radius(radius)
+	var nearest_distance := radius_steps + 1
+	for enemy: BattleActor in _living(_foes_of(actor)):
 		var at: Variant = _actor_cell(enemy)
 		if not (at is Vector2i):
 			continue
-		var delta: Vector2i = (at as Vector2i) - center
-		var distance := maxi(absi(delta.x), absi(delta.y))
-		if distance <= radius and distance < nearest_distance:
+		var distance := GridMetric.distance(at as Vector2i, center)
+		if distance <= radius_steps and distance < nearest_distance:
 			nearest = enemy
 			nearest_distance = distance
 	if nearest == null:
@@ -4253,8 +4678,7 @@ func _noonday(actor: BattleActor, center: Vector2i) -> Array[String]:
 		var at: Variant = _actor_cell(creature)
 		if not (at is Vector2i):
 			continue
-		var delta: Vector2i = (at as Vector2i) - center
-		if maxi(absi(delta.x), absi(delta.y)) > NOONDAY_RADIUS:
+		if GridMetric.distance(at as Vector2i, center) > GridMetric.radius(NOONDAY_RADIUS):
 			continue
 		if not bool(battlefield.line_of_sight_between_cells(center, at as Vector2i).get("allowed", false)):
 			continue
@@ -4275,7 +4699,7 @@ func _trigger_witness_contracts(actor: BattleActor, revealed: Array[String]) -> 
 	var triggered: Array[String] = []
 	for target_id: String in revealed:
 		var target := _actor_by_id(StringName(target_id))
-		if target == null or not enemies.has(target):
+		if target == null or not _foes_of(actor).has(target):
 			continue
 		for payoff: Dictionary in threads.release_witness(StringName(target_id)):
 			for raw: Variant in payoff.get("writes", []):
@@ -4362,8 +4786,7 @@ func _note_in_reach(actor: BattleActor, note: Dictionary, reach: int = 4) -> boo
 			if at is Vector2i:
 				cells.append(at as Vector2i)
 	for cell: Vector2i in cells:
-		var delta: Vector2i = cell - (origin as Vector2i)
-		if maxi(absi(delta.x), absi(delta.y)) <= reach:
+		if GridMetric.distance(cell, origin as Vector2i) <= GridMetric.reach(reach):
 			return true
 	return false
 
@@ -4390,7 +4813,10 @@ func _query_note_action(actor: BattleActor, action: CombatAction, options: Dicti
 	if action.effect_id == EFFECT_ANCHOR and kind != "aftertone":
 		return _blocked(&"not_aftertone", "Anchor only protects an Aftertone.", {"type": &"aftertone"})
 	if not _note_in_reach(actor, note):
-		return _blocked(&"blocked_by_range", "%s reaches 4 cells." % action.display_name, {"type": &"range", "range": 4})
+		return _blocked(
+			&"blocked_by_range", "%s reaches %s." % [action.display_name, GridMetric.steps_text(GridMetric.reach(4))],
+			{"type": &"range", "range": GridMetric.reach(4)},
+		)
 	# Older Aftertones have no source id. Their carrier supplies legacy ownership; new
 	# Resolution lays always record the caster, including lays on hostile creatures.
 	var owner_id := String(row.get("owner_id", note.get("target_id", "")))
@@ -4557,7 +4983,7 @@ func _query_object_action(actor: BattleActor, action: CombatAction, options: Dic
 	var origin: Variant = _actor_cell(actor)
 	if not (origin is Vector2i):
 		return _blocked(&"position", "%s is not standing on the grid." % actor.display_name, {"type": &"cells"})
-	var range_cells := int(action.effect_payload.get("range", 4))
+	var range_cells := GridMetric.reach(int(action.effect_payload.get("range", 4)))
 	var preview := {}
 	if action.effect_id == EFFECT_SEVER:
 		var line: Dictionary = fire.line_by_id(int(options.get("line_id", 0)))
@@ -4565,21 +4991,19 @@ func _query_object_action(actor: BattleActor, action: CombatAction, options: Dic
 			return _blocked(&"no_target", "%s needs a working to end." % action.display_name, {"type": &"working"})
 		var reachable := false
 		for cell: Vector2i in FireField.cells_from_data(line.get("cells", [])):
-			var delta: Vector2i = cell - (origin as Vector2i)
-			if maxi(absi(delta.x), absi(delta.y)) <= range_cells:
+			if GridMetric.distance(cell, origin as Vector2i) <= range_cells:
 				reachable = true
 				break
 		if not reachable:
-			return _blocked(&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells], {"type": &"range", "range": range_cells})
+			return _blocked(&"blocked_by_range", "%s reaches %s." % [action.display_name, GridMetric.steps_text(range_cells)], {"type": &"range", "range": range_cells})
 		preview = {"kind": "line", "line_id": int(line.get("id", 0)), "cells": FireField.cells_to_data(FireField.cells_from_data(line.get("cells", [])))}
 	else:
 		var row := material.object(String(options.get("object_id", "")))
 		if row.is_empty():
 			return _blocked(&"no_target", "%s needs an object to work on." % action.display_name, {"type": &"object"})
 		var cell: Vector2i = row.get("cell", Vector2i.ZERO)
-		var delta: Vector2i = cell - (origin as Vector2i)
-		if maxi(absi(delta.x), absi(delta.y)) > range_cells:
-			return _blocked(&"blocked_by_range", "%s reaches %d cells." % [action.display_name, range_cells], {"type": &"range", "range": range_cells})
+		if GridMetric.distance(cell, origin as Vector2i) > range_cells:
+			return _blocked(&"blocked_by_range", "%s reaches %s." % [action.display_name, GridMetric.steps_text(range_cells)], {"type": &"range", "range": range_cells})
 		var sight := battlefield.line_of_sight_to_cell(actor, cell)
 		if not bool(sight.get("allowed", false)):
 			return sight
@@ -4756,8 +5180,7 @@ func _shroud_center(field: Dictionary) -> Vector2i:
 
 
 func _shroud_covers(field: Dictionary, cell: Vector2i) -> bool:
-	var delta := cell - _shroud_center(field)
-	return maxi(absi(delta.x), absi(delta.y)) <= int(field.get("radius", 0))
+	return GridMetric.distance(cell, _shroud_center(field)) <= GridMetric.radius(int(field.get("radius", 0)))
 
 
 ## The first shroud raised by the creature's own side that covers its cell, or `{}`.
@@ -5301,6 +5724,23 @@ func _living_count(group: Array[BattleActor]) -> int:
 		if actor.is_alive():
 			count += 1
 	return count
+
+
+## The actor's own side (combat polish 2026-11-02): side words in shared rules are relative to
+## who acts, so a class-kit enemy's "ally" is another enemy. A combatant on neither list is
+## treated as the player's side, as before.
+func _friends_of(actor: BattleActor) -> Array[BattleActor]:
+	return enemies if actor != null and enemies.has(actor) else allies
+
+
+func _foes_of(actor: BattleActor) -> Array[BattleActor]:
+	return allies if actor != null and enemies.has(actor) else enemies
+
+
+## Only the player's side spends the Soul Gauge (game-identity ruling 3: it is the player's
+## soul). A class-kit enemy pays Breath alone.
+func _pays_soul(actor: BattleActor) -> bool:
+	return actor == null or not enemies.has(actor)
 
 
 func _first_living(group: Array[BattleActor]) -> BattleActor:

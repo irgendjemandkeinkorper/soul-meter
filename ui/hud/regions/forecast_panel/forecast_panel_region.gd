@@ -12,6 +12,17 @@ var _selected: StringName = ElementWheel.ORDER[0]
 ## presentation uses its conditional quote so it cannot announce a future miss.
 var _payload_damage := -1
 var _class_command_text := ""
+## Inside the breakdown popover (owner 2026-11-01) the panel IS the details: the target
+## header, wheel, power chain and full accuracy terms stay visible and the in-panel
+## "Show combat details" toggle retires. Off (the default) keeps the docked behaviour.
+var details_pinned := false:
+	set(value):
+		details_pinned = value
+		if is_node_ready():
+			_update_details_visibility()
+## The aim row hosted on the field HUD's bar (owner 2026-11-01) uses the bar's action-button
+## size so the footer line stays one row tall; off, the docked panel's buttons.
+var compact_aim := false
 @onready var wheel: Container = %ActWheel
 @onready var aim_row: Container = %AimRow
 @onready var target_header: Label = %TargetHeader
@@ -102,7 +113,7 @@ func show_aim_options(
 		button.name = "Aim%s" % ("Ordinary" if location == ORDINARY_AIM else str(location).capitalize())
 		button.text = tr("ORDINARY") if location == ORDINARY_AIM else _aim_label(target, location)
 		button.set_meta("aim_label", button.text)
-		button.theme_type_variation = "BronzeButton" if location == selected else "Button"
+		button.theme_type_variation = _aim_variation(location == selected)
 		var quote: Dictionary = quotes.get(location, {})
 		if location != ORDINARY_AIM and not bool(quote.get("allowed", false)):
 			button.disabled = true
@@ -120,9 +131,15 @@ func mark_aim_selected(selected: StringName) -> void:
 	for child: Node in aim_row.get_children():
 		var button := child as Button
 		var is_selected := str(button.get_meta("aim_location", "")) == str(selected)
-		button.theme_type_variation = "BronzeButton" if is_selected else "Button"
+		button.theme_type_variation = _aim_variation(is_selected)
 		var label := str(button.get_meta("aim_label", ""))
 		button.text = "[%s]" % label if is_selected else label
+
+
+func _aim_variation(selected: bool) -> String:
+	if compact_aim:
+		return "HudAimButtonActive" if selected else "HudAimButton"
+	return "BronzeButton" if selected else "Button"
 
 
 ## Render only public conditional quotes, never the committed hit or injury roll.
@@ -173,10 +190,11 @@ func show_aim_forecast(payload: Dictionary, selected: StringName, use_ct: bool) 
 
 func _update_details_visibility() -> void:
 	var has_accuracy := not accuracy_details.text.is_empty()
-	aim_details.visible = aim_row.visible or has_accuracy
-	accuracy_summary.visible = has_accuracy and not aim_details.button_pressed
-	accuracy_details.visible = has_accuracy and aim_details.button_pressed
-	var show_details := not aim_row.visible or aim_details.button_pressed
+	var expanded := details_pinned or aim_details.button_pressed
+	aim_details.visible = (aim_row.visible or has_accuracy) and not details_pinned
+	accuracy_summary.visible = has_accuracy and not expanded
+	accuracy_details.visible = has_accuracy and expanded
+	var show_details := details_pinned or not aim_row.visible or aim_details.button_pressed
 	for control: Control in [target_header, wheel, affinity, forecast]:
 		control.visible = show_details
 

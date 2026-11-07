@@ -59,9 +59,11 @@ func test_authored_field_terrain_is_applied_to_the_battlefield() -> void:
 	var model: GridBattlefieldModel = Battle.controller.battlefield as GridBattlefieldModel
 	assert_object(model).is_not_null()
 	assert_object(model._grid).is_same(_field.iso_grid())
-	assert_bool(bool(_tile_at(model.tiles_snapshot(), Vector2i(2, 1)).get("cover", false))).is_true()
-	assert_int(int(_tile_at(model.tiles_snapshot(), Vector2i(3, 1)).get("height_delta", -1))).is_equal(1)
-	assert_int(int(_tile_at(model.tiles_snapshot(), Vector2i(4, 2)).get("height_delta", -1))).is_equal(2)
+	# Terrain is authored on ground cells; a hex reads the cell under its centre (hex slice H3b).
+	var grid: IsoGrid = _field.iso_grid()
+	assert_bool(bool(_tile_at(model.tiles_snapshot(), grid.cell_at_square(Vector2i(2, 1))).get("cover", false))).is_true()
+	assert_int(int(_tile_at(model.tiles_snapshot(), grid.cell_at_square(Vector2i(3, 1))).get("height_delta", -1))).is_equal(1)
+	assert_int(int(_tile_at(model.tiles_snapshot(), grid.cell_at_square(Vector2i(4, 2))).get("height_delta", -1))).is_equal(2)
 
 
 func test_every_catalog_encounter_fits_and_deploys_a_full_party() -> void:
@@ -88,8 +90,9 @@ func test_every_catalog_encounter_fits_and_deploys_a_full_party() -> void:
 		var occupied: Dictionary = {}
 		for actor: BattleActor in Battle.allies + Battle.enemies:
 			var position: Dictionary = model.describe_position(model.position_of(actor))
-			var cell: Vector2i = position.get("cell", Vector2i(-1, -1))
-			assert_bool(cell.x >= 0 and cell.y >= 0).override_failure_message(
+			# Hex cells can have negative coordinates; a placed combatant stands on the field.
+			var cell: Vector2i = position.get("cell", Vector2i(-9999, -9999))
+			assert_bool(_field.iso_grid().is_in_bounds(cell)).override_failure_message(
 				"%s failed to place %s" % [authored_id, actor.display_name]
 			).is_true()
 			assert_bool(occupied.has(cell)).override_failure_message(
@@ -102,7 +105,10 @@ func test_every_catalog_encounter_fits_and_deploys_a_full_party() -> void:
 func test_terrain_tileset_authors_cover_and_elevation_custom_data() -> void:
 	var terrain: TileMapLayer = _field_scene.get_node("Terrain") as TileMapLayer
 	assert_object(terrain).is_not_null()
-	assert_int(terrain.tile_set.get_custom_data_layers_count()).is_equal(2)
+	# Walk-in walls (item 35) added `blocks_fire`.
+	assert_int(terrain.tile_set.get_custom_data_layers_count()).is_equal(3)
+	assert_str(String(terrain.tile_set.get_custom_data_layer_name(2))).is_equal("blocks_fire")
+	assert_int(terrain.tile_set.get_custom_data_layer_type(2)).is_equal(TYPE_BOOL)
 	assert_str(String(terrain.tile_set.get_custom_data_layer_name(0))).is_equal("cover")
 	assert_int(terrain.tile_set.get_custom_data_layer_type(0)).is_equal(TYPE_BOOL)
 	assert_str(String(terrain.tile_set.get_custom_data_layer_name(1))).is_equal("elevation")
