@@ -1,8 +1,8 @@
 extends Node
-## Placeholder pieces for walk-in buildings (owner list item 35, rulings of 2026-11-03: "Modular
-## kit", "Placeholders now"). Kenney Fantasy Town models are composed into the kit's pieces at the
+## Painterly pieces for walk-in buildings (#631, owner-approved skin pass 2026-11-09).
+## Kenney Fantasy Town geometry is composed into the kit's pieces at the
 ## kit spec and rendered with the sprite tool's camera (tools/render_isometric_sprites.gd) at the
-## kit's own pitch (KIT_PITCH_RADIANS), so these placeholders and the owner's later Blender
+## kit's own pitch (KIT_PITCH_RADIANS), so these pieces and the owner's later Blender
 ## captures sit on one grid. The spec:
 ##   - one model unit is one cell edge: a unit square on the floor is one 64 x 32 tile;
 ##   - a wall is 1 unit long and 4 tall, and stands in the middle of the cell it blocks; a `-half`
@@ -14,8 +14,8 @@ extends Node
 ##   - one roof per walk-in building on the maps (BUILDINGS), computed from the layout's outline
 ##     (`BuildingPlan.roof_triangles()`): it rises from every outer wall and sits ROOF_SEAT above
 ##     the post tops, so no post or wall corner shows through it.
-## Furniture is built from plain boxes, since the Kenney kits have none; like every piece here it
-## is a placeholder for the Blender kit. Each size a layout uses is rendered, its long side along x
+## Painted materials replace the palette without moving vertices, silhouettes or pivots.
+## Furniture retains its existing shapes and footprints. Each layout size has its long side along x
 ## or, for a piece longer along z, turned to run along z with its front still facing the camera.
 ## Wall pieces come in two runs: `-x` runs along the ground's +x cells (screen right and down),
 ## `-z` along its +y cells (screen left and down).
@@ -33,6 +33,52 @@ const RUN_ENV := "SOUL_METER_BUILDING_KIT"
 const KIT := "res://assets/kenney3d/fantasy-town-kit/Models/GLB format/"
 const OUT_DIR := "res://assets/generated/sprites/building-kit/"
 const MANIFEST := OUT_DIR + "building_kit.json"
+const MATERIALS := OUT_DIR + "materials/"
+## World-space material coordinates survive the modules' nonuniform scales. The source
+## palette is used only to separate the existing timber/plaster/iron faces, never as paint.
+## Roof UVs follow each slope's eaves; no displacement or alpha changes are permitted.
+const PAINT_SHADER := """
+shader_type spatial;
+render_mode cull_disabled, diffuse_lambert, specular_disabled;
+uniform sampler2D paint : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D timber : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D metal : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D palette : source_color, filter_nearest, repeat_enable;
+uniform vec4 tint : source_color = vec4(1.0);
+uniform float scale = 1.0;
+uniform int kind = 0;
+varying vec3 place;
+varying vec3 facing;
+void vertex() {
+	place = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	facing = normalize(MODEL_NORMAL_MATRIX * NORMAL);
+}
+void fragment() {
+	vec3 n = abs(normalize(facing));
+	vec2 uv = n.y > max(n.x, n.z) ? place.xz :
+		(n.x > n.z ? vec2(place.z, -place.y) : vec2(place.x, -place.y));
+	uv *= scale;
+	if (kind == 4) { uv = UV; }
+	vec3 colour = texture(paint, uv).rgb;
+	if (kind == 1) {
+		// Kenney's dark faces are structural timber; light faces are infill.
+		vec3 original = texture(palette, UV).rgb;
+		if (original.r < 0.4) { colour = texture(timber, uv).rgb; }
+	}
+	if (kind == 2) {
+		vec3 original = texture(palette, UV).rgb;
+		if (original.b > original.r) { colour = texture(metal, uv).rgb; }
+	}
+	if (kind == 8) {
+		// Painted relief breaks up the existing small ember panels without a glow halo.
+		float grain = dot(colour, vec3(0.333));
+		colour = mix(vec3(0.16, 0.022, 0.004), vec3(0.9, 0.32, 0.035), clamp(grain * 5.0, 0.0, 1.0));
+		EMISSION = colour * 0.3;
+	}
+	ALBEDO = colour * tint.rgb;
+	ROUGHNESS = 0.94;
+}
+"""
 
 ## The kit's camera pitch: asin(½) = 30°, the pitch at which a unit square on the floor renders as
 ## an exact 64 x 32 diamond. The sprite tool's atan(½) (26.57°) draws it 64 x 28.6: a small prop
@@ -55,8 +101,8 @@ const FASCIA_COLOUR := Color(0.24, 0.17, 0.12)
 ## The roof's edge board: how far it hangs below the roof surface at the eaves.
 const FASCIA_DEPTH := 0.12
 const STONE := Color(0.46, 0.44, 0.41)
-const GRADE_SATURATION := 0.7
-const GRADE_VALUE := 0.62
+const GRADE_SATURATION := 0.85
+const GRADE_VALUE := 0.95
 
 const PIECE_VIEW := Vector2i(160, 256)
 const FURNITURE_VIEW := Vector2i(320, 288)
@@ -76,6 +122,8 @@ var _camera: Camera3D
 var _stage: Node3D
 var _log: PackedStringArray = []
 var _manifest := {}
+var _paint_textures: Dictionary[String, Texture2D] = {}
+var _paint_shader: Shader
 
 
 func _ready() -> void:
@@ -122,7 +170,7 @@ func _run() -> void:
 		ok = await _piece(piece, _furniture(furniture[piece][0], furniture[piece][1]), FURNITURE_VIEW) and ok
 	var manifest := {
 		"generator": "tools/render_building_kit.gd",
-		"note": "GENERATED by tools/render_building_kit.gd. Do not edit. Placeholder kit (item 35).",
+		"note": "GENERATED by tools/render_building_kit.gd. Do not edit. Painterly materials (#631); prompts in provenance.json.",
 		"spec": {
 			"unit": "one cell edge", "wall_height": WALL_TIERS, "stub_height": STUB_HEIGHT,
 			"door_height": DOOR_HEIGHT, "wall_thickness": WALL_THICKNESS, "post_size": POST_SIZE,
@@ -157,7 +205,7 @@ func _create_viewport() -> void:
 	environment.background_color = Color(0.0, 0.0, 0.0, 0.0)
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Iso.AMBIENT_LIGHT_COLOR
-	environment.ambient_light_energy = Iso.AMBIENT_LIGHT_ENERGY
+	environment.ambient_light_energy = 0.45
 	environment.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 	var world_environment := WorldEnvironment.new()
 	world_environment.environment = environment
@@ -165,7 +213,7 @@ func _create_viewport() -> void:
 	var sunlight := DirectionalLight3D.new()
 	sunlight.rotation_degrees = Iso.SUN_ROTATION_DEGREES
 	sunlight.light_color = Iso.SUN_LIGHT_COLOR
-	sunlight.light_energy = Iso.SUN_LIGHT_ENERGY
+	sunlight.light_energy = 1.15
 	sunlight.shadow_enabled = true
 	_viewport.add_child(sunlight)
 	_camera = Camera3D.new()
@@ -208,6 +256,12 @@ func _piece(name: String, piece: Node3D, view: Vector2i) -> bool:
 	var touches := used.position.x == 0 or used.position.y == 0 \
 		or used.end.x == view.x or used.end.y == view.y
 	image = image.get_region(used)
+	if name in ["floor-planks", "floor-footing"]:
+		# The model's 0.06-deep side faces used to spill 1–2 px into the next tile.
+		# Keep the model, camera and base pivot; give its projected ground surface
+		# the exact pixel-centre ownership of a 64×32 diamond, with no shared pixels.
+		image = _floor_coverage(image)
+		used.size = image.get_size()
 	_grade(image)
 	var path := OUT_DIR + name + ".png"
 	if image.save_png(path) != OK:
@@ -222,8 +276,19 @@ func _piece(name: String, piece: Node3D, view: Vector2i) -> bool:
 	return not touches
 
 
-## Brings Kenney's bright toy palette down toward the painted maps' dusk: less saturated and
-## darker. PROVISIONAL, like every placeholder.
+static func _floor_coverage(rendered: Image) -> Image:
+	var tile := rendered.get_region(Rect2i(0, 0, 64, 32))
+	for y in 32:
+		for x in 64:
+			var colour := tile.get_pixel(x, y)
+			var distance := absf(float(x) + 0.5 - 32.0) / 32.0 \
+				+ absf(float(y) + 1.0 - 16.0) / 16.0
+			colour.a = 1.0 if distance < 1.0 else 0.0
+			tile.set_pixel(x, y, colour)
+	return tile
+
+
+## A light family-wide dusk grade; the generated textures already carry the dark palette.
 static func _grade(image: Image) -> void:
 	for y in image.get_height():
 		for x in image.get_width():
@@ -241,6 +306,7 @@ func _module(model_name: String, size: Vector3) -> Node3D:
 	var source := KIT + model_name + ".glb"
 	var model := (load(source) as PackedScene).instantiate() as Node3D
 	Iso._apply_external_colormap(model, source)
+	_paint_module(model, model_name)
 	var bounds := Iso._model_bounds(model)
 	var turn := bounds.size.z > bounds.size.x * 1.5
 	var holder := Node3D.new()
@@ -316,7 +382,11 @@ func _roof(plan: BuildingPlan) -> Node3D:
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	tool.set_smooth_group(-1)
 	for triangle: PackedVector3Array in plan.roof_triangles():
+		var normal := (triangle[1] - triangle[0]).cross(triangle[2] - triangle[0]).normalized()
 		for point: Vector3 in triangle:
+			# Courses run along the eave, at the same height across hips and valleys.
+			var along := point.z if absf(normal.x) > absf(normal.z) else point.x
+			tool.set_uv(Vector2(along * 0.5, -point.y))
 			tool.add_vertex(point)
 	tool.generate_normals()
 	var root := Node3D.new()
@@ -350,13 +420,11 @@ static func _roof_view(plan: BuildingPlan) -> Vector2i:
 	return Vector2i(int(span * BuildingPlan.HALF_WIDTH) + 128, int(span * BuildingPlan.HALF_HEIGHT + top * BuildingPlan.PIXELS_PER_UNIT) + 128)
 
 
-static func _surface(mesh: Mesh, colour: Color) -> MeshInstance3D:
+func _surface(mesh: Mesh, colour: Color) -> MeshInstance3D:
 	var instance := MeshInstance3D.new()
 	instance.mesh = mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = colour
-	material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	instance.material_override = material
+	instance.material_override = _paint_material("roof-slate", Color.WHITE, 4) if colour == ROOF_COLOUR \
+		else _paint_material("furniture-wood", Color(0.65, 0.65, 0.65))
 	return instance
 
 
@@ -437,14 +505,14 @@ func _furniture(kind: String, cells: Vector2i) -> Node3D:
 
 
 ## A box `size` standing with the middle of its base at `at`.
-static func _box(size: Vector3, at: Vector3, colour: Color) -> MeshInstance3D:
+func _box(size: Vector3, at: Vector3, colour: Color) -> MeshInstance3D:
 	var mesh := BoxMesh.new()
 	mesh.size = size
 	return _solid(mesh, at + Vector3(0.0, size.y * 0.5, 0.0), colour)
 
 
 ## An upright cylinder standing with the middle of its base at `at`.
-static func _cylinder(radius: float, height: float, at: Vector3, colour: Color) -> MeshInstance3D:
+func _cylinder(radius: float, height: float, at: Vector3, colour: Color) -> MeshInstance3D:
 	var mesh := CylinderMesh.new()
 	mesh.top_radius = radius
 	mesh.bottom_radius = radius
@@ -452,14 +520,75 @@ static func _cylinder(radius: float, height: float, at: Vector3, colour: Color) 
 	return _solid(mesh, at + Vector3(0.0, height * 0.5, 0.0), colour)
 
 
-static func _solid(mesh: Mesh, centre: Vector3, colour: Color) -> MeshInstance3D:
-	var material := StandardMaterial3D.new()
-	material.albedo_color = colour
+func _solid(mesh: Mesh, centre: Vector3, colour: Color) -> MeshInstance3D:
+	var material := _paint_material("furniture-wood")
+	if colour == WOOD_DARK:
+		material = _paint_material("furniture-wood", Color(0.6, 0.6, 0.6))
+	elif colour == WOOD_TOP:
+		material = _paint_material("floor-planks", Color(1.2, 1.15, 1.08))
+	elif colour == STONE or colour == STONE.darkened(0.2):
+		material = _paint_material("footing-stone" if centre.y < 0.0 else "hearth-stone")
+	elif colour == IRON or colour == IRON.lightened(0.15):
+		material = _paint_material("iron", Color(0.8, 0.8, 0.8))
+	elif colour == CLOTH:
+		material = _paint_material("cloth", Color(0.65, 0.24, 0.19))
+	elif colour == LINEN or colour == LINEN.lightened(0.1):
+		material = _paint_material("cloth", Color(1.25, 1.2, 1.1))
+	elif colour == FIRE:
+		material = _paint_material("hearth-stone", Color.WHITE, 8)
 	var instance := MeshInstance3D.new()
 	instance.mesh = mesh
 	instance.material_override = material
 	instance.position = centre
 	return instance
+
+
+func _paint_material(texture_name: String, tint := Color.WHITE, kind := 0) -> ShaderMaterial:
+	if _paint_shader == null:
+		_paint_shader = Shader.new()
+		_paint_shader.code = PAINT_SHADER
+	var material := ShaderMaterial.new()
+	material.shader = _paint_shader
+	material.set_shader_parameter("paint", _paint_texture(texture_name))
+	material.set_shader_parameter("timber", _paint_texture("furniture-wood"))
+	material.set_shader_parameter("metal", _paint_texture("iron"))
+	material.set_shader_parameter("tint", tint)
+	material.set_shader_parameter("kind", kind)
+	return material
+
+
+func _paint_texture(texture_name: String) -> Texture2D:
+	if not _paint_textures.has(texture_name):
+		var image := Image.load_from_file(MATERIALS + texture_name + ".png")
+		image.generate_mipmaps()
+		_paint_textures[texture_name] = ImageTexture.create_from_image(image)
+	return _paint_textures[texture_name]
+
+
+func _paint_module(node: Node, model_name: String) -> void:
+	if node is MeshInstance3D:
+		var instance := node as MeshInstance3D
+		for surface in instance.mesh.get_surface_count():
+			var original := instance.get_active_material(surface) as BaseMaterial3D
+			var texture_name := "furniture-wood"
+			var kind := 0
+			if model_name.begins_with("wall-"):
+				texture_name = "wall-plaster"
+				kind = 1
+			elif model_name == "pillar-wood":
+				kind = 2
+			elif model_name == "pillar-stone":
+				texture_name = "footing-stone"
+			elif model_name == "planks":
+				texture_name = "floor-planks"
+			var material := _paint_material(texture_name, Color.WHITE, kind)
+			if kind == 1:
+				material.set_shader_parameter("scale", 0.25)
+			if original != null:
+				material.set_shader_parameter("palette", original.albedo_texture)
+			instance.set_surface_override_material(surface, material)
+	for child: Node in node.get_children():
+		_paint_module(child, model_name)
 
 
 static func _quad(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> void:
