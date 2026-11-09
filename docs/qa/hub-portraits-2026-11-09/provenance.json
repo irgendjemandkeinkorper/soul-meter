@@ -1,0 +1,301 @@
+{
+  "tool": "built-in image_gen",
+  "generation_cap_per_npc": 2,
+  "generation_cap_total": 40,
+  "shared_style": "512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.",
+  "subjects": [
+    {
+      "stem": "hesk_waterward",
+      "id": "kesselford-bell-ringer",
+      "hub": "kesselford",
+      "subject": "Hesk Waterward, flood-bell ringer watching the ford from Ford Square; rings when the river rises without rain. Narrow-faced middle-aged worker, medium brown skin, short graying dark curls, rain-worn charcoal coat and simple brown neckcloth; alert patient gaze.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Hesk Waterward, flood-bell ringer at Kesselford's Ford Square. Watches the ford and rings when the river rises without rain. A plain, weathered, human-looking middle-aged working person, long narrow face, medium brown skin, short graying dark curls, unadorned rain-worn charcoal wool coat with a simple dark brown neckcloth; alert, patient neutral gaze and closed mouth. Appearance is artistic interpretation, not a race assignment.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and clearly readable at small dialogue size, modest room above head, shoulders fully framed, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture, as an ordinary working person.\nOutput: square 512x512 PNG with fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, monstrous anatomy, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-953860bf-b635-424d-99f3-79a7c52e9ae1.png"
+        }
+      ]
+    },
+    {
+      "stem": "orla_chainwright",
+      "id": "kesselford-ferry-keeper",
+      "hub": "kesselford",
+      "subject": "Orla Chainwright, ferry keeper at the Ferry Stage who chains the ferry to both banks before dawn and judges when the river is safe. Broad-faced middle-aged woman, sun-weathered olive skin, dark hair tied firmly back with gray at the temples, rain-dark oiled blue-black work coat and plain coarse wool collar; steady practical neutral gaze.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Orla Chainwright, ferry keeper at the Ferry Stage who chains the ferry to both banks before dawn and judges when the river is safe. Broad-faced middle-aged woman, sun-weathered olive skin, dark hair tied firmly back with gray at the temples, rain-dark oiled blue-black work coat and plain coarse wool collar; steady practical neutral gaze.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-497a4b38-ac53-41b4-b91f-5e8f53416ca0.png"
+        }
+      ]
+    },
+    {
+      "stem": "wendel_marrow",
+      "id": "kesselford-grain-factor",
+      "hub": "kesselford",
+      "subject": "Wendel Marrow, grain factor stranded four days with a consignment, lodging at the Ferry Bell Wayhouse while waiting for a safe crossing. Middle-aged man with fair weathered skin, slightly heavy face, receding brown hair and short uneven beard, travel-worn brown wool coat over plain charcoal waistcoat; tired patient neutral expression. No visible book, sign or regalia.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Wendel Marrow, grain factor stranded four days with a consignment, lodging at the Ferry Bell Wayhouse while waiting for a safe crossing. Middle-aged man with fair weathered skin, slightly heavy face, receding brown hair and short uneven beard, travel-worn brown wool coat over plain charcoal waistcoat; tired patient neutral expression. No visible book, sign or regalia.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-fe6fbddb-0b6c-404f-8dcc-a8e7d31a3e9b.png"
+        }
+      ]
+    },
+    {
+      "stem": "ivo_threnlow",
+      "id": "kesselford-mender-pair-elder",
+      "hub": "kesselford",
+      "subject": "Ivo Threnlow, senior Mender of the dawn pair at the Mender Stone, sings the ford clear and counts notes returning late. Elderly man with deep brown weathered skin, high cheekbones, short silver hair and close silver beard, patched charcoal wool outer layer and plain bone-colored linen collar; composed attentive neutral expression, mouth closed. No magical depiction or religious regalia.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Ivo Threnlow, senior Mender of the dawn pair at the Mender Stone, sings the ford clear and counts notes returning late. Elderly man with deep brown weathered skin, high cheekbones, short silver hair and close silver beard, patched charcoal wool outer layer and plain bone-colored linen collar; composed attentive neutral expression, mouth closed. No magical depiction or religious regalia.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-80e69a6f-210b-4ccc-9b3d-6c4c3dd1adf6.png"
+        }
+      ]
+    },
+    {
+      "stem": "nessa_quill",
+      "id": "kesselford-mender-pair-junior",
+      "hub": "kesselford",
+      "subject": "Nessa Quill, junior Mender apprentice of the dawn pair at the Mender Stone, keeps the monthly map of safe hours at the ford. Young adult woman with freckled brown skin and dark tightly curled hair gathered low, modest patched dark brown jacket, plain blue-black neck wrap; observant thoughtful neutral gaze. No visible map writing, symbols or magic.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Nessa Quill, junior Mender apprentice of the dawn pair at the Mender Stone, keeps the monthly map of safe hours at the ford. Young adult woman with freckled brown skin and dark tightly curled hair gathered low, modest patched dark brown jacket, plain blue-black neck wrap; observant thoughtful neutral gaze. No visible map writing, symbols or magic.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-779db0cd-431d-4985-878b-66f447daf8f4.png"
+        }
+      ]
+    },
+    {
+      "stem": "dagny_kettlebrook",
+      "id": "kesselford-wayhouse-keeper",
+      "hub": "kesselford",
+      "subject": "Dagny Kettlebrook, keeper of the Ferry Bell Wayhouse where travelers wait out the crossing. Broad-built older woman, light weathered skin, gray hair tucked into a plain dark linen headwrap, worn brown work dress and charcoal apron, matter-of-fact calm neutral expression; simple domestic working clothes, no tavern backdrop or signs.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Dagny Kettlebrook, keeper of the Ferry Bell Wayhouse where travelers wait out the crossing. Broad-built older woman, light weathered skin, gray hair tucked into a plain dark linen headwrap, worn brown work dress and charcoal apron, matter-of-fact calm neutral expression; simple domestic working clothes, no tavern backdrop or signs.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-bcc2f49a-1492-4680-82bc-c94ded968cb7.png"
+        }
+      ]
+    },
+    {
+      "stem": "tamsin_flatbell",
+      "id": "ashlaren-bell-warden",
+      "hub": "ashlaren",
+      "subject": "Tamsin Flatbell, shrine-bell warden of Weighing Square who rings at each weighing and records the days the bell sounds flat. Middle-aged woman with deep brown weathered skin, long angular face, short natural tightly coiled hair streaked gray, plain charcoal wool layers and an unadorned linen collar; listening attentive neutral expression. Mundane worker, no priestly robes or faction regalia.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Tamsin Flatbell, shrine-bell warden of Weighing Square who rings at each weighing and records the days the bell sounds flat. Middle-aged woman with deep brown weathered skin, long angular face, short natural tightly coiled hair streaked gray, plain charcoal wool layers and an unadorned linen collar; listening attentive neutral expression. Mundane worker, no priestly robes or faction regalia.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-9349771f-0fdd-4d21-bb5d-90e1a638e72a.png"
+        }
+      ]
+    },
+    {
+      "stem": "ilse_furrowgood",
+      "id": "ashlaren-ghorr-steward",
+      "hub": "ashlaren",
+      "subject": "Ilse Furrowgood, Ghorr grain steward at Ashlaren's near fields who wants the crop rot studied. Follow the accepted U1 Ghorr sheet: massive almost ursine barrel torso, coarse peat-brown fur, gray-brown hide, warthog-like flattened muzzle, modest pair of worn ivory upward-curving lower tusks, small dark natural eyes. Practical plain brown apron over charcoal work shirt, no insignia. Calm intelligent neutral face, healthy weight-bearing physique, no brittle decline. Exactly FOUR arms: upper pair from collar-level shoulders and lower pair from below ribs, lower pair slightly smaller, all four arms and four distinct hands visible resting naturally in front of the torso. Frame this as a waist-up bust with entire head and all four forearms/hands in the square; no legs. No human body substitute.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Ilse Furrowgood, Ghorr grain steward at Ashlaren's near fields who wants the crop rot studied. Follow the accepted U1 Ghorr sheet: massive almost ursine barrel torso, coarse peat-brown fur, gray-brown hide, warthog-like flattened muzzle, modest pair of worn ivory upward-curving lower tusks, small dark natural eyes. Practical plain brown apron over charcoal work shirt, no insignia. Calm intelligent neutral face, healthy weight-bearing physique, no brittle decline. Exactly FOUR arms: upper pair from collar-level shoulders and lower pair from below ribs, lower pair slightly smaller, all four arms and four distinct hands visible resting naturally in front of the torso. Frame this as a waist-up bust with entire head and all four forearms/hands in the square; no legs. No human body substitute.\nReference image: the accepted U1 sheet supplies Ghorr anatomy and practical worker clothing only. Render a single individual, not a reference sheet. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-819b9282-4f31-415d-a7b4-257343f0abc1.png"
+        }
+      ]
+    },
+    {
+      "stem": "brannoc_ledgerwell",
+      "id": "ashlaren-head-factor",
+      "hub": "ashlaren",
+      "subject": "Brannoc Ledgerwell, head factor of Ashlaren's inland counting-house at the Factors' Weighing Hall, certifies the outgoing sacks and has certified the same sack full and empty. Older man with weathered light olive skin, broad brow, neatly combed iron-gray hair, trimmed graying moustache, plain worn charcoal high-collared coat and brown wool underlayer; reserved precise neutral gaze. No badges, medals or fine regalia.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Brannoc Ledgerwell, head factor of Ashlaren's inland counting-house at the Factors' Weighing Hall, certifies the outgoing sacks and has certified the same sack full and empty. Older man with weathered light olive skin, broad brow, neatly combed iron-gray hair, trimmed graying moustache, plain worn charcoal high-collared coat and brown wool underlayer; reserved precise neutral gaze. No badges, medals or fine regalia.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-17fd712b-72a6-473f-b7b6-3241e3be9dac.png"
+        }
+      ]
+    },
+    {
+      "stem": "gaut_stonebrook",
+      "id": "ashlaren-miller",
+      "hub": "ashlaren",
+      "subject": "Gaut Stonebrook, miller at the Flat Bell millhouse, grinds the grain the Factors certify and keeps doubts to himself. Stocky middle-aged man with fair weathered ruddy skin, heavy eyebrows, short sandy hair graying at the edges, short coarse beard, faint mundane flour dust at hair and collar, worn brown linen shirt and charcoal miller's apron; quiet closed-mouth neutral expression.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Gaut Stonebrook, miller at the Flat Bell millhouse, grinds the grain the Factors certify and keeps doubts to himself. Stocky middle-aged man with fair weathered ruddy skin, heavy eyebrows, short sandy hair graying at the edges, short coarse beard, faint mundane flour dust at hair and collar, worn brown linen shirt and charcoal miller's apron; quiet closed-mouth neutral expression.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-931740d2-e4b5-4b09-a60d-0471f2187936.png"
+        }
+      ]
+    },
+    {
+      "stem": "pell_haskard",
+      "id": "ashlaren-warehouse-watch",
+      "hub": "ashlaren",
+      "subject": "Pell Haskard, warehouse watch at Ashlaren's yard, guards the unopened twice-certified sack and never leaves the yard. Weathered middle-aged man, deep brown skin, shaved head with dark stubble and sparse gray beard, plain heavy blue-black padded work coat, frayed brown scarf; watchful weary neutral gaze. Ordinary employed guard, no weapons, insignia, fantasy armor or spikes.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Pell Haskard, warehouse watch at Ashlaren's yard, guards the unopened twice-certified sack and never leaves the yard. Weathered middle-aged man, deep brown skin, shaved head with dark stubble and sparse gray beard, plain heavy blue-black padded work coat, frayed brown scarf; watchful weary neutral gaze. Ordinary employed guard, no weapons, insignia, fantasy armor or spikes.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-c86c09c0-6b0e-4efd-9b3d-4c9e8d3ff12e.png"
+        }
+      ]
+    },
+    {
+      "stem": "odile_marrowby",
+      "id": "ashlaren-weigh-clerk",
+      "hub": "ashlaren",
+      "subject": "Odile Marrowby, clerk at the Factors' Weighing Hall, keeps two sets of weights and checks the bell before choosing. Slim middle-aged working person with weathered light tan skin, straight dark bob with silver at the temples, fine lines around observant dark eyes, practical charcoal waistcoat over pale bone linen, simple dark brown shawl; careful neutral expression. No visible writing, official seals or insignia.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Odile Marrowby, clerk at the Factors' Weighing Hall, keeps two sets of weights and checks the bell before choosing. Slim middle-aged working person with weathered light tan skin, straight dark bob with silver at the temples, fine lines around observant dark eyes, practical charcoal waistcoat over pale bone linen, simple dark brown shawl; careful neutral expression. No visible writing, official seals or insignia.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "stalled_no_output",
+          "note": "Request produced no image after approximately 20 minutes; waiting exec cell terminated. Counted against cap."
+        },
+        {
+          "attempt": 2,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-88b284c2-3790-47c5-9f96-981e56272d2b.png"
+        }
+      ]
+    },
+    {
+      "stem": "mabbe_sloe",
+      "id": "long-verge-cairn-warden",
+      "hub": "long_verge",
+      "subject": "Mabbe Sloe, cairn warden on the road between the Long Verge cairns, walks with a pot of black and renews bands where the road last cost someone. Older woman with brown wind-weathered skin, narrow lined face, long gray braid tucked under plain charcoal wool hood, rain-dark brown work coat with a few ordinary black paint smudges on its collar; patient steady neutral gaze. No visible cairns or paint symbols.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Mabbe Sloe, cairn warden on the road between the Long Verge cairns, walks with a pot of black and renews bands where the road last cost someone. Older woman with brown wind-weathered skin, narrow lined face, long gray braid tucked under plain charcoal wool hood, rain-dark brown work coat with a few ordinary black paint smudges on its collar; patient steady neutral gaze. No visible cairns or paint symbols.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "stalled_no_output",
+          "note": "Request produced no image after approximately 20 minutes; waiting exec cell terminated. Counted against cap."
+        },
+        {
+          "attempt": 2,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-52f7add0-7cc6-4c34-aa90-7d9e472d16a7.png"
+        }
+      ]
+    },
+    {
+      "stem": "jory_fennick",
+      "id": "long-verge-old-soldier",
+      "hub": "long_verge",
+      "subject": "Jory Fennick, retired Company soldier at the camp fire, remembers when the road had three bad stretches and now counts eleven. Elderly man with light weathered skin, broad lined face, thinning white hair, close white stubble, worn plain blue-black wool coat and mended brown collar; tired reflective neutral gaze. No medals, insignia, armor or heroic military posing.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Jory Fennick, retired Company soldier at the camp fire, remembers when the road had three bad stretches and now counts eleven. Elderly man with light weathered skin, broad lined face, thinning white hair, close white stubble, worn plain blue-black wool coat and mended brown collar; tired reflective neutral gaze. No medals, insignia, armor or heroic military posing.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-8fbd81d9-75af-4a46-baa9-be5a9460d4d4.png"
+        }
+      ]
+    },
+    {
+      "stem": "odric_tallowmere",
+      "id": "long-verge-paymaster",
+      "hub": "long_verge",
+      "subject": "Odric Tallowmere, Company paymaster at the paymaster's tent, maintains the pay-table and the map of eleven bad stretches. Lean older man with warm brown weathered skin, narrow long nose, receding dark hair graying at the sides, clean-shaven, plain charcoal wool coat with worn brown leather collar edging; measured watchful neutral expression. No visible currency, ledger writing, maps, badges or faction markings.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Odric Tallowmere, Company paymaster at the paymaster's tent, maintains the pay-table and the map of eleven bad stretches. Lean older man with warm brown weathered skin, narrow long nose, receding dark hair graying at the sides, clean-shaven, plain charcoal wool coat with worn brown leather collar edging; measured watchful neutral expression. No visible currency, ledger writing, maps, badges or faction markings.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-f15b7b26-2c20-425c-8223-a2a0a0ede41f.png"
+        }
+      ]
+    },
+    {
+      "stem": "tessaly_brack",
+      "id": "long-verge-recruit",
+      "hub": "long_verge",
+      "subject": "Tessaly Brack, new Company recruit posted at the unnamed roadside grave on the south shoulder, notices the thin streaks converge there. Young adult woman with fair freckled wind-chapped skin, short practical auburn hair, plain weather-worn charcoal padded coat and brown neckcloth; restrained alert neutral gaze, ordinary tired working recruit. No corpse, grave, supernatural streaks, weapons, armor plates or regalia.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Tessaly Brack, new Company recruit posted at the unnamed roadside grave on the south shoulder, notices the thin streaks converge there. Young adult woman with fair freckled wind-chapped skin, short practical auburn hair, plain weather-worn charcoal padded coat and brown neckcloth; restrained alert neutral gaze, ordinary tired working recruit. No corpse, grave, supernatural streaks, weapons, armor plates or regalia.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-58d673ba-b6f8-4356-bf25-67eef28f1b15.png"
+        }
+      ]
+    },
+    {
+      "stem": "iwan_corrow",
+      "id": "long-verge-sergeant",
+      "hub": "long_verge",
+      "subject": "Iwan Corrow, column sergeant at the muster drum in the Company camp, marches recruits up the moor-road and ensures the drum sounds before the first bad stretch. Broad-shouldered middle-aged man with deep brown weathered skin, short graying curls and a cropped salt-and-pepper beard, plain worn blue-black work coat and charcoal collar; firm calm neutral gaze. No drum, weapon, badges, medals, faction uniform markings or heroic pose.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Iwan Corrow, column sergeant at the muster drum in the Company camp, marches recruits up the moor-road and ensures the drum sounds before the first bad stretch. Broad-shouldered middle-aged man with deep brown weathered skin, short graying curls and a cropped salt-and-pepper beard, plain worn blue-black work coat and charcoal collar; firm calm neutral gaze. No drum, weapon, badges, medals, faction uniform markings or heroic pose.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-39002560-f50f-4d05-919f-9fa8b298cc59.png"
+        }
+      ]
+    },
+    {
+      "stem": "brannoc_quell",
+      "id": "hollowmere-envoy",
+      "hub": "hollowmere",
+      "subject": "Brannoc Quell, envoy carrying the Watcher's daily reports between the mere and the escarpment elders, lodging in a tent on the approach; has stopped reading them in transit. Lean middle-aged man with weathered olive skin, shoulder-length dark hair tied back, sparse dark beard, rain-worn brown traveling cloak over plain charcoal clothes; guarded weary neutral gaze. Mundane human-looking working courier, no supernatural traits, no Hollow body, no insignia or visible letter.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Brannoc Quell, envoy carrying the Watcher's daily reports between the mere and the escarpment elders, lodging in a tent on the approach; has stopped reading them in transit. Lean middle-aged man with weathered olive skin, shoulder-length dark hair tied back, sparse dark beard, rain-worn brown traveling cloak over plain charcoal clothes; guarded weary neutral gaze. Mundane human-looking working courier, no supernatural traits, no Hollow body, no insignia or visible letter.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-e3d5bc9a-ff19-4d6a-b7f5-a82480a24ba0.png"
+        }
+      ]
+    },
+    {
+      "stem": "corrin_vell",
+      "id": "hollowmere-mender",
+      "hub": "hollowmere",
+      "subject": "Corrin Vell, Wayfare Mender instrument-reader posted at the mere's instrument stake, files the Agreement readings alongside the Watcher's sentences. Middle-aged androgynous working person with deep brown weathered skin, closely cropped graying curls, rounded face, plain charcoal linen tunic and brown weather-worn wool shoulder wrap; intent observant neutral expression. No invented instrument, text, magic, religious vestment or faction regalia; plain human-looking appearance.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Corrin Vell, Wayfare Mender instrument-reader posted at the mere's instrument stake, files the Agreement readings alongside the Watcher's sentences. Middle-aged androgynous working person with deep brown weathered skin, closely cropped graying curls, rounded face, plain charcoal linen tunic and brown weather-worn wool shoulder wrap; intent observant neutral expression. No invented instrument, text, magic, religious vestment or faction regalia; plain human-looking appearance.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-ff809010-0b47-4a7e-a263-b39f4da333f2.png"
+        }
+      ]
+    },
+    {
+      "stem": "ysolde_marrow",
+      "id": "hollowmere-watcher",
+      "hub": "hollowmere",
+      "subject": "Ysolde Marrow, the Widow-Watchers' single observer at the watch-stilt, watches the mere's weather and writes one unsigned sentence daily. Older woman with pale wind-weathered skin, narrow deeply lined face, straight gray hair loosely tied low, plain blue-black hood resting down around shoulders over brown wool clothes; composed tired perceptive neutral gaze, normal dark eyes. Plain human-looking working observer; no magic, prophecy effects, Hollow body or religious regalia.",
+      "prompt": "Use case: stylized-concept.\nAsset type: one square dialogue portrait for Soul Meter, matching its shipped Wave Z townsfolk.\n512×512 neutral bust; semi-realistic painterly dark-fantasy rendering; muted era-3 Dramgid charcoal, blue-black, damp brown, dark iron, pale bone, and restrained tarnished-bronze palette; directional upper-left light; plain dark atmospheric background; ordinary weathered working people; no text, border, magic, glowing eyes, armor spikes, or heroic posing.\nSubject: Ysolde Marrow, the Widow-Watchers' single observer at the watch-stilt, watches the mere's weather and writes one unsigned sentence daily. Older woman with pale wind-weathered skin, narrow deeply lined face, straight gray hair loosely tied low, plain blue-black hood resting down around shoulders over brown wool clothes; composed tired perceptive neutral gaze, normal dark eyes. Plain human-looking working observer; no magic, prophecy effects, Hollow body or religious regalia.\nComposition: single centered head and upper-chest bust, three-quarter view, face large and readable at small dialogue size, modest room above head, hands and props outside crop. Fine naturalistic facial features with restrained painterly texture. Physical details are artistic interpretations, not new canon; record no race except the canon Ghorr steward.\nOutput: square 512x512 PNG, fully opaque RGB dark atmospheric background.\nAvoid: writing, letters, symbols, signage, watermark, decorative frame, faction insignia, regalia, spells, supernatural effects, glowing eyes, Hollow bodies, Ofshütje.",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "accepted",
+          "source": "/home/adamjroder/.codex/generated_images/01a1c079-0ed7-7c81-8da9-a8ed713c9e23/exec-d5404a9f-a247-4acc-86e9-46bc4b837e2b.png"
+        }
+      ]
+    }
+  ],
+  "generation_count": 22,
+  "accepted_portraits": 20,
+  "export_note": "Generated square RGB sources exported with Pillow LANCZOS to required 512x512 RGB, without repainting or cropping."
+}

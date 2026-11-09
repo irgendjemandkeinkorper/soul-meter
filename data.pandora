@@ -15866,7 +15866,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/orla_chainwright_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -15975,7 +15975,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/hesk_waterward_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -16084,7 +16084,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/ivo_threnlow_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -16193,7 +16193,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/nessa_quill_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -16302,7 +16302,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/dagny_kettlebrook_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -16411,7 +16411,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/wendel_marrow_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -16589,7 +16589,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/brannoc_ledgerwell_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -16698,7 +16698,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/odile_marrowby_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -16807,7 +16807,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/tamsin_flatbell_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -16916,7 +16916,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/ilse_furrowgood_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -17025,7 +17025,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/pell_haskard_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -17134,7 +17134,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/gaut_stonebrook_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -17312,7 +17312,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/odric_tallowmere_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -17421,7 +17421,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/mabbe_sloe_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -17530,7 +17530,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/iwan_corrow_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -17639,7 +17639,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/jory_fennick_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -17748,7 +17748,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/tessaly_brack_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -20162,7 +20162,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/ysolde_marrow_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -20271,7 +20271,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/brannoc_quell_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",
@@ -20380,7 +20380,7 @@
 					},
 					"Portrait Path": {
 						"type": "string",
-						"value": ""
+						"value": "res://assets/generated/portraits/corrin_vell_portrait_neutral.png"
 					},
 					"Quest Hooks": {
 						"type": "string",

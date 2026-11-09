@@ -16,8 +16,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "long-verge-cairn-warden",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/mabbe_sloe_portrait_neutral.png",
         "monogram": "CS",
         "mark": "9B40",
         "palette_index": 9
@@ -62,8 +62,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "long-verge-old-soldier",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/jory_fennick_portrait_neutral.png",
         "monogram": "JF",
         "mark": "096A",
         "palette_index": 2
@@ -108,8 +108,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "long-verge-paymaster",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/odric_tallowmere_portrait_neutral.png",
         "monogram": "PT",
         "mark": "E5C1",
         "palette_index": 8
@@ -154,8 +154,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "long-verge-recruit",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/tessaly_brack_portrait_neutral.png",
         "monogram": "RB",
         "mark": "7470",
         "palette_index": 4
@@ -200,8 +200,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "long-verge-sergeant",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/iwan_corrow_portrait_neutral.png",
         "monogram": "SC",
         "mark": "6DD3",
         "palette_index": 7

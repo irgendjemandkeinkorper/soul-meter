@@ -16,8 +16,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "kesselford-bell-ringer",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/hesk_waterward_portrait_neutral.png",
         "monogram": "HW",
         "mark": "DD3F",
         "palette_index": 1
@@ -62,8 +62,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "kesselford-ferry-keeper",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/orla_chainwright_portrait_neutral.png",
         "monogram": "OC",
         "mark": "060B",
         "palette_index": 1
@@ -108,8 +108,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "kesselford-grain-factor",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/wendel_marrow_portrait_neutral.png",
         "monogram": "FM",
         "mark": "479D",
         "palette_index": 3
@@ -154,8 +154,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "kesselford-mender-pair-elder",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/ivo_threnlow_portrait_neutral.png",
         "monogram": "MT",
         "mark": "1233",
         "palette_index": 7
@@ -200,8 +200,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "kesselford-mender-pair-junior",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/nessa_quill_portrait_neutral.png",
         "monogram": "MQ",
         "mark": "47E2",
         "palette_index": 6
@@ -246,8 +246,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "kesselford-wayhouse-keeper",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/dagny_kettlebrook_portrait_neutral.png",
         "monogram": "DK",
         "mark": "AFC0",
         "palette_index": 8

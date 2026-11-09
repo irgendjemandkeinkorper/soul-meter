@@ -16,8 +16,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "ashlaren-bell-warden",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/tamsin_flatbell_portrait_neutral.png",
         "monogram": "WF",
         "mark": "F9FA",
         "palette_index": 1
@@ -62,8 +62,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "ashlaren-ghorr-steward",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/ilse_furrowgood_portrait_neutral.png",
         "monogram": "SF",
         "mark": "BC0E",
         "palette_index": 9
@@ -108,8 +108,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "ashlaren-head-factor",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/brannoc_ledgerwell_portrait_neutral.png",
         "monogram": "FL",
         "mark": "1ED4",
         "palette_index": 8
@@ -154,8 +154,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "ashlaren-miller",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/gaut_stonebrook_portrait_neutral.png",
         "monogram": "MS",
         "mark": "6A75",
         "palette_index": 9
@@ -200,8 +200,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "ashlaren-warehouse-watch",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/pell_haskard_portrait_neutral.png",
         "monogram": "PH",
         "mark": "1016",
         "palette_index": 5
@@ -246,8 +246,8 @@
       "quest_hooks": [],
       "portrait": {
         "id": "ashlaren-weigh-clerk",
-        "kind": "monogram",
-        "asset_path": "",
+        "kind": "asset",
+        "asset_path": "res://assets/generated/portraits/odile_marrowby_portrait_neutral.png",
         "monogram": "CM",
         "mark": "FF00",
         "palette_index": 2
