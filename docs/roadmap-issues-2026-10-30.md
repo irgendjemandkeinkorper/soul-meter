@@ -30,8 +30,8 @@ rechecks the labels:
 # gh issue create --title '[Roadmap P2.4] Append-only Soul log and playtest export' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.4)"
 # gh issue create --title '[Roadmap P2.5] Make the hollowing recovery price legible' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.5)"
 # gh issue create --title '[Roadmap P2.6] Agreement-route unavoidable spend (R3 curve)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.6)"
-# gh issue create --title '[Roadmap P2.7] PROVISIONAL Hollow negatives package' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.7)"
-# gh issue create --title '[Roadmap P2.8] PROVISIONAL Name-Ledger recovery route' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.8)"
+# gh issue create --title '[Roadmap P2.7] Hollow negatives package (SR2)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.7)"
+# gh issue create --title '[Roadmap P2.8] Witness act: the repeatable way back from Hollow (SR1)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.8)"
 # gh issue create --title '[Roadmap P3.1] Intent-planner performance and legibility spike' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.1)"
 # gh issue create --title '[Roadmap P3.2] Retire the AP scheduler shim' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.2)"
 # gh issue create --title '[Roadmap P3.3] Implement the selected uncapped intent planner' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.3)"
@@ -257,15 +257,17 @@ source extraction, and quest/journey tests. Regenerate generated artifacts; do n
 **Deliverables:** PROVISIONAL 14 routes: a reviewed Paradox option on each of the ten Dom side
 quests and the Hollowmere stake, and a Soul cost on each of the three main-quest rulings whichever
 way it goes; visible PROVISIONAL −4 to −10 costs and one matching outcome delta per route.
+SR3 (owner, 2026-11-08): every Paradox route is **always listed** as a normal option carrying its
+SOUL −N chip; the cost is the only gate (no skill check, no tutorial lock).
 
 **Acceptance checks (binary, instrument named):** `tools/quest_audit.gd` and the chapter-journey
 harness must report one visible cost and one equal logged delta for every approved route; any
-missing, hidden or unequal pair fails.
+missing, hidden, check-gated or unequal pair fails.
 
 **Do-not-decide boundary:** Do not write unapproved quest outcomes, invent canon, change the cost
 range, or add Soul income outside acts of Agreement.
 
-**Depends on:** R1; Phase 1 acceptance; P1.1 trace.
+**Depends on:** R1, SR3; Phase 1 acceptance; P1.1 trace.
 
 ### P2.2 — Breath sizing against set-piece drain
 
@@ -339,7 +341,9 @@ needed by chapter completion and playtests.
 `ui/screens/chapter_complete.gd`, playtest export, migrations, and focused tests.
 
 **Deliverables:** Append-only serializable entries with cause and before/after values; one public
-write path; chapter-complete display; deterministic export.
+write path; chapter-complete display; deterministic export. SR4 (owner, 2026-11-08): the player
+reads the log **only at chapter end** (the chapter-complete screen) and testers get the export;
+there is no in-play log page. During play the world reads Soul back (P2.3).
 
 **Acceptance checks (binary, instrument named):** Soul-log unit tests, save migration/round-trip,
 chapter-journey export and chapter-complete capture must agree entry-for-entry; mutation outside
@@ -348,7 +352,7 @@ the public write path, lost entries or reordered export fails.
 **Do-not-decide boundary:** Do not rename bands, change Soul math, write back to Pandora, or turn
 the log into a second mutable ledger.
 
-**Depends on:** R3; P1.1; P2.1.
+**Depends on:** R3, SR4; P1.1; P2.1.
 
 ### P2.5 — Make the hollowing recovery price legible
 
@@ -410,7 +414,7 @@ set the final numbers; R3's answer fixes the band and owner item 5 fixes the cos
 
 ### P2.7 — PROVISIONAL Hollow negatives package
 
-**Title:** [Roadmap P2.7] PROVISIONAL Hollow negatives package
+**Title:** [Roadmap P2.7] Hollow negatives package (SR2)
 
 **Milestone:** Proposed `Roadmap Phase 2 — Soul: make the meter mean it`; confirm it exists before
 filing.
@@ -432,7 +436,9 @@ focused save, dialogue, vendor and travel fixtures.
 Sway bargaining benefit, refusal of elective solo travel with companion-supported and explicit
 recovery travel preserved, a displayed permanent ceiling, and a journal recovery lead; retain
 the existing casting refusal, NPC reaction, witness bark and consequence notice. The ceiling is
-PROVISIONAL `0.5 ×` the Soul value immediately before the first zero, pending R13.
+`0.5 ×` the Soul value immediately before the first zero (R13 answered `0.5` on 2026-10-31; still
+PROVISIONAL as a tuning number). SR2 (owner, 2026-11-08): the **full package** as listed here;
+which dialogue options are lost stays an owner prose approval.
 
 **Acceptance checks (binary, instrument named):** `test/unit/test_husked_state.gd`,
 `test/unit/test_dialogue_checks.gd`, `test/unit/test_vendor_pricing.gd`,
@@ -441,15 +447,15 @@ restriction at zero, no elective-solo-travel soft-lock, active restrictions clea
 first positive write, and the ceiling remaining. A missing restriction, passive-rest recovery,
 unreachable recovery travel, peak-Soul ceiling basis or cleared scar fails.
 
-**Do-not-decide boundary:** Do not ratify R13, change what enters or exits active Hollow, add a
+**Do-not-decide boundary:** Do not change R13's ratio, change what enters or exits active Hollow, add a
 new penalty system, invent dialogue, remove the permanent scar, or make passive rest regenerate
 Soul.
 
-**Depends on:** R13; P2.3–P2.5; owner approval of blocked choices and journal prose.
+**Depends on:** R13, SR2; P2.3–P2.5; owner approval of blocked choices and journal prose.
 
 ### P2.8 — PROVISIONAL Name-Ledger recovery route
 
-**Title:** [Roadmap P2.8] PROVISIONAL Name-Ledger recovery route
+**Title:** [Roadmap P2.8] Witness act: the repeatable way back from Hollow (SR1)
 
 **Milestone:** Proposed `Roadmap Phase 2 — Soul: make the meter mean it`; confirm it exists before
 filing.
@@ -466,9 +472,12 @@ husking-while-alive” and River-Mother Name-Ledger lore),
 `globals/quest_registry.gd`, approved River-Mother NPC dialogue/quest outcomes,
 `ui/screens/journal.gd`, the Soul log from P2.4, `tools/quest_audit.gd` and journey/save fixtures.
 
-**Deliverables:** An owner-approved PROVISIONAL NPC-side act in which a River-Mother records the
-player's name, or another owner-approved repeatable Agreement act; an Agreement-tagged positive
-Soul write through the quest path; a journal lead; persistence and repeat-use coverage. The
+**Deliverables:** SR1 (owner, 2026-11-08), **be witnessed**: one named NPC per hub hears the
+player's account and remembers them, repeatable once per hub per WorldClock day; where a hub has a
+River-Mother who keeps a Name-Ledger, she is the canonical witness. Claude proposes each hub's
+witness from existing canon NPCs and the owner approves the list and the prose. An
+Agreement-tagged positive Soul write through the quest path (amount: owner item 5); a journal lead
+naming the nearest witness; persistence and once-per-day coverage. The
 combat class resource remains what it is: recording a fallen or saved ally's name returns Breath
 to its caster and does not itself mint Soul.
 
@@ -479,11 +488,11 @@ write once, clear active Hollow, preserve the ceiling, and demonstrate the appro
 cadence. A combat-resource Soul write, passive-rest write, recruitment dependency, one-shot
 dead end or missing journal lead fails.
 
-**Do-not-decide boundary:** Do not treat the Name-Ledger class resource as a world ritual, choose
-the NPC or alternative Agreement act, set its Soul amount or cadence, write canon prose, require
-Wyneth, or add a second non-Agreement Soul-income channel without owner approval.
+**Do-not-decide boundary:** Do not treat the Name-Ledger class resource as a world ritual, pick a
+hub's witness without owner approval, set the Soul amount, change SR1's once-per-hub-per-day
+cadence, write canon prose, require Wyneth, or add a second non-Agreement Soul-income channel.
 
-**Depends on:** R13; P2.4 and P2.7; owner approval of the PROVISIONAL mechanism and prose.
+**Depends on:** R13, SR1; P2.4 and P2.7; owner approval of the witness list and prose.
 
 ## Phase 3 — proposed milestone: Roadmap Phase 3 — Enemies that play the game
 
@@ -520,7 +529,9 @@ measured question to the owner.
 **Do-not-decide boundary:** Do not ship a ceiling, admission queue, new HUD rule, enemy content or
 permanent planner architecture. The PROVISIONAL 24 fallback is comparison-only.
 
-**Depends on:** R10; Phase 2 acceptance. The official rendered FR-904 evidence remains Phase 6.
+**Depends on:** R10 (answered `defer`). By the owner's 2026-11-08 planning answer it runs in week 2
+(11-16 → 11-22), in parallel with Phase 2, instead of after Phase 2 acceptance; it ships nothing.
+P3.2 onward still wait for Phase 2 acceptance. The official rendered FR-904 evidence remains Phase 6.
 
 ### P3.2 — Retire the AP scheduler shim
 
@@ -567,17 +578,21 @@ integration, focused combat tests, benchmark and legibility fixtures.
 **Deliverables:** Per-archetype intent sets (PROVISIONAL strike, hold, flank, guard-ally, call,
 flee at a threshold), threat-score selection (lowest HP in reach, caster, isolated, flanked), the
 approved cheap-intent tier/cache if selected, `shown_intent` consistency, invalidation rules,
-logging and regression coverage.
+logging and regression coverage. SR5 (owner, 2026-11-08): without Sacred Clarity every alerted
+enemy shows a **coarse intent-kind icon** (strike, hold, flank, guard-ally, call, flee); Clarity
+still adds target, aim and odds and locks the intent (ruled 2026-10-29). Use existing DS glyphs or
+text; new icon art is the owner's lane. SR6: the flee intent hands off to P3.11 (surrender).
 
 **Acceptance checks (binary, instrument named):** The populated-field benchmark, intent-vs-strike
 mirror harness and scripted legibility capture must reproduce P3.1's passing result; Sacred
-Clarity must reveal the action actually executed. A stale/replaced intent, alerted hostile absent
-from CT or performance regression beyond the declared budget fails.
+Clarity must reveal the action actually executed, and every alerted enemy's coarse icon must match
+its planned intent kind at display time. A stale/replaced intent, an alerted enemy without an
+icon, an alerted hostile absent from CT or performance regression beyond the declared budget fails.
 
 **Do-not-decide boundary:** No engaged ceiling, delayed alerted join, new intent prose, ability
 design or departure from the P3.1-selected uncapped architecture.
 
-**Depends on:** R10 answered; P3.1; P3.2. Answers `defer` and `no ceiling` both permit the
+**Depends on:** R10 answered; SR5; P3.1; P3.2. Answers `defer` and `no ceiling` both permit the
 uncapped implementation. A PROVISIONAL numeric answer pauses this issue until its scope is
 revised to the owner-directed fallback and ruling 6 is amended.
 
@@ -778,7 +793,8 @@ the chapter journey and save round-trip fixtures.
 
 **Deliverables:** Owner-approved killing and mercy reaction data, one trigger at the resolved
 slice outcome, a save-compatible durable result, and a later read-back; no ally-to-enemy side
-transfer or hostile companion turn.
+transfer or hostile companion turn. SR6 (owner, 2026-11-08): a surrendered enemy's spare-or-finish
+choice (P3.11) is a killing-or-mercy outcome this reaction reads.
 
 **Acceptance checks (binary, instrument named):** `test/e2e/test_first_chapter_journey.gd`, save
 round-trip coverage and the rendered slice capture must exercise both approved outcomes, fire
@@ -790,7 +806,39 @@ switch fails.
 invent a loyalty system or hostile-turn cause, change her recruitment gate, or move broader
 Phase 4 companion work into this issue.
 
-**Depends on:** R15; P3.7–P3.9; owner approval of the reaction prose and durable outcome.
+**Depends on:** R15, SR6; P3.7–P3.9 and P3.11; owner approval of the reaction prose and durable outcome.
+
+### P3.11 — Fleeing enemies surrender: spare or finish (SR6)
+
+**Title:** [Roadmap P3.11] Fleeing enemies surrender: spare or finish (SR6)
+
+**Milestone:** `Roadmap Phase 3 — Enemies that play the game`.
+
+**Labels:** `delegated-to-codex` for the mechanics; the spare/finish lines stay owner-reviewed
+prose.
+
+**Objective:** SR6 (owner, 2026-11-08): an enemy whose flee intent fires does not leave the map.
+It drops its weapon in place and the player chooses to spare or finish it, so a fight can end in
+mercy.
+
+**Scope:** P3.3's flee intent, `globals/combat/combat_controller.gd` (a surrendered actor leaves
+the CT order without counting as downed), `globals/battle.gd` result and ledger writes, the
+Agreement-tagged Soul path, approved dialogue for the choice, and focused combat and save tests.
+
+**Deliverables:** A surrendered state; a spare/finish choice offered once per surrendered enemy;
+spare writes one Agreement-tagged outcome (amount: owner item 5) and finish writes the
+killing outcome; both are durable and readable by P3.10; loot and XP follow the existing rules
+for a defeated foe.
+
+**Acceptance checks (binary, instrument named):** Combat fixtures must show a fleeing enemy
+surrendering in place, leaving CT, offering the choice once, writing exactly one matching
+outcome, and surviving a save round trip. A surrendered enemy that still acts, a double write, a
+missing choice or a lost outcome fails.
+
+**Do-not-decide boundary:** Do not set Soul amounts or flee thresholds, write the choice prose,
+let surrendered enemies alert others, or change ruling 6's alert joins.
+
+**Depends on:** SR6; P3.3; owner prose approval for the choice lines.
 
 ## Phase 4 — proposed milestone: Roadmap Phase 4 — Company
 
@@ -810,7 +858,9 @@ HUD/deployment integration, the Gate T-1..T-5 harnesses and party tests.
 
 **Deliverables:** PROVISIONAL three-of-six tavern recruitment chosen by the player (the hint
 "Choose exactly two" becomes three), PROVISIONAL four-member layout/placement, serialized party
-state and compatible travel/combat flow.
+state and compatible travel/combat flow. SR13 (owner, 2026-11-08): the player can **swap
+companions at any hub's tavern or inn** between quests, and benched companions keep their state.
+SR14: no companion leaves the party over the player's choices in Chapter 1.
 
 **Acceptance checks (binary, instrument named):** The Gate T-1..T-5 harnesses
 (`test/integration/test_gate_t1_clearability.gd`, `test/integration/test_gate_t2_positional_depth.gd`,
@@ -821,7 +871,7 @@ mutation; overflow, overlap, lost member or bypassed `GameState.set_party()` fai
 **Do-not-decide boundary:** Do not raise the PROVISIONAL Chapter 1 party above four, rewrite
 companion canon, or change the ratified later-chapter ceiling of six.
 
-**Depends on:** R6; Phase 3 acceptance.
+**Depends on:** R6, SR13, SR14; Phase 3 acceptance.
 
 ### P4.2 — Reactive companion bark triggers
 
@@ -1260,3 +1310,136 @@ check simulated by an agent fails.
 with Gate T-6's outside-tester evidence.
 
 **Depends on:** Phases 1–5 accepted; P5.4 (session clock); P6.1–P6.3.
+
+## 2026-11-08 additions — issues from the system rulings (SR7, SR9, SR10, SR15)
+
+Rulings are logged in `docs/owner-decisions.md` §5 (2026-11-08). SR11 (hostile bands: prices and
+doors), SR12 (no quest expiry) and SR14 (companions stay) bind later work as constraints and get
+no issue of their own; SR8 (injuries only) needs no change.
+
+### SR7 — Losing an ambient fight: wake at the nearest discovered hub
+
+**Title:** [SR7] Losing an ambient fight: wake at the nearest discovered hub
+
+**Milestone:** `Roadmap Phase 3 — Enemies that play the game`.
+
+**Labels:** `delegated-to-codex`
+
+**Objective:** Give ambient defeat the non-game-over stake FR-905 asks for. Today
+`globals/battle.gd` (`_finish_ambient`) writes nothing for a lost ambient session ("treated the
+same until one is ratified"). SR7 (owner, 2026-11-08): the party comes to at the nearest
+discovered hub, injuries kept, some coin lost, and a Reputation cost with the faction that beat
+them.
+
+**Scope:** `globals/battle.gd` ambient defeat branch, `GameFlow.travel()` with its scene constants
+(never `change_scene_to_file()`), `GameState.discovered_fast_travel_hubs()`, `GameState` coin (`gp`),
+`Reputation.record()` with a cause, the existing checkpoint autosave, the consequence notice, and
+focused integration tests.
+
+**Deliverables:** Travel to the nearest discovered hub after an ambient defeat; HP halved and
+serious injuries kept, as built; a PROVISIONAL coin loss proposed in the PR for owner item 5; one
+Reputation entry against the beating faction with a readable cause; one checkpoint; one notice
+line, which needs owner prose approval.
+
+**Acceptance checks (binary, instrument named):** An integration fixture that loses an ambient
+fight must arrive at the nearest discovered hub through `GameFlow.travel()`, show halved HP, kept
+injuries, the coin loss, exactly one Reputation entry and one checkpoint, and leave every quest
+reachable. Authored set-piece defeats must keep their own `authored_loss` stakes unchanged. A
+game-over, a soft-lock, a double Reputation write or a direct scene change fails.
+
+**Do-not-decide boundary:** Do not set the final coin amount, change set-piece stakes, add
+capture or debt systems, or write the notice text.
+
+**Depends on:** SR7. Can start at once; it does not wait on P3.1.
+
+### SR9 — Held tones lower fizzle (`tone_bonus_for` goes live)
+
+**Title:** [SR9] Held tones lower fizzle: tone_bonus_for goes live in casting
+
+**Milestone:** `Roadmap Phase 2 — Soul: make the meter mean it` (the casting economy beside P2.2).
+
+**Labels:** `delegated-to-codex`
+
+**Objective:** SR9 (owner, 2026-11-08; closes owner item 27): held Major/Minor tones lower fizzle
+and nothing penalizes off-tone casting. Implement the TONES half of F3c exactly as
+`docs/architecture-chargen-dramgid.md` §4.2 specifies. `SkillCheck.tone_bonus_for()` exists and
+has no production caller; #281, which blocked F3c, is closed.
+
+**Scope:** The casting context builders (`_fizzle_context()` in
+`globals/combat/combat_controller.gd` and the casting forecast in `globals/elements/casting_gate.gd`),
+`globals/skill_check.gd`, `docs/class-resources.md`, and focused unit tests. The ARMS half of F3c (§4.1) is out of scope.
+
+**Deliverables:** `fizzle.tone_bonus` fed from `tone_bonus_for(member, elements)` (lowest tone
+across the composition, per OQ-0007); the forecast breakdown step ("Resonance N% → −k"); and a
+rerun of `tools/casting_economy_sweep.gd`, reported for P2.2.
+
+**Acceptance checks (binary, instrument named):** Unit tests must show all twelve ratified fizzle
+readings unchanged for untrained tones, a Trained or Expert held tone reducing fizzle by
+`floori(tone_bonus / 4)`, an off-tone cast unchanged from today, and the forecast step matching
+the applied value. Any off-tone penalty, a changed untrained reading, or a forecast that differs
+from the roll fails.
+
+**Do-not-decide boundary:** Do not change the `/4` divisor, tier bonuses, the Intuition term or
+casting power, and do not write the Major into `BattleActor.element_id`.
+
+**Depends on:** SR9. Can start at once.
+
+### SR10 — Bypassed fights pay their kill XP
+
+**Title:** [SR10] Bypassed fights pay their kill XP
+
+**Milestone:** `Roadmap Phase 3 — Enemies that play the game`.
+
+**Labels:** `delegated-to-codex`
+
+**Objective:** SR10 (owner, 2026-11-08): getting past a fight by talk, stealth or Soul pays the
+same XP as winning it, so the game never pays the player to fight. Kill XP today is awarded per
+defeated foe (`GameState.kill_xp_for_*`).
+
+**Scope:** Every existing encounter bypass resolution (talk or Sway, pre-alert Tread, Soul
+routes), the `GameState` XP award path (`_award_each`), the encounter's `defeated_flag`
+bookkeeping, and focused tests.
+
+**Deliverables:** One shared award call that pays a bypassed encounter's kill XP once, with a
+cause naming the bypass, and an audit listing which current encounters have a bypass and pay it.
+
+**Acceptance checks (binary, instrument named):** For each bypass kind present in shipped content,
+a fixture must award exactly the XP the same foes pay when defeated, once. A bypassed encounter
+must then not pay XP again if fought, and the reverse. Double pay, no pay, or a bypass that
+leaves the encounter live for a second award fails.
+
+**Do-not-decide boundary:** Do not author new bypass routes (P5.5 owns that audit), change the XP
+curve or level cap, or change milestone XP.
+
+**Depends on:** SR10. Can start at once; P5.5 later extends it to new routes.
+
+### SR15 — Chapter-end export: the end-state record Chapter 2 reads
+
+**Title:** [SR15] Chapter-end export: the end-state record Chapter 2 reads
+
+**Milestone:** `Ch1 Phase 5 — NG+, Polish & Acceptance`.
+
+**Labels:** None. This is a save-format design call owned by Claude; implementation may be
+delegated after the owner reviews the note.
+
+**Objective:** SR15 (owner, 2026-11-08): Chapter 2 imports **end-states only**: flags for who lived,
+what the player ruled, Soul, Renown and Reputation. Party, gear and levels rebuild in Chapter 2.
+Fix the record's shape now, because Phase 2 adds the Soul log to saves and the format should not
+drift.
+
+**Scope:** A design note `docs/design/chapter-end-export.md`; `globals/save_game.gd` schema notes;
+the ledgers' public read APIs; one round-trip test that pins the record.
+
+**Deliverables:** The field list with sources and types, a version number, what is deliberately
+left out (party, gear, levels, inventory), how the permanent Soul scar and active Hollow travel
+across, and a pinned test fixture.
+
+**Acceptance checks (binary, instrument named):** The note must name a source of truth for every
+field. The pinned test must write and read the record from a finished chapter-journey save with
+no loss. A field without a source, an included party/gear/level field, or an unversioned record
+fails.
+
+**Do-not-decide boundary:** Do not decide Chapter 2 content, how Chapter 2 rebuilds the party, or
+NG+ rules; do not change the save schema beyond adding the export.
+
+**Depends on:** SR15; P2.4 (the Soul log's final shape).
