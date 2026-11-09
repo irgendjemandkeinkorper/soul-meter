@@ -2,7 +2,7 @@
 
 ## 0. Filing boundary and commands
 
-Nothing in this packet is filed until the owner says so. **Filed so far:** Phase 1 on 2026-10-31 at the owner's request, under milestone `Roadmap Phase 1 — Fallout-full field` (#31): P1.1 #530, P1.2 #531, P1.3 #532, P1.4 #533, P1.5 #534, P1.6 #535. Phases 2–6 remain unfiled. The milestone names below are proposals;
+Nothing in this packet is filed until the owner says so. **Filed so far:** Phase 1 on 2026-10-31 at the owner's request, under milestone `Roadmap Phase 1 — Fallout-full field` (#31): P1.1 #530, P1.2 #531, P1.3 #532, P1.4 #533, P1.5 #534, P1.6 #535. Phases 2 and 3 on 2026-11-08 at the owner's request (planning answer `Phases 2–3 + new rulings`), under milestones `Roadmap Phase 2 — Soul: make the meter mean it` (#32) and `Roadmap Phase 3 — Enemies that play the game` (#33): P2.1 #594, P2.2 #595, P2.3 #596, P2.4 #597, P2.5 #598, P2.6 #599, P2.7 #600, P2.8 #601, P3.1 #603, P3.2 #604, P3.3 #605, P3.4 #606, P3.5 #607, P3.6 #608, P3.7 #609, P3.8 #610, P3.9 #611, P3.11 #612, P3.10 #613; and the 2026-11-08 additions: SR9 #602, SR7 #614, SR10 #615, SR15 #616 (SR15 under `Ch1 Phase 5 — NG+, Polish & Acceptance`). Tracking issue #617. Phases 4–6 remain unfiled. The milestone names below are proposals;
 do not assume they exist. Before filing, confirm or create them only with explicit owner
 authorization. The checked-in repository label list names `delegated-to-codex` and `jules`
 (`docs/fleet-roadmap.md`, `CONTRIBUTING.md`; both verified present with `gh label list` on
@@ -24,24 +24,24 @@ rechecks the labels:
 # gh issue create --title '[Roadmap P1.4] Equipment effects enter combat' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.4)"   # filed as #533
 # gh issue create --title '[Roadmap P1.5] Verify region-map fast travel end to end' --milestone 'Roadmap Phase 1 — Fallout-full field' --label jules --body "$(body_for P1.5)"   # filed as #534
 # gh issue create --title '[Roadmap P1.6] Production Zhavar writers' --milestone 'Roadmap Phase 1 — Fallout-full field' --label delegated-to-codex --body "$(body_for P1.6)"   # filed as #535
-# gh issue create --title '[Roadmap P2.1] Authored Paradox routes with visible Soul costs' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.1)"
-# gh issue create --title '[Roadmap P2.2] Breath sizing against set-piece drain' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.2)"
-# gh issue create --title '[Roadmap P2.3] Soul bands and world read-back' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.3)"
-# gh issue create --title '[Roadmap P2.4] Append-only Soul log and playtest export' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.4)"
-# gh issue create --title '[Roadmap P2.5] Make the hollowing recovery price legible' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.5)"
-# gh issue create --title '[Roadmap P2.6] Agreement-route unavoidable spend (R3 curve)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.6)"
-# gh issue create --title '[Roadmap P2.7] Hollow negatives package (SR2)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.7)"
-# gh issue create --title '[Roadmap P2.8] Witness act: the repeatable way back from Hollow (SR1)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.8)"
-# gh issue create --title '[Roadmap P3.1] Intent-planner performance and legibility spike' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.1)"
-# gh issue create --title '[Roadmap P3.2] Retire the AP scheduler shim' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.2)"
-# gh issue create --title '[Roadmap P3.3] Implement the selected uncapped intent planner' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.3)"
-# gh issue create --title '[Roadmap P3.4] Approved enemy archetype abilities' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.4)"
-# gh issue create --title '[Roadmap P3.5] Encounter templates, spawn breadth and verb coverage' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.5)"
-# gh issue create --title '[Roadmap P3.6] Complete or collapse balance bands' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.6)"
-# gh issue create --title '[Roadmap P3.7] Telegraph the dorthkor-vanguard reinforcement chain' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.7)"
-# gh issue create --title '[Roadmap P3.8] Emit ambient-combat admission events' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.8)"
-# gh issue create --title '[Roadmap P3.9] Show pending reinforcements in the CT strip' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.9)"
-# gh issue create --title '[Roadmap P3.10] Serai-Lun killing-or-mercy reaction data' --milestone 'Roadmap Phase 3 — Enemies that play the game' --body "$(body_for P3.10)"
+# gh issue create --title '[Roadmap P2.1] Authored Paradox routes with visible Soul costs' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.1)"   # filed as #594
+# gh issue create --title '[Roadmap P2.2] Breath sizing against set-piece drain' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.2)"   # filed as #595
+# gh issue create --title '[Roadmap P2.3] Soul bands and world read-back' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.3)"   # filed as #596
+# gh issue create --title '[Roadmap P2.4] Append-only Soul log and playtest export' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.4)"   # filed as #597
+# gh issue create --title '[Roadmap P2.5] Make the hollowing recovery price legible' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.5)"   # filed as #598
+# gh issue create --title '[Roadmap P2.6] Agreement-route unavoidable spend (R3 curve)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.6)"   # filed as #599
+# gh issue create --title '[Roadmap P2.7] Hollow negatives package (SR2)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --label delegated-to-codex --body "$(body_for P2.7)"   # filed as #600
+# gh issue create --title '[Roadmap P2.8] Witness act: the repeatable way back from Hollow (SR1)' --milestone 'Roadmap Phase 2 — Soul: make the meter mean it' --body "$(body_for P2.8)"   # filed as #601
+# gh issue create --title '[Roadmap P3.1] Intent-planner performance and legibility spike' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.1)"   # filed as #603
+# gh issue create --title '[Roadmap P3.2] Retire the AP scheduler shim' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.2)"   # filed as #604
+# gh issue create --title '[Roadmap P3.3] Implement the selected uncapped intent planner' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.3)"   # filed as #605
+# gh issue create --title '[Roadmap P3.4] Approved enemy archetype abilities' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.4)"   # filed as #606
+# gh issue create --title '[Roadmap P3.5] Encounter templates, spawn breadth and verb coverage' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.5)"   # filed as #607
+# gh issue create --title '[Roadmap P3.6] Complete or collapse balance bands' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.6)"   # filed as #608
+# gh issue create --title '[Roadmap P3.7] Telegraph the dorthkor-vanguard reinforcement chain' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.7)"   # filed as #609
+# gh issue create --title '[Roadmap P3.8] Emit ambient-combat admission events' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.8)"   # filed as #610
+# gh issue create --title '[Roadmap P3.9] Show pending reinforcements in the CT strip' --milestone 'Roadmap Phase 3 — Enemies that play the game' --label delegated-to-codex --body "$(body_for P3.9)"   # filed as #611
+# gh issue create --title '[Roadmap P3.10] Serai-Lun killing-or-mercy reaction data' --milestone 'Roadmap Phase 3 — Enemies that play the game' --body "$(body_for P3.10)"   # filed as #613
 # gh issue create --title '[Roadmap P4.1] PROVISIONAL four-person Chapter 1 party' --milestone 'Roadmap Phase 4 — Company' --label delegated-to-codex --body "$(body_for P4.1)"
 # gh issue create --title '[Roadmap P4.2] Reactive companion bark triggers' --milestone 'Roadmap Phase 4 — Company' --label delegated-to-codex --body "$(body_for P4.2)"
 # gh issue create --title '[Roadmap P4.3] TravelPlan banter beats' --milestone 'Roadmap Phase 4 — Company' --label delegated-to-codex --body "$(body_for P4.3)"
