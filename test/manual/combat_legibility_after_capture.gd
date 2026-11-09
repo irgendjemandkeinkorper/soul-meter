@@ -6,8 +6,8 @@ extends GdUnitTestSuite
 ## Rendered acceptance evidence for #281's carried-forward #211 sentence: "A Bog Wight encounter
 ## is readable end-to-end with the log hidden: you can see who acted, on whom, from where, and
 ## what it cost." The fight opens through the production flow (field watch -> alert -> chart
-## Battle state -> UIManager-mounted battle HUD), the dock's log label is hidden, and frames are
-## captured at each beat. Presentation only: no combat rule, actor stat or art is changed except
+## Battle state -> field-owned one-bar HUD), with frames captured at each beat.
+## Presentation only: no combat rule, actor stat or art is changed except
 ## the Bog Wight's HP before the KO strike, so the KO beat is reachable in one hit.
 ##
 ## Beats tween over 0.14-0.22 s. To land a frame mid-beat the harness slows Engine.time_scale
@@ -40,12 +40,14 @@ var _renown_before: Dictionary
 var _quests_before: Dictionary
 var _boot_visible := true
 var _dir := ""
-var _hud: Screen
+var _hud: FieldHUD
 var _stage: BattleStageRegion
 var _overlay: CombatOverlay
+var _window_size_before: Vector2i
 
 
 func before_test() -> void:
+	_window_size_before = get_tree().root.size
 	_dir = OS.get_environment("SOUL_METER_LEGIBILITY_CAPTURE_DIR")
 	if _dir.is_empty():
 		_dir = ProjectSettings.globalize_path("user://qa/combat-legibility")
@@ -72,6 +74,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	Engine.time_scale = 1.0
+	get_tree().root.size = _window_size_before
 	if _state_is_active(BATTLE_STATE):
 		GameFlow.send_event(&"battle_end")
 		await get_tree().process_frame
@@ -175,15 +178,34 @@ func test_bog_wight_encounter_beats_with_the_log_hidden() -> void:
 			Engine.time_scale = 1.0
 			await _real(0.2)
 			await _capture("11-ko-fading")
+			_assert_ko_notices_clear_the_bar()
 			await _settle(1.0)
 			await _capture("12-ko-downed")
+			_assert_ko_notices_clear_the_bar()
 			await _settle(1.5)
 			await _capture("13-ko-settled")
+			_assert_ko_notices_clear_the_bar()
 			break
 		Engine.time_scale = 1.0
 		await _settle(2.0)
 	print("KO ", not foe.is_alive(), " ended ", Battle.ended)
+	assert_bool(foe.is_alive()).is_false()
 	Engine.time_scale = 1.0
+
+
+## #628: assert the real Reputation/Renown payoff is visible while the combat bar remains.
+func _assert_ko_notices_clear_the_bar() -> void:
+	var notices := _hud.get_node("ConsequenceNotices") as ConsequenceNotices
+	var stack := notices.get_node("NoticeStack") as VBoxContainer
+	assert_bool(_hud.combat_active()).is_true()
+	assert_int(notices.visible_notice_texts().size()).is_equal(2)
+	assert_int(notices.pending_notice_count()).is_equal(0)
+	var bar_rect := _hud.bar().get_global_rect()
+	assert_bool(notices.get_global_rect().intersects(bar_rect)).is_false()
+	for panel: Control in stack.get_children():
+		assert_bool(panel.is_visible_in_tree()).is_true()
+		assert_float(panel.modulate.a).is_greater(0.0)
+		assert_bool(panel.get_global_rect().intersects(bar_rect)).is_false()
 
 
 ## The party stops `offset` cells from the wight, inside its alert radius; the real field
@@ -202,8 +224,8 @@ func _open_session(wight: Hostile, offset: Vector2i) -> BattleInterface:
 	assert_bool(Battle.session_active).is_true()
 	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
 	assert_bool(_state_is_active(DEPLOYMENT_SLATE_STATE)).is_false()
-	_hud = UIManager._stack.back() as Screen
-	var interface := _hud.find_child("BattleInterface", true, false) as BattleInterface
+	_hud = _field.field_hud()
+	var interface := _hud.battle_interface
 	_stage = interface.stage
 	_overlay = _field.combat_overlay() as CombatOverlay
 	assert_object(_overlay).is_not_null()
@@ -214,8 +236,7 @@ func _open_session(wight: Hostile, offset: Vector2i) -> BattleInterface:
 	var camera := player.get_node("Camera2D") as Camera2D
 	camera.make_current()
 	camera.reset_smoothing()
-	# Log hidden: the dock's message label is the combat log.
-	(_hud.get("_log_lbl") as Control).hide()
+	# The one-bar HUD has no separate debug log; its message window stays visible.
 	await _settle(1.5)
 	return interface
 
