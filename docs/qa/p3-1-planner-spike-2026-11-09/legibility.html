@@ -25,7 +25,7 @@
 </style>
 <main>
   <h1>Legibility: PROVISIONAL 2/3 — FAIL</h1>
-  <p>Original rendered captures with report-only markers. The game HUD is unchanged.
+  <p>Retained rendered captures, converted to JPEG quality 90, with report-only markers. The game HUD is unchanged.
     All three comparisons retained 100 hostiles in CT. <a href="README.md">Read the measurements</a>.</p>
   <label for="variant">Comparator</label>
   <select id="variant">
@@ -43,7 +43,7 @@
   </ol>
   <figure>
     <div class="frame">
-      <img id="before" src="cached-legibility-before.png" width="1920" height="1080"
+      <img id="before" src="cached-legibility-before.jpg" width="1920" height="1080"
         alt="Before response: Benchmark Wight 001's revealed strike targets Vex, and Guard's hover card promises to reduce the next hit.">
       <div class="mark one"><span>1</span></div>
       <div class="mark two"><span>2</span></div>
@@ -53,7 +53,7 @@
   </figure>
   <figure>
     <div class="frame">
-      <img id="response" src="cached-legibility-response.png" width="1920" height="1080"
+      <img id="response" src="cached-legibility-response.jpg" width="1920" height="1080"
         alt="After Guard and the wight's strike: Vex has 87 of 100 HP, confirming 13 damage despite the advertised mitigation.">
       <div class="mark damage"><span>3</span></div>
     </div>
@@ -66,8 +66,8 @@
 <script>
   document.querySelector('#variant').addEventListener('change', event => {
     const variant = event.target.value;
-    document.querySelector('#before').src = `${variant}-legibility-before.png`;
-    document.querySelector('#response').src = `${variant}-legibility-response.png`;
+    document.querySelector('#before').src = `${variant}-legibility-before.jpg`;
+    document.querySelector('#response').src = `${variant}-legibility-response.jpg`;
   });
   document.querySelector('#marks').addEventListener('click', event => {
     const hidden = document.body.classList.toggle('unmarked');

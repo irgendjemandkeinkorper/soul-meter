@@ -1,5 +1,6 @@
 extends RefCounted
 ## #603 measurement-only reader of the existing combat boundary. Never installed in Battle.
+## None = CT membership instrumentation only; no speculative plans or cache listener.
 ## Full = existing intent + movement search for every hostile on each refresh.
 ## Cached = revision cache, cheap distant intents, full imminent/revealed intents.
 ## Fallback = only the first PROVISIONAL 24 speculative planners; CT membership is untouched.
@@ -18,7 +19,8 @@ var decision_ms: Array[float] = []
 func configure(controller: CombatController, variant: String) -> void:
 	_controller = controller
 	_variant = variant
-	_controller.event_emitted.connect(_invalidate)
+	if _variant != "none":
+		_controller.event_emitted.connect(_invalidate)
 
 
 func dispose() -> void:
@@ -51,6 +53,8 @@ func refresh() -> Dictionary:
 			continue
 		if ct.has(String(enemy.combat_id)):
 			ct_hostiles += 1
+		if _variant == "none":
+			continue
 		if _variant == "fallback24" and planned >= PROVISIONAL_FALLBACK:
 			continue
 		var full := _variant != "cached" or priority.has(enemy.combat_id) \
@@ -80,6 +84,8 @@ func refresh() -> Dictionary:
 func plan_for_decision(enemy: BattleActor) -> Dictionary:
 	# This seam is exercised by the fixture, never substituted into shipped combat.
 	# Fresh at consumption even if a caller mutated a fixture without emitting an event.
+	if _variant == "none":
+		return _controller.plan_enemy_turn(enemy)
 	return _full_plan(enemy)
 
 

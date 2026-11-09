@@ -19,7 +19,8 @@ extends SceneTree
 ## controller's `event_emitted` and Battle's `combat_event` / `turn_resolved` during the decision
 ## window. The proxies cost time of their own, so do not compare an attributed run's timings
 ## with an unattributed one.
-## #603 opt-in comparison: --planner-variant full|cached|fallback24 --planner-output PATH.
+## #603 opt-in comparison: --planner-variant none|full|cached|fallback24 --planner-output PATH.
+## Timing-only reruns: --planner-reuse-legibility PATH keeps previously inspected evidence.
 ## Use tools/planner_spike/measure_capped.py for isolated, memory-capped rendered evidence.
 
 const PerformanceBenchmark := preload("res://tools/performance_benchmark.gd")
@@ -991,6 +992,10 @@ const PLANNER_FRAME_BUDGET_MS := 16.67
 const PLANNER_TRANSITION_BUDGET_MS := 2000.0
 
 
+static func is_planner_variant(variant: String) -> bool:
+	return variant in ["none", "full", "cached", "fallback24"]
+
+
 static func planner_budget_verdict(
 	frames: Array, transition_ms: float, present: int, ct_hostiles: int
 ) -> bool:
@@ -1025,10 +1030,24 @@ func _spike_argument(flag: String, fallback: String = "") -> String:
 
 func _run_planner_spike() -> void:
 	var variant := _spike_argument("--planner-variant")
-	if variant not in ["full", "cached", "fallback24"]:
-		_add_error("--planner-variant must be full, cached, or fallback24.")
+	if not is_planner_variant(variant):
+		_add_error("--planner-variant must be none, full, cached, or fallback24.")
 		_finish_with_error()
 		return
+	var retained_legibility: Dictionary = {}
+	var legibility_source := _spike_argument("--planner-reuse-legibility")
+	if not legibility_source.is_empty():
+		var evidence: Variant = JSON.parse_string(FileAccess.get_file_as_string(legibility_source))
+		# The control shares the capture fixture; it has no separate inspected capture.
+		var source_variant := "cached" if variant == "none" else variant
+		if not evidence is Dictionary or not evidence.get("variants", {}).has(source_variant):
+			_add_error("Missing retained legibility evidence for %s: %s" % [source_variant, legibility_source])
+			_finish_with_error()
+			return
+		retained_legibility = evidence["variants"][source_variant].duplicate(true)
+		retained_legibility["reused_from"] = legibility_source
+		retained_legibility["source_variant"] = source_variant
+		retained_legibility["capture_rerun"] = false
 	if OS.get_cmdline_user_args().has("--session-size"):
 		_add_error("The planner comparison requires all 100 alerted hostiles; omit --session-size.")
 		_finish_with_error()
@@ -1095,7 +1114,8 @@ func _run_planner_spike() -> void:
 	var report := {
 		"benchmark_id": "P3.1-planner-spike", "schema_version": "1.0", "variant": variant,
 		"provisional": true, "official_fr904_gate": false,
-		"execution": "shadow intent maintenance; unchanged production controller resolves actions",
+		"execution": "no speculative planning; unchanged production controller resolves actions" if variant == "none" \
+			else "shadow intent maintenance; unchanged production controller resolves actions",
 		"environment": _environment_report(), "scenario": _scenario_details(),
 		"ct_hostiles_min": ct_min, "ct_hostiles_max": ct_max,
 		"admission": create_admission_report(_admission),
@@ -1114,8 +1134,11 @@ func _run_planner_spike() -> void:
 			and frames.size() == PROVISIONAL_PLANNER_SAMPLES and _errors.is_empty(),
 	}
 	var output := _spike_argument("--planner-output", "/tmp/codex-planner/%s.json" % variant)
-	var capture: RefCounted = load("res://tools/planner_spike/legibility_capture.gd").new()
-	report["legibility"] = await capture.call("capture", self, _battle, _field, _battle_hud(), planner, output.get_base_dir(), variant)
+	if retained_legibility.is_empty():
+		var capture: RefCounted = load("res://tools/planner_spike/legibility_capture.gd").new()
+		report["legibility"] = await capture.call("capture", self, _battle, _field, _battle_hud(), planner, output.get_base_dir(), variant)
+	else:
+		report["legibility"] = retained_legibility
 	report["legibility_facts"] = int((report["legibility"] as Dictionary).get("automated_facts", 0))
 	report["errors"] = _errors.duplicate()
 	report["status"] = "ok" if _errors.is_empty() else "error"

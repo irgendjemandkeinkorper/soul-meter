@@ -1,5 +1,136 @@
 # Verification log
 
+## No-planner control follow-up — 2026-11-09
+
+Follow-up base: `25d3cf1d` on `codex/p3-1-planner-spike`, initially clean.
+The original spike history below is retained; its earlier suite runs were not repeated.
+This follow-up ran only the affected suite, once red and once green. No import was needed.
+One Godot process at a time, no git writes, no GitHub operations, and no capture reruns.
+
+Both suite commands ran from the worktree root. The supplied capped runner's referenced
+`scripts/test.sh` was again confirmed byte-identical to this worktree's wrapper with `cmp`.
+
+Failing-first command, before implementation:
+
+```bash
+CAP_MB=3500 TIMEOUT_S=900 LOG=/tmp/codex-planner2/planner-red.log \
+  SOUL_METER_HEADLESS=0 GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 \
+  XDG_DATA_HOME=/tmp/codex-planner2/data XDG_CONFIG_HOME=/tmp/codex-planner2/config \
+  XDG_CACHE_HOME=/tmp/codex-planner2/cache \
+  xvfb-run -a -s "-screen 0 1920x1080x24" \
+  bash /tmp/codex-tools/test_capped.sh res://test/unit/test_planner_spike.gd
+```
+
+Summary: `exit=100 peak_rss_mb=485 killed=0 log=/tmp/codex-planner2/planner-red.log`.
+Six cases executed: three passed and three failed, with six assertion failures and no
+parse errors. The expected failures were missing variant validation, `none` producing
+100 plans instead of zero, and speculative work/cache-listener activity in the control.
+
+Passing command, after implementation:
+
+```bash
+CAP_MB=3500 TIMEOUT_S=900 LOG=/tmp/codex-planner2/planner-green.log \
+  SOUL_METER_HEADLESS=0 GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 \
+  XDG_DATA_HOME=/tmp/codex-planner2/data XDG_CONFIG_HOME=/tmp/codex-planner2/config \
+  XDG_CACHE_HOME=/tmp/codex-planner2/cache \
+  xvfb-run -a -s "-screen 0 1920x1080x24" \
+  bash /tmp/codex-tools/test_capped.sh res://test/unit/test_planner_spike.gd
+```
+
+Summary: `exit=0 peak_rss_mb=469 killed=0 log=/tmp/codex-planner2/planner-green.log`.
+All six cases passed, zero errors/failures/orphans. Coverage accepts all four names,
+rejects unknown/empty names, retains 100 CT seats without changing scheduler state,
+requires zero speculative work/listeners for `none`, checks its default decision plan,
+and preserves the original gate and cache-invalidation contracts. Both runs log the
+existing 32-resources-in-use teardown warning; the green process exits 0.
+
+### Follow-up measurement protocol
+
+The exact sequential command was:
+
+```bash
+set -o pipefail
+for round in 1 2; do
+  for variant in none full cached fallback24; do
+    prefix=""
+    if [ "$round" = 1 ]; then prefix="run1-"; fi
+    python3 tools/planner_spike/measure_capped.py "$variant" \
+      "$PWD/docs/qa/p3-1-planner-spike-2026-11-09/${prefix}${variant}.json" \
+      --reuse-legibility "$PWD/docs/qa/p3-1-planner-spike-2026-11-09/retained-legibility.json" \
+      | tee -a /tmp/codex-planner2/measurement-launches.log || exit "$?"
+  done
+done
+```
+
+Each call starts a fresh Godot process, waits for it to exit, and enforces the unchanged
+3500 MB / 900 second watchdog. Each has fresh isolated XDG directories under
+`/tmp/codex-planner2/bench-<report-stem>-*`, fixed dice, `LP_NUM_THREADS=1`, Xvfb/X11,
+Compatibility/Mesa llvmpipe and a seeded 1920×1080 player config. The new optional flag
+passes `--planner-reuse-legibility` to Godot and bypasses capture execution. The original
+capture fixture and its 2/3 verdict remain unchanged. The control explicitly references
+the cached capture evidence, not a newly measured control capture.
+
+All eight launches completed successfully, in this exact order. Each summary's `log=`
+path is `/tmp/codex-planner2/benchmark-<report-stem>.log`. The full printed Godot commands
+and summary lines are retained in [measurement-launches.txt](measurement-launches.txt).
+
+| Order | Report | Summary |
+|---|---|---|
+| 1 | [run1-none.json](run1-none.json) | `exit=0 peak_rss_mb=920 killed=0` |
+| 2 | [run1-full.json](run1-full.json) | `exit=0 peak_rss_mb=920 killed=0` |
+| 3 | [run1-cached.json](run1-cached.json) | `exit=0 peak_rss_mb=920 killed=0` |
+| 4 | [run1-fallback24.json](run1-fallback24.json) | `exit=0 peak_rss_mb=918 killed=0` |
+| 5 | [none.json](none.json) | `exit=0 peak_rss_mb=917 killed=0` |
+| 6 | [full.json](full.json) | `exit=0 peak_rss_mb=927 killed=0` |
+| 7 | [cached.json](cached.json) | `exit=0 peak_rss_mb=922 killed=0` |
+| 8 | [fallback24.json](fallback24.json) | `exit=0 peak_rss_mb=919 killed=0` |
+
+Every report has 120 frames, 106 production enemy outcomes, 100 admitted hostiles and
+100 CT seats throughout, and an empty `errors` array. The two controls have no speculative
+plans or computation samples. Report exit 0 means measurement completed, not a budget
+pass: all eight frame p95 values exceed 16.67 ms. All transitions are below 2,000 ms.
+Legibility remains the retained 2/3. Each log contains the same 18 pre-existing
+`FieldMap::_theme_world_label` conversion errors and one 38-resources-in-use teardown
+warning; there are no new script errors. No out-of-scope repair was attempted.
+
+### Capture conversion
+
+`/usr/bin/python3` with PIL 12.3.0 converted all six images using
+`Image.open(source).convert("RGB").save(target, "JPEG", quality=90)`. Each JPEG decoded
+successfully at 1920×1080 before its source was removed. All six JPEGs were opened with
+`view_image`; the displayed next actor, revealed strike, Guard text and HP response
+remain present. This checks conversion integrity without re-judging the existing verdict.
+The default `python3` lacked PIL; the system interpreter supplied it. No repository
+dependency changed. [capture-compression.json](capture-compression.json) retains the
+source and target hashes/sizes; [legibility.html](legibility.html) uses the JPEGs.
+
+### Follow-up acceptance checks
+
+[control-followup-checks.json](control-followup-checks.json) records the independent
+Python checks over the eight reports: original top-level/raw/frame schema keys, 120 raw
+samples, nearest-rank p95 and means recomputed, same environment/placement/fixture/actions,
+100-hostile admission and CT counts, expected 0/100/100/24 speculative plans, empty
+report errors, unchanged gate arithmetic, and explicit reused-capture provenance.
+README values and overheads use the control from the same run.
+
+All seven distinct HTML targets resolve, including the six images reached by the
+comparator selector's JavaScript. Markdown links resolve. No capture PNG remains and
+all six JPEG hashes match the conversion manifest; source hashes match the original
+HEAD images. `git diff --check` passes and the Python wrapper compiles.
+
+`git diff --stat HEAD -- globals actors ui world data` is empty.
+`git diff --quiet HEAD -- globals actors ui world data project.godot` exits 0.
+[production-unchanged.json](production-unchanged.json) has been refreshed against
+`25d3cf1d` and confirms byte equality for the combat controller, Battle, scheduler and
+kit AI. All changed/untracked source and evidence files are within the allowed scope.
+No Godot process remained after the measurement sequence.
+
+Open questions/deviations: no new ruling or scope deviation; owner hardware/profiling
+choice remains open, Guard is Claude's separate issue, and the inherited 2/3 verdict
+was not re-judged. The historical session-suite memory limitation below remains unchanged.
+
+## Original spike verification (historical)
+
 Worktree: `/home/adamjroder/projects/soul-meter-wt/codex-planner-603`.
 Base: `d39acca91466d793843bbd2e06cf19e23d8c57fe` (`codex/p3-1-planner-spike`).
 No git writes or GitHub operations. One Godot process at a time throughout.
@@ -121,7 +252,7 @@ are retained in the logs.
 
 The raw arrays were independently checked with Python: nearest-rank p95 recomputed,
 120 samples per variant, identical planned cells, every frame retaining 100 CT hostiles,
-100 / 100 / 24 speculative plans, visible rendered HUD, six existing PNGs, no report errors.
+100 / 100 / 24 speculative plans, visible rendered HUD, six captures (now JPEGs), no report errors.
 All final screenshots were opened before the 2/3 visual verdict was recorded.
 `git diff --check` passed. The Python measurement wrapper compiles. Local report/HTML
 links resolve. `production-unchanged.json` records SHA-256 comparisons with HEAD;

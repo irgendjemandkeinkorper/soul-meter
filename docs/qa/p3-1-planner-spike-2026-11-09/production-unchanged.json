@@ -1,5 +1,5 @@
 {
-  "base": "d39acca91466d793843bbd2e06cf19e23d8c57fe",
+  "base": "25d3cf1d2ac60895f432e398f579738b306cb953",
   "production_diff_exit": 0,
   "files": {
     "globals/battle.gd": {

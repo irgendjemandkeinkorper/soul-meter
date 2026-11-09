@@ -1,19 +1,29 @@
 """One benchmark process, isolated data, 3500 MB per-process cap, 900 second timeout."""
+import argparse
 import os
 from pathlib import Path
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 
-variant = sys.argv[1]
-output = sys.argv[2]
-log_path = f"/tmp/codex-planner/benchmark-{variant}.log"
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("variant", choices=("none", "full", "cached", "fallback24"))
+parser.add_argument("output", type=Path)
+parser.add_argument("--reuse-legibility", type=Path, help="Retained evidence JSON; skip capture execution")
+args = parser.parse_args()
+variant = args.variant
+output = str(args.output.resolve())
+work_dir = Path("/tmp/codex-planner2")
+work_dir.mkdir(parents=True, exist_ok=True)
+run_dir = Path(tempfile.mkdtemp(prefix=f"bench-{args.output.stem}-", dir=work_dir))
+log_path = work_dir / f"benchmark-{args.output.stem}.log"
 env = os.environ.copy()
 env.update(LP_NUM_THREADS="1", SOUL_METER_FIXED_DICE="1",
-           XDG_DATA_HOME=f"/tmp/codex-planner/bench-{variant}/data",
-           XDG_CONFIG_HOME=f"/tmp/codex-planner/bench-{variant}/config",
-           XDG_CACHE_HOME=f"/tmp/codex-planner/bench-{variant}/cache")
+           XDG_DATA_HOME=str(run_dir / "data"),
+           XDG_CONFIG_HOME=str(run_dir / "config"),
+           XDG_CACHE_HOME=str(run_dir / "cache"))
 config = Path(env["XDG_DATA_HOME"]) / "godot/app_userdata/SoulMeter/player_config.cfg"
 config.parent.mkdir(parents=True, exist_ok=True)
 config.write_text('[VideoSettings]\n\nScreenResolution=Vector2i(1920, 1080)\n')
@@ -21,6 +31,8 @@ command = ["xvfb-run", "-a", "-s", "-screen 0 1920x1080x24",
            str(Path.home() / ".local/bin/godot"), "--path", ".", "--resolution", "1920x1080",
            "--script", "res://tools/populated_field_benchmark.gd", "--",
            "--planner-variant", variant, "--planner-output", output]
+if args.reuse_legibility:
+    command.extend(["--planner-reuse-legibility", str(args.reuse_legibility.resolve())])
 print("command=" + repr(command), flush=True)
 started = time.monotonic()
 peak = killed = 0
