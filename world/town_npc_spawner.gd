@@ -25,6 +25,17 @@ const IDLE_ROTATION_DEGREES := 0.4
 ## come from the generated roster. An empty map preserves the ordinary spawner.
 @export var npc_pockets: Dictionary = {}
 
+## Canon Dom population (handoff §3, vault cities/dom.md). Orthos's 5 is a
+## PROVISIONAL placeholder for "minority", not a ratified percentage.
+## Other hubs have no owner-approved mix; empty/missing entries preserve spawns.
+const HUB_RACE_MIX: Dictionary = {
+	"dom": {"ghorr": 58, "vael": 27, "kaan": 6, "kes-reth": 4, "orthos": 5},
+	"ashlaren": {},
+	"kesselford": {},
+	"long_verge": {},
+	"hollowmere": {},
+}
+
 var _spawned_npcs: Array[NPC] = []
 var _idle_sprites: Array[Sprite2D] = []
 var _idle_origins: Array[Vector2] = []
@@ -63,6 +74,37 @@ static func sprite_models() -> PackedStringArray:
 	return UnitArtScript.FALLBACK_POOL
 
 
+## Only race-tagged crowd units participate. Named art always wins at the call
+## site. Missing art for a race removes its weight until that art is available;
+## no eligible units returns the exact old fallback without consuming global RNG.
+static func crowd_unit_for(hub_id: String, seed_key: String, fallback_unit: String) -> String:
+	var mix: Dictionary = HUB_RACE_MIX.get(hub_id, {})
+	var pools: Dictionary[String, PackedStringArray] = {}
+	var total_weight := 0.0
+	for race_id: String in mix:
+		var weight := float(mix[race_id])
+		if weight <= 0.0:
+			continue
+		var pool := PackedStringArray()
+		for unit_id: String in UnitFrames.unit_ids_for_race(race_id):
+			if unit_id.begins_with("crowd-") and UnitArtScript.has_unit(unit_id):
+				pool.append(unit_id)
+		if not pool.is_empty():
+			pools[race_id] = pool
+			total_weight += weight
+	if total_weight <= 0.0:
+		return fallback_unit
+	var rng := RandomNumberGenerator.new()
+	rng.seed = (hub_id + ":" + seed_key).hash()
+	var roll := rng.randf() * total_weight
+	for race_id: String in pools:
+		roll -= float(mix[race_id])
+		if roll < 0.0:
+			var pool: PackedStringArray = pools[race_id]
+			return pool[rng.randi_range(0, pool.size() - 1)]
+	return fallback_unit
+
+
 func _populate_town() -> void:
 	if not _spawned_npcs.is_empty():
 		return
@@ -72,8 +114,8 @@ func _populate_town() -> void:
 		return
 	var models := sprite_models()
 
-	_upgrade_legacy_townsfolk(town, models)
 	var town_id := _town_id(town.scene_file_path)
+	_upgrade_legacy_townsfolk(town, models, town_id)
 	if not town_id.is_empty():
 		_spawn_generated_townsfolk(town, models, town_id)
 	set_process(not _idle_sprites.is_empty())
@@ -90,7 +132,7 @@ static func _town_id(scene_path: String) -> String:
 	return ""
 
 
-func _upgrade_legacy_townsfolk(town: Node2D, models: PackedStringArray) -> void:
+func _upgrade_legacy_townsfolk(town: Node2D, models: PackedStringArray, town_id: String = "") -> void:
 	# A scene-authored npc_id (the hand-placed story NPCs) already self-wired
 	# to its own generated unit art in NPC._ready() — leave it alone. Only
 	# truly anonymous legacy nodes fall back to the generic crowd pool.
@@ -101,7 +143,8 @@ func _upgrade_legacy_townsfolk(town: Node2D, models: PackedStringArray) -> void:
 		var npc := child as NPC
 		if not npc.npc_id.is_empty():
 			continue
-		_apply_isometric_visual(npc, models[model_index % models.size()])
+		var fallback_unit := models[model_index % models.size()]
+		_apply_isometric_visual(npc, crowd_unit_for(town_id, str(npc.name), fallback_unit))
 		model_index += 1
 
 
@@ -174,7 +217,10 @@ func _spawn_generated_townsfolk(town: Node2D, models: PackedStringArray, town_id
 		npc.set_meta(&"facing", facing)
 		npc.set_meta(&"idle_phase", idle_phase)
 		npc.set_meta(&"model_index", model_index)
-		_apply_isometric_visual(npc, npc_id, facing)
+		var unit_id := npc_id
+		if not UnitArtScript.has_unit(npc_id):
+			unit_id = crowd_unit_for(town_id, npc_id, UnitArtScript.resolve(npc_id))
+		_apply_isometric_visual(npc, unit_id, facing)
 		_configure_pocket(npc, npc_id)
 		town.add_child(npc)
 		_set_generated_interaction_radius(npc)
@@ -203,7 +249,8 @@ func _apply_isometric_visual(npc: NPC, unit_id: String, facing: String = "east")
 		return
 	var resolved_id := UnitArtScript.resolve(unit_id)
 	npc.set_meta(&"sprite_model", resolved_id)
-	npc.set_meta(&"sprite_path", UnitArtScript.texture_path(resolved_id))
+	var sprite := npc.get_node("Sprite2D") as Sprite2D
+	npc.set_meta(&"sprite_path", sprite.texture.resource_path)
 
 
 func _register_idle(npc: NPC, idle_phase: float) -> void:
