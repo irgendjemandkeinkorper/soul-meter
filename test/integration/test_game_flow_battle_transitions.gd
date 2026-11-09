@@ -477,3 +477,43 @@ func test_ambient_ally_turn_offers_reachable_cells_under_charge_time() -> void:
 		return
 	var destination := StringName((reachable[0] as Dictionary).get("destination", &""))
 	assert_bool(bool(controller.move_query(destination).get("allowed", false))).is_true()
+
+
+## SR7 (owner, 2026-11-08): dismissing a lost ambient fight wakes the party at the nearest
+## discovered hub through GameFlow.travel(), and the defeat's one checkpoint waits for the hub.
+func test_an_ambient_defeat_travels_to_the_nearest_discovered_hub() -> void:
+	GameState.discover_fast_travel_hub(&"dom")
+	var hostile := await _ambient_hostile(Vector2(96.0, 0.0))
+	assert_bool(Battle.session_active).is_true()
+	SaveGame._pending_autosave_reason = ""
+
+	# The fixture's cooldown is 0, so the wight beside the beaten party re-alerts on the next
+	# physics frame. The pending wake must refuse it rather than open a second fight.
+	Battle.controller.force_finish(CombatController.ResultState.DEFEAT, Battle.OUTCOME_DEFEAT)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await get_tree().process_frame
+	assert_object(Battle.last_result).override_failure_message(
+		"a foe left standing re-opened a fight before the party woke"
+	).is_not_null()
+	assert_bool(Battle.session_active).is_false()
+	assert_str(String(Battle.last_result.wake_hub_id)).is_equal("dom")
+	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
+
+	GameFlow.send_event(&"battle_end")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_str(GameFlow._target_scene).override_failure_message(
+		"a lost ambient fight must wake the party at the nearest discovered hub"
+	).is_equal("res://world/starting_town.tscn")
+	assert_bool(_state_is_active(LOADING_STATE)).is_true()
+	assert_bool(GameFlow._wake_checkpoint_pending).is_true()
+	assert_str(SaveGame._pending_autosave_reason).is_equal("")
+	# Still loading: the wight beside the party stays refused, so no fight opens mid-trip.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	assert_bool(Battle.session_active).is_false()
+	assert_int(hostile.state).is_not_equal(Hostile.State.DOWNED)
+	GameFlow._wake_checkpoint_pending = false
+	GameFlow._pending_defeat_wake = &""

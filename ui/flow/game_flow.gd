@@ -102,6 +102,12 @@ var _pending_area_scene := ""
 var _pending_area_spawn: StringName = &"default"
 var _area_access_result := -1
 var _skip_next_breath_refill := false
+## SR7: the hub a lost ambient fight wakes the party at, held from `battle_ended` until the
+## battle state exits (the player has dismissed the outcome).
+var _pending_defeat_wake: StringName = &""
+## SR7: the defeat's one checkpoint, requested once the wake hub's level is ready.
+var _wake_checkpoint_pending := false
+const WAKE_CHECKPOINT_DETAIL := "session-defeat"
 var travel_plan: TravelPlan = null
 ## The runtime state from before the class demo, restored when the flow returns to the title.
 ## Non-empty exactly while the demo owns the sandbox.
@@ -138,6 +144,8 @@ func _ready() -> void:
 	_restore_travel_plan()
 	if not Battle.battle_ended.is_connected(_on_journey_battle_ended):
 		Battle.battle_ended.connect(_on_journey_battle_ended)
+	if not Battle.battle_ended.is_connected(_on_defeat_wake_battle_ended):
+		Battle.battle_ended.connect(_on_defeat_wake_battle_ended)
 	# Local visual-regression captures can launch a gameplay scene directly
 	# without the Boot state immediately replacing it with the title screen.
 	if OS.get_cmdline_user_args().has("capture-scene"):
@@ -871,6 +879,8 @@ func _complete_scene_load() -> void:
 	_waiting_for_level = false
 	_loading_fallback_scene = ""
 	var current := get_tree().current_scene
+	# SR7: the field the beaten party left is gone, and with it the foes the wake was refusing.
+	_pending_defeat_wake = &""
 	if _recovering_from_failure:
 		# We're only back at the fallback scene after a failed load, not a
 		# genuine arrival — skip apply_pending_location/hub discovery and just
@@ -901,6 +911,9 @@ func _complete_scene_load() -> void:
 		_class_demo_pending = false
 		if _target_scene == CLASS_DEMO_SCENE:
 			_open_class_demo.call_deferred()
+	if _wake_checkpoint_pending:
+		_wake_checkpoint_pending = false
+		SaveGame.request_checkpoint(SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, WAKE_CHECKPOINT_DETAIL)
 	SaveGame.flush_pending_autosave.call_deferred()
 	_check_chapter_complete()
 
@@ -921,6 +934,11 @@ func watch_field_hostiles() -> void:
 func _on_field_hostile_alerted(hostile: Hostile) -> void:
 	if Battle.session_active:
 		return  # Battle is connected to the same signal and admits into the live session.
+	if _pending_defeat_wake != &"":
+		# SR7: the beaten party is leaving for a hub. A foe still standing beside it must not
+		# open a second fight while the outcome is on screen.
+		hostile.refuse_alert()
+		return
 	var field: FieldMap = Battle._current_field_map()
 	var opened: Dictionary = Battle.start_session(field, hostile)
 	if not bool(opened.get("allowed", false)):
@@ -1010,7 +1028,42 @@ func _on_battle_exited() -> void:
 			hud.exit_combat()
 		field.set_combat_mode(false)
 	MusicDirector.pop_context()
+	if _pending_defeat_wake != &"":
+		# SR7: the session's checkpoint stays staged and flushes on `level_ready` at the hub,
+		# so a reload never puts the beaten party back on the field it lost.
+		# The latch stays set until the hub loads, so the field's standing foes stay refused.
+		_wake_at_hub.call_deferred(_pending_defeat_wake)
+		return
 	SaveGame.flush_pending_autosave.call_deferred()
+
+
+## Latched only while the chart is in Battle: the wake runs when that state exits, so a
+## result from a fight the chart never entered (a tool or a test driving Battle directly)
+## must not send the next, unrelated battle exit to a hub.
+func _on_defeat_wake_battle_ended(result: BattleResult) -> void:
+	if result == null or result.state != BattleResult.State.DEFEAT or result.wake_hub_id == &"":
+		return
+	if not ($StateChart/Root/Playing/Battle as StateChartState).active:
+		return
+	_pending_defeat_wake = result.wake_hub_id
+
+
+## SR7 (owner, 2026-11-08): the party comes to at the nearest discovered hub. The trip is free:
+## it is the consequence, not a purchase, so it goes through `travel()`, not `fast_travel()`.
+func _wake_at_hub(hub_id: StringName) -> bool:
+	var hub := FastTravelRegistry.by_id(hub_id)
+	if hub.is_empty():
+		_pending_defeat_wake = &""
+		SaveGame.request_checkpoint(SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, WAKE_CHECKPOINT_DETAIL)
+		return false
+	if get_tree().paused:
+		send_event("resume")
+	if not travel(str(hub["scene_path"])):
+		_pending_defeat_wake = &""
+		SaveGame.request_checkpoint(SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, WAKE_CHECKPOINT_DETAIL)
+		return false
+	_wake_checkpoint_pending = true
+	return true
 
 
 func _on_chapter_complete_entered() -> void:

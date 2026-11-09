@@ -478,6 +478,18 @@ func discovered_fast_travel_hubs() -> Array[StringName]:
 	return result
 
 
+## SR7 (owner, 2026-11-08): where the party comes to after losing an ambient fight. The
+## discovered hub nearest `from_location_id` over the route graph. A location with no route
+## to one (an interior, say) falls back to the first discovered hub, which is Dom whenever Dom
+## is discovered. With no hub discovered at all it is Dom, the starting town (PROVISIONAL).
+func nearest_discovered_hub(from_location_id: StringName) -> StringName:
+	var discovered := discovered_fast_travel_hubs()
+	if discovered.is_empty():
+		return WorldMapRegistry.DOM_ID if not FastTravelRegistry.by_id(WorldMapRegistry.DOM_ID).is_empty() else &""
+	var nearest := WorldMapRegistry.nearest_location(from_location_id, discovered)
+	return nearest if nearest != &"" else discovered[0]
+
+
 # --- Defining Strike knowledge ----------------------------------------------
 
 

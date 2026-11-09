@@ -16,6 +16,11 @@ var spoils: Array[Dictionary] = []
 ## fight the party has already resolved.
 var xp_awarded: int = 0
 var levels_gained: Dictionary = {}
+## SR7 (owner, 2026-11-08): what a lost ambient fight cost. `coin_lost` is the gp taken, and
+## `wake_hub_id` is the discovered fast-travel hub the party comes to at (GameFlow travels
+## there once the outcome is dismissed). Both stay zero/empty for every other result.
+var coin_lost: int = 0
+var wake_hub_id: StringName = &""
 
 
 func succeeded() -> bool:
