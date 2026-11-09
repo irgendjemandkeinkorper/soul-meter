@@ -172,13 +172,25 @@ static func resolve(context: Dictionary) -> Dictionary:
 	var fizzle_roll := 0
 	var fizzled := false
 	var fizzle_overridden := false
+	var fizzle_tone_relief := 0.0
+	var fizzle_resonance := 0.0
 	if is_spell:
 		fizzle_percent = _fizzle_percent(context, composition, magnitude)
+		fizzle_tone_relief = maxf(
+			_fizzle_percent(context, composition, magnitude, false) - fizzle_percent, 0.0
+		)
+		# §4.3: the forecast names the held Tone as "Resonance N%". An Untrained Tone reads
+		# intuition × 8; the learned part (tone_bonus) sits on top of it.
+		var fizzle_inputs: Dictionary = _dictionary(context.get("fizzle", {}))
+		fizzle_resonance = (
+			float(int(fizzle_inputs.get("pitch", 2)) * 8) + float(fizzle_inputs.get("tone_bonus", 0.0))
+		)
 		# Seam v2: a class resource may pin the fizzle chance (Flamebinder's banked failure spends
 		# for a guaranteed cast = 0). Same context at forecast and commit, so both see the pin.
 		if context.has("fizzle_percent_override"):
 			fizzle_percent = clampf(float(context.get("fizzle_percent_override", fizzle_percent)), 0.0, 100.0)
 			fizzle_overridden = true
+			fizzle_tone_relief = 0.0
 		fizzle_roll = _deterministic_fizzle_roll(context, ability_id, unit, target)
 		fizzled = fizzle_roll <= fizzle_percent
 	# Second Casting (#285 slice 4): the resource offers to turn THIS fizzle into a success after
@@ -563,6 +575,9 @@ static func resolve(context: Dictionary) -> Dictionary:
 		"damage": damage,
 		"fizzled": fizzled,
 		"fizzle_percent": fizzle_percent,
+		# SR9: how much the caster's held Tone took off the applied chance (0 off-tone).
+		"fizzle_tone_relief": fizzle_tone_relief,
+		"fizzle_resonance": fizzle_resonance,
 		"fizzle_roll": fizzle_roll,
 		"hit": hit,
 		"hit_chance": hit_chance,
@@ -788,8 +803,10 @@ static func _next_row_up(row: Dictionary, rows: Array) -> Dictionary:
 	return best
 
 
+## `with_tone` false drops the caster's held-Tone relief (SR9), so the forecast can show what
+## the tone actually took off the applied chance.
 static func _fizzle_percent(
-	context: Dictionary, composition: CompositionResult, magnitude: StringName
+	context: Dictionary, composition: CompositionResult, magnitude: StringName, with_tone := true
 ) -> float:
 	var inputs: Dictionary = _dictionary(context.get("fizzle", {}))
 	var breadth := String(inputs.get("breadth", _composition_breadth(composition)))
@@ -810,6 +827,7 @@ static func _fizzle_percent(
 		int(inputs.get("pitch", 2)),
 		bool(inputs.get("mastery", false)),
 		str(inputs.get("patron", "")),
+		float(inputs.get("tone_bonus", 0.0)) if with_tone else 0.0,
 	)
 	service.free()
 	return percent

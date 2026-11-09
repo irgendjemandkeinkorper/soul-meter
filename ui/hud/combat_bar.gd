@@ -1106,7 +1106,18 @@ func _card_for(
 	if action.kind == CombatAction.Kind.CAST and not forecast.is_empty():
 		stats.append(tr("Breath %d") % int(forecast.get("breath_cost", 0)))
 		stats.append(tr("Soul %d") % int(forecast.get("soul_cost", 0.0)))
-		stats.append(tr("Fizzle %.0f%%") % float(forecast.get("fizzle_percent", 0.0)))
+		var tone_relief := float(forecast.get("fizzle_tone_relief", 0.0))
+		if tone_relief > 0.0:
+			# SR9: a held Tone's share of the chance, shown as its own step.
+			stats.append(
+				tr("Fizzle %.0f%% (Resonance %.0f%% → −%.0f)") % [
+					float(forecast.get("fizzle_percent", 0.0)),
+					float(forecast.get("fizzle_resonance", 0.0)),
+					tone_relief,
+				]
+			)
+		else:
+			stats.append(tr("Fizzle %.0f%%") % float(forecast.get("fizzle_percent", 0.0)))
 	else:
 		if action.breath_cost > 0:
 			stats.append(tr("Breath %d") % action.breath_cost)
