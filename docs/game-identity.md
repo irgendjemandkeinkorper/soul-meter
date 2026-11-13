@@ -76,6 +76,10 @@ mechanism) is implementation governed by roadmap rulings R13–R15, answered 202
   > `PartyMember.xp` is declared, serialized and migrated with **zero writers** today. The write
   > paths are `Battle._apply_victory()` (which already guards re-entry via `already_resolved`, so
   > a re-fought encounter cannot double-pay) and `QuestRegistry.resolve_side_quest()`. See #285.
+  >
+  > **SR10 (owner, 2026-11-08):** getting past a fight by talk, stealth or Soul pays the same
+  > kill XP as winning it, once. The award call is `Battle.award_bypass_xp()`; see
+  > `docs/sr10-bypass-xp-audit.md`.
 - **Hollowing (ruling 2)** is a Soul band with its own dialogue conditions and companion barks.
   Soul income (ruling 3) is the quest system's job: `acts of Agreement` become a tagged quest
   outcome that credits the gauge.

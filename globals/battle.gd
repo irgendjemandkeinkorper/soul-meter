@@ -1434,9 +1434,12 @@ func _apply_victory(result: BattleResult) -> void:
 
 
 ## Ruling 9 (2026-09-02), re-affirmed by the owner 2026-09-08: XP comes from
-## combat. Called AFTER the `already_resolved` guard on purpose — re-entering a
-## fight the party has already won pays nothing, so an encounter cannot be farmed
-## by walking out and back in.
+## combat. SR10 (owner, 2026-11-08) adds that a bypassed fight pays the same; see
+## `award_bypass_xp()`. A combat-speech victory (`released`, `named`) reaches this
+## through `_apply_victory()` like `slain`, so talking a fight down mid-battle already
+## pays the full kill XP. Called AFTER the `already_resolved` guard on purpose —
+## re-entering a fight the party has already won pays nothing, so an encounter cannot
+## be farmed by walking out and back in.
 func _award_victory_xp(result: BattleResult) -> void:
 	var foes := _defeated_attributes(enemies)
 	var earned := GameState.kill_xp_for_lead(foes)
@@ -1446,6 +1449,46 @@ func _award_victory_xp(result: BattleResult) -> void:
 	result.levels_gained = GameState.award_party_kill_xp(
 		foes, "Won %s" % String(encounter_id)
 	)
+
+
+const BYPASS_KINDS: Array[StringName] = [&"talk", &"stealth", &"soul"]
+
+
+## SR10 (owner, 2026-11-08): getting past a fight without fighting it, by talk, stealth or a
+## Soul route, pays the same kill XP as winning it, so the game never pays the player to
+## fight. This is the one award call every out-of-battle bypass uses.
+##
+## The encounter's `defeated_flag` is the once-only guard in both directions: a bypass sets
+## it, and `_apply_victory()` / `_resolve_group()` pay nothing once it is set; a won fight
+## sets it, and a later bypass pays nothing. An encounter with no `defeated_flag` is refused,
+## because nothing would stop it paying twice. The foes are the encounter's own catalog
+## actors, so the award equals what the same foes pay when defeated.
+##
+## Writes XP and the flag only. Reputation, Renown and spoils stay with the route that
+## calls this, which owns what getting past the fight means.
+func award_bypass_xp(bypass_encounter_id: StringName, bypass_kind: StringName) -> Dictionary:
+	var refused := {"allowed": false, "xp_awarded": 0, "levels_gained": {}}
+	if not BYPASS_KINDS.has(bypass_kind):
+		refused["blocked_by"] = "unknown_bypass"
+		return refused
+	if EncounterCatalog.definition(bypass_encounter_id).is_empty():
+		refused["blocked_by"] = "unknown_encounter"
+		return refused
+	var defeated_flag := EncounterCatalog.defeated_flag(bypass_encounter_id)
+	if defeated_flag.is_empty():
+		refused["blocked_by"] = "no_defeated_flag"
+		return refused
+	if GameState.flag_is_true(defeated_flag):
+		refused["blocked_by"] = "already_resolved"
+		return refused
+	GameState.set_flag(defeated_flag, true)
+	var foes := _defeated_attributes(EncounterCatalog.make_actors(bypass_encounter_id))
+	var cause := "Got past %s (%s)" % [String(bypass_encounter_id), String(bypass_kind)]
+	var earned := GameState.kill_xp_for_lead(foes)
+	var levels: Dictionary = {}
+	if earned > 0:
+		levels = GameState.award_party_kill_xp(foes, cause)
+	return {"allowed": true, "xp_awarded": earned, "levels_gained": levels, "cause": cause}
 
 
 ## Kill XP scales per member against each foe (Advancement.kill_xp_for), so the award
