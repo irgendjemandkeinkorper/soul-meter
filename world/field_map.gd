@@ -59,7 +59,13 @@ func _theme_world_labels() -> void:
 
 func _on_node_added(node: Node) -> void:
 	if node is Label and is_inside_tree() and _field_root().is_ancestor_of(node):
-		_theme_world_label.call_deferred(node)
+		# Defer by instance id: a label freed before the call would fail the typed
+		# argument check and print an engine error.
+		_theme_world_label_by_id.call_deferred(node.get_instance_id())
+
+
+func _theme_world_label_by_id(instance_id: int) -> void:
+	_theme_world_label(instance_from_id(instance_id) as Node)
 
 
 func _theme_world_label(node: Node) -> void:

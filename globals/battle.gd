@@ -830,6 +830,8 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 ## the field has no placed party, the model keeps its default column seating and the
 ## presentation party is left where it is. When a seat cannot be found, the reason goes in
 ## `_set_piece_seat_failure` and the fight does not open: the default seats lie off the map.
+## Every enemy seat is one the party's anchor reaches without crossing a wall (T1, 2026-11-07),
+## so a foe is never seated in the next room or in the street beyond the wall.
 func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 	var live_cells := field.party_cells()
 	if live_cells.is_empty():
@@ -841,7 +843,7 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 	var gap := int(formation.get("gap", SET_PIECE_ENEMY_SCREEN_STEPS))
 	var desired: Array[Vector2i] = []
 	if lines:
-		desired = _open_line(model, grid, live_cells[0], allies.size(), {})
+		desired = _open_line(model, grid, live_cells[0], allies.size(), {}, live_cells[0])
 	else:
 		for index in allies.size():
 			desired.append(live_cells[mini(index, live_cells.size() - 1)])
@@ -862,18 +864,18 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 	)
 	var enemy_line: Array[Vector2i] = []
 	if lines:
-		var centre := model.seat_near(first_seat, taken)
+		var centre := model.seat_near(first_seat, taken, anchor)
 		if not bool(centre.get("ok", false)):
 			_set_piece_seat_failure = "no open cell near the enemy line's first seat %s" % first_seat
 			return
-		enemy_line = _open_line(model, grid, centre["cell"], enemies.size(), taken)
+		enemy_line = _open_line(model, grid, centre["cell"], enemies.size(), taken, anchor)
 	for index in enemies.size():
 		var wanted: Vector2i = (
 			enemy_line[index] if lines
 			else _screen_steps(grid, first_seat, Vector2.DOWN, SET_PIECE_ENEMY_ROW_STEPS * index)
 			if grid != null else first_seat + Vector2i(0, index)
 		)
-		var found := model.seat_near(wanted, taken)
+		var found := model.seat_near(wanted, taken, anchor)
 		if not bool(found.get("ok", false)):
 			_set_piece_seat_failure = "no open cell near %s for %s" % [wanted, enemies[index].display_name]
 			return
@@ -896,9 +898,16 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 ## it (2026-11-03: once Kesselford's walls were painted, the demo's party column ran into the
 ## Wayhouse front, and the whole seating fell back to the model's default seats, off the map).
 ## When both directions close early, the rest repeat the centre and the caller's nearest-free
-## search seats them around it. `centre` is a free cell.
+## search seats them around it. `centre` is a free cell. A line seat must also be one the
+## party's `anchor` reaches without crossing a wall (T1), so a hex line stops at a walled edge
+## as a square line stops at a wall cell.
 func _open_line(
-	model: GridBattlefieldModel, grid: IsoGrid, centre: Vector2i, count: int, taken: Dictionary
+	model: GridBattlefieldModel,
+	grid: IsoGrid,
+	centre: Vector2i,
+	count: int,
+	taken: Dictionary,
+	anchor: Vector2i,
 ) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = [centre]
 	var held := taken.duplicate()
@@ -917,7 +926,7 @@ func _open_line(
 				open = false
 				break
 		var cell := _screen_steps(grid, centre, direction, steps)
-		if not open or model.seat_near(cell, held).get("cell", null) != cell:
+		if not open or model.seat_near(cell, held, anchor).get("cell", null) != cell:
 			reached.erase(direction)
 			continue
 		cells.append(cell)
