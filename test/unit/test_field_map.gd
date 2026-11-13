@@ -1,4 +1,4 @@
-extends GdUnitTestSuite
+extends "res://test/helpers/error_assert_suite.gd"
 
 const TEST_ROOM_SCENE := "res://world/test_room.tscn"
 const TEST_ROOM_BLOCKED_CELL := Vector2i(23, 23)
@@ -14,6 +14,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	super()
 	GameState.from_dict(_game_state_before)
 
 func test_every_gameplay_scene_exposes_field_layers_and_shared_iso_grid() -> void:

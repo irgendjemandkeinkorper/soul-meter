@@ -1,4 +1,4 @@
-extends GdUnitTestSuite
+extends "res://test/helpers/error_assert_suite.gd"
 
 const CampaignQuestLoaderScript := preload("res://globals/campaign_quest_loader.gd")
 
@@ -14,6 +14,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	super()
 	GameState.flags = _original_flags
 	QuestRegistry.clear_runtime_quests()
 	QuestRegistry.reset()
