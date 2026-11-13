@@ -11,6 +11,9 @@ const COUNCIL_ELDER_DIALOGUE_PATH := "res://dialogue/council_elder.dialogue"
 const MARSHAL_DIALOGUE_PATH := "res://dialogue/marshal_coiljaw.dialogue"
 const IRIS_DIALOGUE_PATH := "res://dialogue/iris_illepah.dialogue"
 const SELLA_DIALOGUE_PATH := "res://dialogue/sella_varn.dialogue"
+const WILDS_ROOM_SCENE := "res://world/test_room.tscn"
+const ZHAVAR_TELEGRAPH_SCENE := "res://actors/zhavar_telegraph/zhavar_telegraph.tscn"
+const ZHAVAR_TOLL_SCENE := "res://actors/zhavar_toll/zhavar_toll.tscn"
 const SERAI_LUN_DIALOGUE_PATH := "res://dialogue/companions/serai_lun.dialogue"
 const WYNETH_DIALOGUE_PATH := "res://dialogue/companions/wyneth_hallow_tide.dialogue"
 const GRUMBRAND_DIALOGUE_PATH := "res://dialogue/companions/old_grumbrand.dialogue"
@@ -807,6 +810,105 @@ func _assert_soul_trace_step(count: int, cause: String, before: float, after: fl
 	assert_float(entry["requested"]).is_equal(after)
 	assert_bool(entry["changed"]).is_true()
 	assert_bool(entry["clamped"]).is_false()
+
+
+## P1.6 (#535): every authored Zhavar route is reached through production writers only.
+## Every authored route keys on the `wilds` zone: the rumour rules (`globals/npc_reactions.gd`),
+## the telegraph (the Wilds' `ZhavarTelegraph` overlay and Toma Reedhand's line) and the toll (the
+## Wilds' `ZhavarToll` stroke and Marshal Coiljaw's witnessed line). Its two production writers are
+## the bell-house turn-in (`dialogue/sella_varn.dialogue`) and the Broken Muster ruling
+## (`QuestRegistry.resolve_broken_muster()`). Each rung is written once, and no other zone moves.
+func test_production_writers_reach_every_authored_zhavar_route_once() -> void:
+	_reset_fixture()
+	SaveGame.zhavar = {}
+	_assert_wilds_room_hosts_the_zhavar_actors()
+	var writes: Array[String] = []
+	var record := func(zone_id: String, rung: String) -> void:
+		writes.append("%s:%s" % [zone_id, rung])
+	SaveGame.zhavar_rung_changed.connect(record)
+	var telegraph := auto_free(
+		(load(ZHAVAR_TELEGRAPH_SCENE) as PackedScene).instantiate()
+	) as ZhavarTelegraph
+	var toll := auto_free((load(ZHAVAR_TOLL_SCENE) as PackedScene).instantiate()) as ZhavarToll
+	var tolls: Array[String] = []
+	toll.tolled.connect(func(zone_id: String) -> void: tolls.append(zone_id))
+	add_child(telegraph)
+	add_child(toll)
+	assert_str(SaveGame.zhavar_rung("wilds")).is_equal("low")
+	assert_float(telegraph.intensity).is_equal(0.0)
+	assert_str(_zhavar_rumor_title("nalla-gatebeat")).is_empty()
+
+	# Writer 1: the bell-house turn-in. The bell house's interactable writes the inspected flag.
+	var sella := load(SELLA_DIALOGUE_PATH) as DialogueResource
+	await _start_quest_from_dialogue(
+		QuestRegistry.BELLHOUSE_REPAIR, SELLA_DIALOGUE_PATH, "start", "What happened"
+	)
+	GameState.set_flag("dom_bellhouse_inspected", true)
+	await _choose_response(sella, "start", "I inspected the bell house")
+	assert_str(SaveGame.zhavar_rung("wilds")).is_equal("rising")
+	# Route class 1, rumours: the rising floor opens, the tolling floor stays shut.
+	assert_str(_zhavar_rumor_title("nalla-gatebeat")).is_equal("dom_nalla_gatebeat_rising")
+	assert_str(_zhavar_rumor_title("kessa-nightrail")).is_equal("dom_kessa_nightrail_rising")
+	assert_str(_zhavar_rumor_title("tern-hollowbeat")).is_empty()
+	# Route class 2, the telegraph: the Wilds overlay rises and Toma hears the east.
+	assert_float(telegraph.intensity).is_equal(ZhavarTelegraph.intensity_for_rung("rising"))
+	var toma := load("res://dialogue/toma_reedhand.dialogue") as DialogueResource
+	await _choose_response(toma, "start", "carrying a sound from the east")
+	assert_array(tolls).is_empty()
+
+	# Writer 2: the Broken Muster ruling.
+	_assert_journey_prerequisites()
+	_resolve_vanguard()
+	_resolve_muster(&"slain")
+	GameState.set_flag("reported_bloodbellow", true)
+	assert_bool(QuestRegistry.resolve_broken_muster(&"hold-both")).is_true()
+	assert_str(SaveGame.zhavar_rung("wilds")).is_equal("tolling")
+	assert_float(telegraph.intensity).is_equal(ZhavarTelegraph.intensity_for_rung("tolling"))
+	# Route class 3, the toll: the Wilds stroke plays once, then the marshal's witnessed line.
+	assert_array(tolls).contains_exactly(["wilds"])
+	assert_bool(GameState.flag_is_true(ZhavarToll.witness_flag("wilds"))).is_true()
+	assert_bool(GameState.flag_is_true("zhavar_tolling_wilds")).is_true()
+	var marshal := load(MARSHAL_DIALOGUE_PATH) as DialogueResource
+	await _choose_response(marshal, "start", "Something answered over the east road")
+	assert_bool(GameState.flag_is_true("zhavar_tolling_witnessed")).is_true()
+	assert_str(_zhavar_rumor_title("tern-hollowbeat")).is_equal("dom_tern_hollowbeat_tolling")
+	assert_str(_zhavar_rumor_title("yssra-coldnet")).is_equal("dom_yssra_coldnet_tolling")
+	# Arriving again finds the toll already witnessed.
+	var second_toll := auto_free(
+		(load(ZHAVAR_TOLL_SCENE) as PackedScene).instantiate()
+	) as ZhavarToll
+	second_toll.tolled.connect(func(zone_id: String) -> void: tolls.append(zone_id))
+	add_child(second_toll)
+	assert_array(tolls).contains_exactly(["wilds"])
+
+	assert_array(writes).override_failure_message(
+		"each rung must be written once, by a production writer, on the wilds zone only"
+	).contains_exactly(["wilds:rising", "wilds:tolling"])
+	for zone_id: Variant in SaveGame.zhavar:
+		assert_str(str(zone_id)).is_equal("wilds")
+	SaveGame.zhavar_rung_changed.disconnect(record)
+
+
+## The Wilds room is where the telegraph and the toll play. Both actors keep their default
+## `wilds` zone there, so the scene must not override it.
+func _assert_wilds_room_hosts_the_zhavar_actors() -> void:
+	var state := (load(WILDS_ROOM_SCENE) as PackedScene).get_state()
+	var found := {}
+	for node_index in state.get_node_count():
+		var node_name := str(state.get_node_name(node_index))
+		if node_name != "ZhavarTelegraph" and node_name != "ZhavarToll":
+			continue
+		found[node_name] = true
+		for property_index in state.get_node_property_count(node_index):
+			var property_name := str(state.get_node_property_name(node_index, property_index))
+			assert_str(property_name).override_failure_message(
+				"%s in the Wilds room must keep its default wilds zone" % node_name
+			).is_not_equal("zone_id")
+	assert_dict(found).contains_keys(["ZhavarTelegraph", "ZhavarToll"])
+
+
+func _zhavar_rumor_title(npc_id: String) -> String:
+	return str(NpcReactions.resolve(npc_id).get("dialogue_title", ""))
 
 
 func _assert_journey_prerequisites() -> void:
