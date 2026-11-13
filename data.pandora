@@ -20231,6 +20231,47 @@
 						"value": ""
 					}
 				}
+			},
+			{
+				"_category_id": "57",
+				"_icon_color": "ffffff00",
+				"_id": "613.0",
+				"_index": 0,
+				"_name": "Blasting Charge",
+				"_property_overrides": {
+					"Description": {
+						"type": "string",
+						"value": "A packed stone-breaker charge with a length of slow cord. Set it in a seam, light it and get clear."
+					},
+					"Display Name": {
+						"type": "string",
+						"value": "Blasting Charge"
+					},
+					"Equip Slot": {
+						"type": "string",
+						"value": ""
+					},
+					"Flavour": {
+						"type": "string",
+						"value": "The trial keeps a few for doors that will not answer to anything else."
+					},
+					"Grid Size": {
+						"type": "vector2i",
+						"value": "(1,1)"
+					},
+					"Max Stack Size": {
+						"type": "int",
+						"value": 3
+					},
+					"Rarity": {
+						"type": "string",
+						"value": "uncommon"
+					},
+					"Weight": {
+						"type": "float",
+						"value": 1.5
+					}
+				}
 			}
 		],
 		"_properties": [
@@ -21946,7 +21987,7 @@
 	},
 	"_id_generator": {
 		"_ids_by_context": {
-			"default": 612.0
+			"default": 613.0
 		}
 	},
 	"_version": 1

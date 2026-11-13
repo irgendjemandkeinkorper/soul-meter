@@ -31,14 +31,20 @@ const SPOT_REACH_PX := 96.0
 const HALL_OPEN_FLAG := "tutorial_gauntlet_complete"
 
 var _saved_state: Dictionary
+var _saved_clock: Dictionary
 
 
 func before_test() -> void:
 	_saved_state = GameState.to_dict().duplicate(true)
+	# Routine NPCs stand where their WorldClock phase puts them, and the clock is an autoload
+	# that earlier suites can leave in any phase. Every map is checked at the default phase.
+	_saved_clock = WorldClock.to_dict()
+	WorldClock.reset()
 
 
 func after_test() -> void:
 	GameState.from_dict(_saved_state)
+	WorldClock.from_dict(_saved_clock)
 
 
 func test_every_painted_map_holds_exactly_its_solids_cells() -> void:
@@ -104,6 +110,33 @@ func test_every_arrival_door_and_person_can_be_reached() -> void:
 		await _unload(scene)
 
 
+## Routine people move with the WorldClock (FR-504a). In every other phase, each one present on a
+## painted map is still reached by the walk from the player's arrival. (2026-11-07: the Long Verge
+## paymaster's afternoon spot stood on blocked ground south of the Split Stone.)
+func test_every_routine_person_can_be_reached_in_every_phase() -> void:
+	for phase: StringName in WorldClock.PHASES:
+		if phase == WorldClock.DEFAULT_PHASE:
+			continue
+		assert_bool(WorldClock.set_phase(phase, "test")).is_true()
+		for scene_path: String in SolidFootprints.PAINTED_MAPS:
+			var scene := await _load_map(scene_path)
+			var grid := (scene.find_child("FieldMap", true, false) as FieldMap).iso_grid()
+			var player := scene.find_child("Player", true, false) as Node2D
+			var walked := _walked_points(grid, grid.world_to_cell(player.global_position))
+			var cut_off: Array[String] = []
+			for target: Node2D in _destinations(scene):
+				var person := target as NPC
+				if person == null or not person.visible or not NpcRoutines.has_routine(person._stable_actor_id()):
+					continue
+				if not _reaches(person, walked):
+					cut_off.append("%s %s" % [scene.get_path_to(person), person.global_position])
+			assert_bool(cut_off.is_empty()).override_failure_message(
+				"%s in the %s: the walk from the player's arrival cannot reach %s"
+				% [scene_path, phase, ", ".join(cut_off)]
+			).is_true()
+			await _unload(scene)
+
+
 func test_kesselford_grid_stops_at_a_facade_and_at_the_border() -> void:
 	var scene := await _load_map(KESSELFORD)
 	var grid := (scene.find_child("FieldMap", true, false) as FieldMap).iso_grid()
@@ -130,23 +163,30 @@ func test_a_trial_hall_gate_opens_its_cells_with_the_gate() -> void:
 	var scene := await _load_map(TRIAL_HALL)
 	var grid := (scene.find_child("FieldMap", true, false) as FieldMap).iso_grid()
 	var door := scene.get_node("SkillDoor/CollisionShape2D") as CollisionShape2D
-	# Points along the door; the walk grid's one-cell clearance keeps those beside the counter.
-	var line: Array[Vector2i] = []
-	for x in range(-840, 841, 40):
-		line.append(grid.world_to_cell(door.global_position + Vector2(x, 0)))
-	var shut := _blocked(grid, line)
-	assert_int(shut).override_failure_message("the shut skill door blocks %d of %d" % [shut, line.size()]).is_equal(line.size())
-	# Where the door meets the east wall the wall keeps the cell.
-	var wall_end := grid.world_to_cell(door.global_position + Vector2(930, 0))
-	assert_bool(grid.is_blocked_for(wall_end)).is_true()
+	# The skill door shuts one doorway of the rooms' plan (2026-11-04); the walls beside it are
+	# walls whatever the door does. The rooms are a walk-in plan, so no clearance ring.
+	var doorway := grid.world_to_cell(door.global_position)
+	var beside: Array[Vector2i] = [
+		grid.world_to_cell(door.global_position + Vector2(-32, -16)),
+		grid.world_to_cell(door.global_position + Vector2(32, 16)),
+	]
+	var through: Array[Vector2i] = [
+		grid.world_to_cell(door.global_position + Vector2(32, -16)),
+		grid.world_to_cell(door.global_position + Vector2(-32, 16)),
+	]
+	assert_bool(grid.is_blocked_for(doorway)).override_failure_message("the shut skill door is open").is_true()
+	assert_int(_blocked(grid, beside)).is_equal(2)
+	assert_int(grid.path_cells(through[0], through[1]).size()).override_failure_message(
+		"a path crosses the shut skill door"
+	).is_equal(0)
 	GameState.set_flag(SKILL_DOOR_FLAG, true)
 	await get_tree().process_frame
-	var open := _blocked(grid, line)
-	assert_int(open).override_failure_message("the open skill door still blocks %d of %d" % [open, line.size()]).is_less(line.size() / 2)
-	assert_bool(grid.is_blocked_for(wall_end)).override_failure_message("opening the door opened the wall").is_true()
+	assert_bool(grid.is_blocked_for(doorway)).override_failure_message("the open skill door still blocks").is_false()
+	assert_int(_blocked(grid, beside)).override_failure_message("opening the door opened the wall").is_equal(2)
+	assert_int(grid.path_cells(through[0], through[1]).size()).is_greater(0)
 	GameState.set_flag(SKILL_DOOR_FLAG, false)
 	await get_tree().process_frame
-	assert_int(_blocked(grid, line)).override_failure_message("the door did not shut again").is_equal(line.size())
+	assert_bool(grid.is_blocked_for(doorway)).override_failure_message("the door did not shut again").is_true()
 	await _unload(scene)
 
 

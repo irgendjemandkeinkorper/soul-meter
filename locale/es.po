@@ -156,6 +156,16 @@ msgstr ""
 msgid "ITEM_RELICS_VOTIVE_CINDER_DESC"
 msgstr ""
 
+#. tools/blasting_charge — display name
+#. English source: Blasting Charge
+msgid "ITEM_TOOLS_BLASTING_CHARGE_NAME"
+msgstr ""
+
+#. tools/blasting_charge — description
+#. English source: A packed stone-breaker charge with a length of slow cord. Set it in a seam, light it and get clear.
+msgid "ITEM_TOOLS_BLASTING_CHARGE_DESC"
+msgstr ""
+
 #. tools/field_needle — display name
 #. English source: Field Needle
 msgid "ITEM_TOOLS_FIELD_NEEDLE_NAME"
@@ -697,4 +707,9 @@ msgstr ""
 #: quests/loamroot_sprigs.tres
 msgctxt "quest_1/quest_description"
 msgid "Iris wants a few loamroot sprigs from the grove for her work."
+msgstr ""
+
+#. DRAFT: owner approval pending (chargen randomize, 2026-11-01).
+#: ui/screens/character_creation.gd
+msgid "RANDOMIZE"
 msgstr ""

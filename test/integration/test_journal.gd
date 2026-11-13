@@ -48,16 +48,15 @@ func test_lists_active_and_completed_quests_with_journal_context() -> void:
 	var active_text := _label_text(active)
 	assert_str(active_text).contains("The Broken Muster")
 	assert_str(active_text).contains("Break the demon vanguard.")
-	assert_str(active_text).contains("GIVEN BY  ·  Themka Gaath")
-	assert_str(active_text).contains("WHERE  ·  Dorthkor Road")
-	assert_str(active_text).contains("STATE  ·  Active")
+	# U3: one who/where line; an ACTIVE quest carries no state badge.
+	assert_str(active_text).contains("Themka Gaath  ·  Dorthkor Road")
+	assert_str(active_text).not_contains("ACTIVE")
 
 	var completed_text := _label_text(completed)
 	assert_str(completed_text).contains("The Bell That Won't Ring")
 	assert_str(completed_text).contains("Return to Sella Varn with what you found.")
-	assert_str(completed_text).contains("GIVEN BY  ·  Sella Varn")
-	assert_str(completed_text).contains("WHERE  ·  Dom bell house")
-	assert_str(completed_text).contains("STATE  ·  Completed")
+	assert_str(completed_text).contains("Sella Varn  ·  Dom bell house")
+	assert_str(completed_text).contains("COMPLETED")
 
 
 func test_every_registered_quest_has_giver_and_location_metadata() -> void:

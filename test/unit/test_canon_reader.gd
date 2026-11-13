@@ -818,7 +818,9 @@ func _item_row(item_id: String, category: String) -> Dictionary:
 func test_items_load_with_their_numeric_and_vector_fields_intact() -> void:
 	var items: Array[Dictionary] = SeedPandora.CanonReader.load("items")
 
-	assert_int(items.size()).is_equal(6)
+	# Every authored item file loads: none is dropped. Counted from disk so a new item does
+	# not break this test.
+	assert_int(items.size()).is_equal(_canon_item_file_count())
 	var by_id: Dictionary = {}
 	for item: Dictionary in items:
 		assert_str(item.get("schema", "")).is_equal("weftlumin.item.v1")
@@ -832,6 +834,23 @@ func test_items_load_with_their_numeric_and_vector_fields_intact() -> void:
 	assert_int(int((axe["grid_size"] as Array)[0])).is_equal(2)
 	assert_int(int((axe["grid_size"] as Array)[1])).is_equal(3)
 	assert_str(axe["equip_slot"]).is_equal("main_hand")
+	var charge: Dictionary = by_id["blasting-charge"]
+	assert_str(charge["category"]).is_equal("Tools")
+	assert_int(int(charge["max_stack_size"])).is_equal(3)
+	assert_float(float(charge["weight"])).is_equal_approx(1.5, 0.0001)
+
+
+func _canon_item_file_count() -> int:
+	var count: int = 0
+	var root: String = SeedPandora.CanonReader.CANON_ROOT
+	for hub: String in DirAccess.get_directories_at(root):
+		var kind_root: String = root.path_join(hub).path_join("items")
+		if not DirAccess.dir_exists_absolute(kind_root):
+			continue
+		for filename: String in DirAccess.get_files_at(kind_root):
+			if filename.get_extension().to_lower() == "json":
+				count += 1
+	return count
 
 
 func test_every_item_names_a_category_the_seeder_creates() -> void:

@@ -374,6 +374,26 @@ func creation_ledger_rows() -> Dictionary:
 
 ## A PartyMember built from the current choices, for previews. Rebuilt lazily whenever a
 ## choice changes; never registered anywhere.
+## An independent copy (ROLL THIS TAB rolls onto a copy and keeps the untouched tabs).
+func copy() -> ChargenBuild:
+	var other := ChargenBuild.new()
+	other.ancestry_id = ancestry_id
+	other.discipline_id = discipline_id
+	other.class_id = class_id
+	other.kit_skill = kit_skill
+	other.major_element = major_element
+	other.minor_element = minor_element
+	other.mastery_element = mastery_element
+	other.attributes = attributes.duplicate(true)
+	other.background_id = background_id
+	other.display_name = display_name
+	other.epithet = epithet
+	other.flaw = flaw
+	other.likeness_id = likeness_id
+	other.creation_buys = creation_buys.duplicate(true)
+	return other
+
+
 func scratch_member() -> PartyMember:
 	if _scratch == null:
 		_scratch = to_party_member()

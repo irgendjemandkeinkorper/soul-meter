@@ -19,14 +19,28 @@ const SEAT_WALK_MAX_FRAME := 1.0 / 30.0
 
 var _combat_mode_active: bool = false
 var _restore_controls: Array[Callable] = []
+var _label_restore: Array[Callable] = []
 var _grid_layer: FieldGridLayer
 ## Node2D -> {"target": world seat, "speed": px/s}, while a body walks onto its seat.
 var _seat_walks: Dictionary = {}
 
 
+const GROUP := &"field_map"
+
+
+## U2 (owner 2026-11-02): world labels speak in the DS display face. A Label under a
+## Node2D inherits no theme, so building names, prompts and exits drew in the engine's
+## sans. Each world-space label gets the UI theme and, unless it asks for something more
+## specific than the eyebrow face, the WorldLabel variation (Cinzel, outlined).
+const WORLD_LABEL_VARIATIONS: Array[StringName] = [&"", &"EyebrowLabel"]
+
+
 func _ready() -> void:
 	set_process(false)
+	add_to_group(GROUP)
 	_connect_hostiles.call_deferred()
+	_theme_world_labels.call_deferred()
+	get_tree().node_added.connect(_on_node_added)
 	_grid_layer = FieldGridLayer.new(self)
 	add_child(_grid_layer)
 
@@ -34,6 +48,30 @@ func _ready() -> void:
 ## The hex grid drawn on this field's floor (see FieldGridLayer).
 func grid_layer() -> FieldGridLayer:
 	return _grid_layer
+
+
+func _theme_world_labels() -> void:
+	if not is_inside_tree():
+		return
+	for node: Node in _field_root().find_children("*", "Label", true, false):
+		_theme_world_label(node)
+
+
+func _on_node_added(node: Node) -> void:
+	if node is Label and is_inside_tree() and _field_root().is_ancestor_of(node):
+		_theme_world_label.call_deferred(node)
+
+
+func _theme_world_label(node: Node) -> void:
+	if not is_instance_valid(node) or not node.is_inside_tree():
+		return
+	var label := node as Label
+	if label == null or label.get_canvas_layer_node() != null:
+		return
+	if label.theme == null:
+		label.theme = UIManager.ui_theme
+	if StringName(label.theme_type_variation) in WORLD_LABEL_VARIATIONS:
+		label.theme_type_variation = &"WorldLabel"
 
 
 func ground() -> TileMapLayer:
@@ -114,6 +152,27 @@ func set_combat_mode(active: bool) -> void:
 		if travel_exit != null:
 			_restore_controls.append(travel_exit.set.bind("monitoring", travel_exit.monitoring))
 			travel_exit.monitoring = false
+
+
+## U1 (owner 2026-11-01): while a conversation is open, field names and prompts
+## ("Loamroot Sprig", "RETURN TO DOM") fade like they do for combat, through their own
+## restore list so a parley inside a fight restores to the fight's state, not the field's.
+func set_world_labels_muted(muted: bool) -> void:
+	if not muted:
+		for restore: Callable in _label_restore:
+			restore.call()
+		_label_restore.clear()
+		return
+	if not _label_restore.is_empty():
+		return
+	# Every world-space label: interactable and exit names, and the building names a town
+	# paints over its facades. Screen-space UI lives in CanvasLayers and is left alone.
+	for node: Node in _field_root().find_children("*", "Label", true, false):
+		var label := node as Label
+		if label == null or label.get_canvas_layer_node() != null:
+			continue
+		_label_restore.append(label.set.bind("self_modulate", label.self_modulate))
+		label.self_modulate = Color(label.self_modulate, 0.0)
 
 
 func combat_mode_active() -> bool:
