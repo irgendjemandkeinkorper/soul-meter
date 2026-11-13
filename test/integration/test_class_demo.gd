@@ -157,6 +157,10 @@ func test_the_arena_seats_ten_and_each_enemy_wears_its_members_body() -> void:
 ## walls, the seating failed, and the demo fought from the model's default seats off the map (the
 ## hex suite grew past 7 GB). A set-piece that cannot seat both sides by the party does not open:
 ## Battle refuses it at once and leaves no session, controller or enemy bodies behind.
+##
+## Since T1 (2026-11-07) a first seat inside a wall moves to the party's side of it, so the fixture
+## no longer walls in that seat: it seals the party inside the ring two steps out, which leaves the
+## leader's neighbours (six hexes or eight cells) for ten bodies. The party seats; an enemy cannot.
 func test_a_demo_that_cannot_seat_its_ten_does_not_open() -> void:
 	assert_bool(ClassDemo.prepare()).is_true()
 	var scene: Node = (load(GameFlow.CLASS_DEMO_SCENE) as PackedScene).instantiate()
@@ -169,15 +173,12 @@ func test_a_demo_that_cannot_seat_its_ten_does_not_open() -> void:
 	var field := scene.find_child("FieldMap", true, false) as FieldMap
 	var grid := field.iso_grid()
 	var lead: Vector2i = field.party_cells()[0]
-	# Wall in the enemy line's first seat and the cells round it, as the Wayhouse walls did.
-	var first_seat := grid.screen_steps(lead, Vector2.RIGHT, ClassDemo.FORMATION_GAP)
+	# Seal the party in: every open cell two steps from the leader becomes solid.
 	var walled: Array[Vector2i] = []
-	for dx in range(-2, 3):
-		for dy in range(-2, 3):
-			var cell := first_seat + Vector2i(dx, dy)
-			if cell != lead and grid.is_in_bounds(cell) and not grid.is_point_solid(cell):
-				grid.set_point_solid(cell, true)
-				walled.append(cell)
+	for cell: Vector2i in GridMetric.ring(lead, 2):
+		if grid.is_in_bounds(cell) and not grid.is_point_solid(cell):
+			grid.set_point_solid(cell, true)
+			walled.append(cell)
 	Battle.ended = true
 	Battle.controller = null
 	var started := Time.get_ticks_msec()
@@ -188,7 +189,8 @@ func test_a_demo_that_cannot_seat_its_ten_does_not_open() -> void:
 
 	assert_bool(bool(opened.get("allowed", true))).override_failure_message(str(opened)).is_false()
 	assert_str(String(opened.get("blocked_by", ""))).is_equal("seating")
-	assert_str(str(opened.get("message", ""))).contains("enemy line's first seat")
+	# The line's first seat or a later enemy's, depending on how many neighbours the party left.
+	assert_str(str(opened.get("message", ""))).contains("no open cell near")
 	assert_bool(Battle.session_active).is_false()
 	assert_bool(Battle.ended).is_true()
 	assert_object(Battle.controller).is_null()
