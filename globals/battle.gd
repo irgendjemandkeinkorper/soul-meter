@@ -24,6 +24,9 @@ const ACTION_PARADOX := &"paradox"
 const ACTION_SPEECH := &"speech-seam"
 const OUTCOME_DEFEAT := &"defeat"
 const OUTCOME_FLED := &"fled"
+## SR7: the share of the party's gp a lost ambient fight takes. PROVISIONAL, proposed for
+## owner item 5 (Breath and Soul numbers).
+const AMBIENT_DEFEAT_COIN_SHARE := 0.10
 var allies: Array[BattleActor] = []
 var enemies: Array[BattleActor] = []
 var active_ally_index := 0
@@ -506,8 +509,10 @@ func _end_session(result: BattleResult) -> void:
 		if _session_field.tree_exiting.is_connected(_on_session_field_exiting):
 			_session_field.tree_exiting.disconnect(_on_session_field_exiting)
 	_settle_session_hostiles()
-	if _ambient_session and result != null:
-		# One checkpoint per session, not one per resolved group (D7).
+	if _ambient_session and result != null and result.wake_hub_id == &"":
+		# One checkpoint per session, not one per resolved group (D7). A defeat that wakes the
+		# party at a hub (SR7) is checkpointed by GameFlow on arrival there instead, so the save
+		# never holds the beaten party on the field it lost.
 		SaveGame.request_checkpoint(
 			SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, "session-" + String(result.outcome_id)
 		)
@@ -1379,9 +1384,8 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 
 ## D7 for an ambient session. Groups already paid out when their last member fell; victory
 ## only sweeps up whatever is left (a group whose last member fell on the finishing blow) and
-## hands the accumulated spoils and XP to the result. Defeat and flight write no ledger for
-## the groups still standing — PROVISIONAL: D7 rules a fled group writes nothing, and a
-## session has no authored loss stake, so defeat is treated the same until one is ratified.
+## hands the accumulated spoils and XP to the result. Flight writes no ledger for the groups
+## still standing (D7). Defeat carries the SR7 stake: see `_apply_ambient_defeat()`.
 func _finish_ambient(result: BattleResult) -> void:
 	match result.state:
 		BattleResult.State.VICTORY:
@@ -1391,12 +1395,65 @@ func _finish_ambient(result: BattleResult) -> void:
 		BattleResult.State.DEFEAT:
 			result.message = "The company falls back and recovers to half strength."
 			result.cause = "Overrun on the field"
+			_apply_ambient_defeat(result)
 		_:
 			result.message = "The company disengages without reward or resolution."
 			result.cause = "Broke off the fight"
 	result.spoils = _session_spoils.duplicate(true)
 	result.xp_awarded = _session_xp
 	result.levels_gained = _session_levels.duplicate(true)
+
+
+## SR7 (owner, 2026-11-08): a lost ambient fight is never a game over. `_finish()` has
+## already halved HP and kept serious injuries. This adds the rest of the stake:
+## - coin: `AMBIENT_DEFEAT_COIN_SHARE` of the party's gp, rounded down (PROVISIONAL, owner
+##   item 5);
+## - one Reputation entry: the authored loss stake (`loss_faction`, `loss_delta`,
+##   `loss_cause`) of the first still-standing group that has one, the same stake a set-piece
+##   defeat by that group writes. A group with no authored loss faction (a beast, say) writes
+##   none;
+## - the wake hub: the discovered hub nearest the field, which GameFlow travels to once the
+##   outcome is dismissed. The session's one checkpoint then saves there, not on the field.
+func _apply_ambient_defeat(result: BattleResult) -> void:
+	var lost := floori(float(GameState.gp) * AMBIENT_DEFEAT_COIN_SHARE)
+	if lost > 0 and GameState.spend_gp(lost):
+		result.coin_lost = lost
+	var stake := _ambient_defeat_stake()
+	if not stake.is_empty():
+		Reputation.record("player", stake["faction"], stake["delta"], stake["cause"], "field")
+	result.wake_hub_id = GameState.nearest_discovered_hub(_session_location_id())
+
+
+func _ambient_defeat_stake() -> Dictionary:
+	for tracked: Variant in _session_hostiles.values():
+		if not is_instance_valid(tracked):
+			continue
+		var actor := (tracked as Hostile).battle_actor()
+		if actor == null or not actor.is_alive():
+			continue
+		if actor.loss_faction.is_empty() or is_zero_approx(actor.loss_delta):
+			continue
+		var cause := actor.loss_cause if not actor.loss_cause.is_empty() else "Overrun on the field"
+		return {"faction": actor.loss_faction, "delta": actor.loss_delta, "cause": cause}
+	return {}
+
+
+## The LocationRegistry id of the scene the session's field belongs to: the nearest ancestor
+## whose scene file is a known location (the FieldMap is often its own sub-scene).
+func _session_location_id() -> StringName:
+	var node: Node = _session_field if is_instance_valid(_session_field) else null
+	while node != null:
+		if not node.scene_file_path.is_empty():
+			var location := LocationRegistry.by_scene(node.scene_file_path)
+			if location != null:
+				return location.id
+		node = node.get_parent()
+	var current := get_tree().current_scene if is_inside_tree() else null
+	if current != null:
+		var location := LocationRegistry.by_scene(current.scene_file_path)
+		if location != null:
+			return location.id
+	return &""
 
 
 func _apply_victory(result: BattleResult) -> void:
@@ -1434,9 +1491,12 @@ func _apply_victory(result: BattleResult) -> void:
 
 
 ## Ruling 9 (2026-09-02), re-affirmed by the owner 2026-09-08: XP comes from
-## combat. Called AFTER the `already_resolved` guard on purpose — re-entering a
-## fight the party has already won pays nothing, so an encounter cannot be farmed
-## by walking out and back in.
+## combat. SR10 (owner, 2026-11-08) adds that a bypassed fight pays the same; see
+## `award_bypass_xp()`. A combat-speech victory (`released`, `named`) reaches this
+## through `_apply_victory()` like `slain`, so talking a fight down mid-battle already
+## pays the full kill XP. Called AFTER the `already_resolved` guard on purpose —
+## re-entering a fight the party has already won pays nothing, so an encounter cannot
+## be farmed by walking out and back in.
 func _award_victory_xp(result: BattleResult) -> void:
 	var foes := _defeated_attributes(enemies)
 	var earned := GameState.kill_xp_for_lead(foes)
@@ -1446,6 +1506,46 @@ func _award_victory_xp(result: BattleResult) -> void:
 	result.levels_gained = GameState.award_party_kill_xp(
 		foes, "Won %s" % String(encounter_id)
 	)
+
+
+const BYPASS_KINDS: Array[StringName] = [&"talk", &"stealth", &"soul"]
+
+
+## SR10 (owner, 2026-11-08): getting past a fight without fighting it, by talk, stealth or a
+## Soul route, pays the same kill XP as winning it, so the game never pays the player to
+## fight. This is the one award call every out-of-battle bypass uses.
+##
+## The encounter's `defeated_flag` is the once-only guard in both directions: a bypass sets
+## it, and `_apply_victory()` / `_resolve_group()` pay nothing once it is set; a won fight
+## sets it, and a later bypass pays nothing. An encounter with no `defeated_flag` is refused,
+## because nothing would stop it paying twice. The foes are the encounter's own catalog
+## actors, so the award equals what the same foes pay when defeated.
+##
+## Writes XP and the flag only. Reputation, Renown and spoils stay with the route that
+## calls this, which owns what getting past the fight means.
+func award_bypass_xp(bypass_encounter_id: StringName, bypass_kind: StringName) -> Dictionary:
+	var refused := {"allowed": false, "xp_awarded": 0, "levels_gained": {}}
+	if not BYPASS_KINDS.has(bypass_kind):
+		refused["blocked_by"] = "unknown_bypass"
+		return refused
+	if EncounterCatalog.definition(bypass_encounter_id).is_empty():
+		refused["blocked_by"] = "unknown_encounter"
+		return refused
+	var defeated_flag := EncounterCatalog.defeated_flag(bypass_encounter_id)
+	if defeated_flag.is_empty():
+		refused["blocked_by"] = "no_defeated_flag"
+		return refused
+	if GameState.flag_is_true(defeated_flag):
+		refused["blocked_by"] = "already_resolved"
+		return refused
+	GameState.set_flag(defeated_flag, true)
+	var foes := _defeated_attributes(EncounterCatalog.make_actors(bypass_encounter_id))
+	var cause := "Got past %s (%s)" % [String(bypass_encounter_id), String(bypass_kind)]
+	var earned := GameState.kill_xp_for_lead(foes)
+	var levels: Dictionary = {}
+	if earned > 0:
+		levels = GameState.award_party_kill_xp(foes, cause)
+	return {"allowed": true, "xp_awarded": earned, "levels_gained": levels, "cause": cause}
 
 
 ## Kill XP scales per member against each foe (Advancement.kill_xp_for), so the award

@@ -154,3 +154,21 @@ func _assert_hub_values(actual: Dictionary, expected: Dictionary) -> void:
 		var context := "%s.%s" % [expected["id"], field]
 		assert_int(typeof(actual.get(field))).override_failure_message(context).is_equal(typeof(expected[field]))
 		assert_bool(actual.get(field) == expected[field]).override_failure_message(context).is_true()
+
+
+## SR7: the wake hub is the discovered hub nearest the field, with Dom as the last resort.
+func test_nearest_discovered_hub_reads_discovery_and_falls_back() -> void:
+	for hub: Dictionary in FastTravelRegistry.all():
+		GameState.set_flag(GameState.FAST_TRAVEL_DISCOVERY_PREFIX + String(hub["id"]), false)
+	assert_str(String(GameState.nearest_discovered_hub(&"wilds"))) \
+		.override_failure_message("with no hub discovered the party still wakes in Dom") \
+		.is_equal("dom")
+
+	GameState.discover_fast_travel_hub(&"kesselford")
+	assert_str(String(GameState.nearest_discovered_hub(&"wilds"))).is_equal("kesselford")
+	# An interior has no routes: the first discovered hub.
+	assert_str(String(GameState.nearest_discovered_hub(&"dom_tavern_interior"))).is_equal("kesselford")
+
+	GameState.discover_fast_travel_hub(&"dom")
+	assert_str(String(GameState.nearest_discovered_hub(&"hollowmere"))).is_equal("dom")
+	assert_str(String(GameState.nearest_discovered_hub(&"dom_tavern_interior"))).is_equal("dom")

@@ -19,6 +19,9 @@ extends SceneTree
 ## controller's `event_emitted` and Battle's `combat_event` / `turn_resolved` during the decision
 ## window. The proxies cost time of their own, so do not compare an attributed run's timings
 ## with an unattributed one.
+## #603 opt-in comparison: --planner-variant none|full|cached|fallback24 --planner-output PATH.
+## Timing-only reruns: --planner-reuse-legibility PATH keeps previously inspected evidence.
+## Use tools/planner_spike/measure_capped.py for isolated, memory-capped rendered evidence.
 
 const PerformanceBenchmark := preload("res://tools/performance_benchmark.gd")
 ## Loaded at runtime, never preloaded: it names `Hostile`, `FieldMap` and `Battle`, whose
@@ -147,6 +150,10 @@ func _run() -> void:
 		_add_error("Synthesis alerted a hostile; the keep-clear zones did not hold.")
 		_finish_with_error()
 		return
+	# #603 is explicitly opt-in. No production controller or default benchmark path changes.
+	if OS.get_cmdline_user_args().has("--planner-variant"):
+		await _run_planner_spike()
+		return
 
 	# Window 1: the populated field with no session. This is the FR-904 field metric. The
 	# TIME_PROCESS monitor publishes the worst frame of the last second, so the same fixed
@@ -268,7 +275,7 @@ func _admit_remaining() -> void:
 		if accepted and bool(_synthesizer.call("is_in_combat", hostile)):
 			admitted += 1
 		else:
-			var refusal: Dictionary = (_battle.get("controller") as CombatController).last_refusal
+			var refusal: Dictionary = (_battle.get("controller") as RefCounted).get("last_refusal")
 			refusals.append(
 				{
 					"hostile": hostile.name,
@@ -287,12 +294,12 @@ func _admit_remaining() -> void:
 	}
 	if admitted != requested:
 		_add_error("Admitted %d of %d requested hostiles." % [admitted, requested])
-	for actor: BattleActor in (_battle.get("enemies") as Array):
+	for actor: Resource in (_battle.get("enemies") as Array):
 		_enemy_ids[actor.combat_id] = true
 
 
 func _apply_ally_hp_fixture() -> void:
-	for actor: BattleActor in (_battle.get("allies") as Array):
+	for actor: Resource in (_battle.get("allies") as Array):
 		actor.max_hp = FIXTURE_ALLY_HP
 		actor.hp = FIXTURE_ALLY_HP
 
@@ -305,7 +312,7 @@ func _apply_ally_hp_fixture() -> void:
 ## listener on them, which is why zero-decision turns are recorded rather than discarded.
 func _run_decision_window() -> Array[Dictionary]:
 	var turns: Array[Dictionary] = []
-	var controller := _battle.get("controller") as CombatController
+	var controller := _battle.get("controller") as RefCounted
 	if controller == null:
 		_add_error("The session has no CombatController to drive.")
 		return turns
@@ -315,7 +322,8 @@ func _run_decision_window() -> Array[Dictionary]:
 	for turn_index: int in ALLY_TURN_CAP:
 		if decisions_timed >= target:
 			break
-		if int(controller.get("state")) != CombatController.State.ALLY_TURN:
+		var states: Dictionary = controller.get_script().get_script_constant_map()["State"]
+		if int(controller.get("state")) != int(states["ALLY_TURN"]):
 			_add_error("Ally turn %d did not start on an ally turn." % turn_index)
 			break
 		_pass_marks.clear()
@@ -356,8 +364,9 @@ func _run_decision_window() -> Array[Dictionary]:
 	return turns
 
 
-## D9: 100 hostiles is a presence budget; the design target is <= 30 in one session.
-## `--session-size N` keeps all 100 on the field and admits only N into the session.
+## Legacy measurement dial, not an engagement rule. The default admits all 100.
+## `--session-size N` keeps all 100 on the field and admits only N into the session;
+## the #603 comparison rejects this dial and measures all 100 present-and-alerted hostiles.
 func _requested_session_size() -> int:
 	var arguments := OS.get_cmdline_user_args()
 	var argument_index := arguments.find("--session-size")
@@ -387,7 +396,7 @@ func _requested_decision_target() -> int:
 
 
 func _drive_ally_turn() -> StringName:
-	var controller := _battle.get("controller") as CombatController
+	var controller := _battle.get("controller") as RefCounted
 	if controller.end_turn():
 		return &"yield"
 	var guard: StringName = _synthesizer.call("guard_action_id")
@@ -396,7 +405,7 @@ func _drive_ally_turn() -> StringName:
 	return &""
 
 
-func _on_controller_event(event: CombatEvent) -> void:
+func _on_controller_event(event: RefCounted) -> void:
 	if DECISION_EVENT_TYPES.has(event.type) and _enemy_ids.has(event.actor_id):
 		_pass_marks.append(Time.get_ticks_usec())
 
@@ -409,7 +418,7 @@ func _on_controller_event(event: CombatEvent) -> void:
 ## flags, for the decision window only. Off by default: the proxies add their own overhead,
 ## so an attributed run is not comparable with an unattributed one.
 func _wrap_listeners() -> void:
-	var controller := _battle.get("controller") as CombatController
+	var controller := _battle.get("controller") as RefCounted
 	if controller == null:
 		return
 	_wrap_signal(controller.event_emitted, "event_emitted", 1)
@@ -493,8 +502,8 @@ func _listener_report() -> Array[Dictionary]:
 	return rows
 
 
-func _tick_count(controller: CombatController) -> int:
-	var scheduler := controller.scheduler
+func _tick_count(controller: RefCounted) -> int:
+	var scheduler := controller.get("scheduler") as RefCounted
 	if scheduler != null and scheduler.has_method("tick_count"):
 		return int(scheduler.call("tick_count"))
 	return 0
@@ -616,13 +625,16 @@ func _prime_game_flow() -> bool:
 ## Grows the party toward PARTY_SIZE from existing recruit candidates, the same way the grid
 ## benchmark fills its deployment. Fewer is recorded, not refused: D9 is about hostiles.
 func _prepare_party() -> void:
-	var lead := _game_state.call("protagonist") as PartyMember
+	var lead := _game_state.call("protagonist") as Resource
 	if lead == null:
 		return
-	var party: Array[PartyMember] = [lead]
-	var candidates: Array[PartyMember] = []
+	# Preserve the runtime typed Array without compiling PartyMember before autoloads exist.
+	var party: Array = (_game_state.get("party") as Array).duplicate()
+	party.clear()
+	party.append(lead)
+	var candidates: Array = []
 	candidates.assign(_game_state.call("recruitable_candidates"))
-	for candidate: PartyMember in candidates:
+	for candidate: Resource in candidates:
 		if candidate.id == lead.id:
 			continue
 		party.append(candidate)
@@ -632,6 +644,13 @@ func _prepare_party() -> void:
 
 
 func _battle_hud() -> Control:
+	# The one-bar HUD lives on the field; UIManager only hosts the no-field fallback.
+	if is_instance_valid(_field):
+		var field_hud := _field.call("field_hud") as Node
+		if field_hud != null:
+			var interface := field_hud.get("battle_interface") as Control
+			if interface != null and interface.is_visible_in_tree():
+				return interface
 	var ui_manager := root.get_node_or_null("UIManager")
 	if ui_manager == null:
 		return null
@@ -963,3 +982,172 @@ static func _elapsed_ms(start_usec: int, finish_usec: int) -> float:
 	if start_usec < 0 or finish_usec < 0:
 		return -1.0
 	return float(finish_usec - start_usec) / 1000.0
+
+
+# --- #603 tool-only comparison; all fixture numbers PROVISIONAL ---
+
+const PROVISIONAL_PLANNER_SAMPLES := 120
+const PROVISIONAL_ACTION_EVERY_FRAMES := 4
+const PLANNER_FRAME_BUDGET_MS := 16.67
+const PLANNER_TRANSITION_BUDGET_MS := 2000.0
+
+
+static func is_planner_variant(variant: String) -> bool:
+	return variant in ["none", "full", "cached", "fallback24"]
+
+
+static func planner_budget_verdict(
+	frames: Array, transition_ms: float, present: int, ct_hostiles: int
+) -> bool:
+	if frames.is_empty() or present != HOSTILE_COUNT or ct_hostiles != HOSTILE_COUNT \
+			or not is_finite(transition_ms) or transition_ms < 0.0:
+		return false
+	for sample: Variant in frames:
+		if not is_finite(float(sample)) or float(sample) < 0.0:
+			return false
+	return float(summarize_timings(frames)["p95"]) <= PLANNER_FRAME_BUDGET_MS \
+		and transition_ms < PLANNER_TRANSITION_BUDGET_MS
+
+
+static func planner_comparison_verdict(reports: Array) -> bool:
+	var variants: Dictionary = {}
+	for report: Dictionary in reports:
+		variants[str(report.get("variant", ""))] = report
+	if not variants.has_all(["full", "cached", "fallback24"]):
+		return false
+	for variant: String in ["full", "cached"]:
+		var report: Dictionary = variants[variant]
+		if bool(report.get("budget_pass", false)) and int(report.get("legibility_facts", 0)) == 3:
+			return true
+	return false
+
+
+func _spike_argument(flag: String, fallback: String = "") -> String:
+	var args := OS.get_cmdline_user_args()
+	var index := args.find(flag)
+	return str(args[index + 1]) if index >= 0 and index + 1 < args.size() else fallback
+
+
+func _run_planner_spike() -> void:
+	var variant := _spike_argument("--planner-variant")
+	if not is_planner_variant(variant):
+		_add_error("--planner-variant must be none, full, cached, or fallback24.")
+		_finish_with_error()
+		return
+	var retained_legibility: Dictionary = {}
+	var legibility_source := _spike_argument("--planner-reuse-legibility")
+	if not legibility_source.is_empty():
+		var evidence: Variant = JSON.parse_string(FileAccess.get_file_as_string(legibility_source))
+		# The control shares the capture fixture; it has no separate inspected capture.
+		var source_variant := "cached" if variant == "none" else variant
+		if not evidence is Dictionary or not evidence.get("variants", {}).has(source_variant):
+			_add_error("Missing retained legibility evidence for %s: %s" % [source_variant, legibility_source])
+			_finish_with_error()
+			return
+		retained_legibility = evidence["variants"][source_variant].duplicate(true)
+		retained_legibility["reused_from"] = legibility_source
+		retained_legibility["source_variant"] = source_variant
+		retained_legibility["capture_rerun"] = false
+	if OS.get_cmdline_user_args().has("--session-size"):
+		_add_error("The planner comparison requires all 100 alerted hostiles; omit --session-size.")
+		_finish_with_error()
+		return
+	# PROVISIONAL setup fixture: keep the opener slower than the party. Otherwise it can
+	# walk onto another synthesized body's cell before that body is admitted to the grid.
+	# This changes one synthetic actor only, equally in all comparators; no production rule.
+	var opener := (_synthesized[0] as Node).call("battle_actor") as Resource
+	var attributes: Dictionary = opener.get("attributes").duplicate(true)
+	attributes["reason"] = 0
+	opener.set("attributes", attributes)
+	if not await _open_session():
+		_finish_with_error()
+		return
+	_admit_remaining()
+	_apply_ally_hp_fixture()
+	print("P3.1 %s: present=%d admitted=%d; cold planning" % [variant, _synthesized.size(), int(_admission.get("admitted", 0))])
+	var controller := _battle.get("controller") as RefCounted
+	var planner: RefCounted = load("res://tools/planner_spike/planner.gd").new()
+	planner.call("configure", controller, variant)
+	var cold_started := Time.get_ticks_usec()
+	var cold: Dictionary = planner.call("refresh")
+	var cold_ms := _elapsed_ms(cold_started, Time.get_ticks_usec())
+	await process_frame
+	# Readiness includes every admission, cold planning and a rendered frame with the HUD.
+	var transition_ms := _elapsed_ms(_first_alert_usec, Time.get_ticks_usec())
+	print("P3.1 %s: cold_ms=%.3f transition_ms=%.3f" % [variant, cold_ms, transition_ms])
+	var settle := await _discard_post_setup_warmup("all_admitted_and_cold_planned")
+	var frames: Array[float] = []
+	var planner_ms: Array[float] = []
+	var decisions: Array[float] = []
+	var rows: Array[Dictionary] = []
+	var ct_min := int(cold["ct_hostiles"])
+	var ct_max := ct_min
+	controller.event_emitted.connect(_on_controller_event)
+	for index: int in PROVISIONAL_PLANNER_SAMPLES:
+		var started := Time.get_ticks_usec()
+		var row: Dictionary = planner.call("refresh")
+		planner_ms.append(_elapsed_ms(started, Time.get_ticks_usec()))
+		ct_min = mini(ct_min, int(row["ct_hostiles"]))
+		ct_max = maxi(ct_max, int(row["ct_hostiles"]))
+		row.erase("plans")
+		row["frame"] = index
+		row["ally_action"] = ""
+		if index % PROVISIONAL_ACTION_EVERY_FRAMES == 0 and decisions.size() < HOSTILE_COUNT:
+			_pass_marks.clear()
+			var action_started := Time.get_ticks_usec()
+			row["ally_action"] = String(_drive_ally_turn())
+			var previous := action_started
+			for mark: int in _pass_marks:
+				decisions.append(_elapsed_ms(previous, mark))
+				previous = mark
+			if str(row["ally_action"]).is_empty() or bool(_battle.get("ended")):
+				_add_error("Comparison could not keep the fixture session running at frame %d." % index)
+				break
+		await process_frame
+		frames.append(_elapsed_ms(started, Time.get_ticks_usec()))
+		rows.append(row)
+		if (index + 1) % 30 == 0:
+			print("P3.1 %s: frames=%d decisions=%d ct_min=%d" % [variant, frames.size(), decisions.size(), ct_min])
+	controller.event_emitted.disconnect(_on_controller_event)
+	if decisions.size() < HOSTILE_COUNT:
+		_add_error("D9 window timed %d decisions; required at least 100." % decisions.size())
+	var report := {
+		"benchmark_id": "P3.1-planner-spike", "schema_version": "1.0", "variant": variant,
+		"provisional": true, "official_fr904_gate": false,
+		"execution": "no speculative planning; unchanged production controller resolves actions" if variant == "none" \
+			else "shadow intent maintenance; unchanged production controller resolves actions",
+		"environment": _environment_report(), "scenario": _scenario_details(),
+		"ct_hostiles_min": ct_min, "ct_hostiles_max": ct_max,
+		"admission": create_admission_report(_admission),
+		"frame_interval_ms": summarize_timings(frames),
+		"planner_refresh_ms": summarize_timings(planner_ms),
+		"cold_planning_ms": cold_ms, "transition_ms": transition_ms,
+		"d9_event_decision_ms_advisory": summarize_timings(decisions),
+		"planner_computation_ms_advisory": summarize_timings(planner.get("decision_ms")),
+		"budget": {"frame_p95_ms": PLANNER_FRAME_BUDGET_MS, "transition_strict_ms": PLANNER_TRANSITION_BUDGET_MS},
+		"fixture": {"samples": PROVISIONAL_PLANNER_SAMPLES, "action_every_frames": PROVISIONAL_ACTION_EVERY_FRAMES,
+			"opener_reason": 0,
+			"priority_depth": 8, "near_hex_distance": 6, "fallback_deciders": 24, "settle": settle},
+		"raw": {"frame_interval_ms": frames, "planner_refresh_ms": planner_ms,
+			"d9_event_decision_ms": decisions, "planner_computation_ms": planner.get("decision_ms"), "frames": rows},
+		"budget_pass": planner_budget_verdict(frames, transition_ms, _synthesized.size(), ct_min)
+			and frames.size() == PROVISIONAL_PLANNER_SAMPLES and _errors.is_empty(),
+	}
+	var output := _spike_argument("--planner-output", "/tmp/codex-planner/%s.json" % variant)
+	if retained_legibility.is_empty():
+		var capture: RefCounted = load("res://tools/planner_spike/legibility_capture.gd").new()
+		report["legibility"] = await capture.call("capture", self, _battle, _field, _battle_hud(), planner, output.get_base_dir(), variant)
+	else:
+		report["legibility"] = retained_legibility
+	report["legibility_facts"] = int((report["legibility"] as Dictionary).get("automated_facts", 0))
+	report["errors"] = _errors.duplicate()
+	report["status"] = "ok" if _errors.is_empty() else "error"
+	planner.call("dispose")
+	DirAccess.make_dir_recursive_absolute(output.get_base_dir())
+	var file := FileAccess.open(output, FileAccess.WRITE)
+	if file == null:
+		_add_error("Could not write planner report: %s" % output)
+	else:
+		file.store_string(JSON.stringify(report, "\t") + "\n")
+	print(JSON.stringify(report))
+	quit(0 if _errors.is_empty() else 1)

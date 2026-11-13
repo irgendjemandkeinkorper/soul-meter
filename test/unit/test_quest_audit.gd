@@ -726,3 +726,61 @@ func test_companion_resolutions_are_two_distinct_completion_read_back_outcomes()
 	QuestAuditScript._classify_readbacks(results, dialogue_sources)
 	for outcome: Dictionary in korrath["outcomes"]:
 		assert_bool(bool(outcome["read_back"])).is_true()
+
+
+func test_zhavar_routes_flag_a_zone_that_routes_read_and_nothing_raises() -> void:
+	var sources := {
+		"res://globals/npc_reactions.gd": (
+			'{"zhavar_zone": "fens", "minimum_zhavar_rung": "rising"},\n'
+			+ '{"flag": "zhavar_tolling_wilds", "flag_value": true},\n'
+		),
+		"res://dialogue/watch.dialogue": (
+			'- "Humming." [if SaveGame.zhavar_rung("wilds") != "low" /]\n'
+			+ '- "It answered." [if GameState.get_flag("zhavar_tolling_wilds") /]\n'
+			+ '\tdo GameState.set_flag("zhavar_tolling_witnessed", true)\n'
+		),
+		"res://dialogue/turn_in.dialogue": '\tdo SaveGame.raise_zhavar("wilds")\n',
+	}
+	var routes := QuestAuditScript.zhavar_route_sites(sources)
+	var zones: Dictionary = routes["zones"]
+
+	assert_array(zones.keys()).contains_exactly_in_any_order(["fens", "wilds"])
+	assert_array(zones["wilds"]["writers"]).contains_exactly(["res://dialogue/turn_in.dialogue:1"])
+	assert_array(zones["wilds"]["routes"]["rumour"]).contains_exactly(
+		["res://globals/npc_reactions.gd:2"]
+	)
+	assert_array(zones["wilds"]["routes"]["telegraph"]).contains_exactly(
+		["res://dialogue/watch.dialogue:1"]
+	)
+	assert_array(zones["wilds"]["routes"]["toll"]).contains_exactly(
+		["res://dialogue/watch.dialogue:2"]
+	)
+	assert_array(Array(routes["unwritten_zones"])).contains_exactly(["fens"])
+
+	var flags := QuestAuditScript.scan_flag_sources(PackedStringArray([FLAG_FIXTURE]))
+	var report := QuestAuditScript.build_report(
+		[] as Array[Dictionary], flags, false, PackedStringArray(), PackedStringArray(), {}, [], [],
+		{}, routes
+	)
+	assert_int(report["categories"]["zhavar_routes"]["count"]).is_equal(1)
+	assert_str(report["categories"]["zhavar_routes"]["findings"][0]["code"]).is_equal(
+		"zhavar_route_unwritten"
+	)
+	assert_str(report["categories"]["zhavar_routes"]["findings"][0]["zone"]).is_equal("fens")
+	assert_bool(report["metrics"]["zhavar_routes"]["passes"]).is_false()
+
+
+## P1.6 (#535): production reaches every authored Zhavar route class. All of them key on the
+## Wilds, which has two literal writers (the bell-house turn-in and the Broken Muster ruling).
+func test_production_zhavar_routes_are_all_written() -> void:
+	var routes := QuestAuditScript.scan_zhavar_routes()
+	var zones: Dictionary = routes["zones"]
+
+	assert_array(Array(routes["unwritten_zones"])).is_empty()
+	assert_array(zones.keys()).contains_exactly(["wilds"])
+	assert_array(zones["wilds"]["writers"]).contains_exactly_in_any_order(
+		["res://dialogue/sella_varn.dialogue:12", "res://globals/quest_registry.gd:551"]
+	)
+	assert_array(zones["wilds"]["routes"].keys()).contains_exactly_in_any_order(
+		["rumour", "telegraph", "toll"]
+	)

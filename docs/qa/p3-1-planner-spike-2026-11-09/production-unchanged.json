@@ -1,0 +1,22 @@
+{
+  "base": "25d3cf1d2ac60895f432e398f579738b306cb953",
+  "production_diff_exit": 0,
+  "files": {
+    "globals/battle.gd": {
+      "sha256": "abe1898b3a33faeb92d25c62494472fba189906e27445200ae781c1cd4511c9c",
+      "byte_equal_to_head": true
+    },
+    "globals/combat/combat_controller.gd": {
+      "sha256": "11d3615b3b76715dd3ae994561d3e74cc5c2e90e8ebdfe04439af08cd2c2f3c8",
+      "byte_equal_to_head": true
+    },
+    "globals/combat/charge_time_scheduler.gd": {
+      "sha256": "4b439bec9ecfb6d108f41ddf7524f5c9f1b023d5ca0dcdff80bc86de206624fa",
+      "byte_equal_to_head": true
+    },
+    "globals/combat/kit_ai.gd": {
+      "sha256": "073e24dfc4996cda7b7ea808dbe3447c3bdcf5cacfba24ec38b834850cbf8567",
+      "byte_equal_to_head": true
+    }
+  }
+}

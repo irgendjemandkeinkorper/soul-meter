@@ -289,6 +289,11 @@ func _recompute() -> void:
 	var chance := "HIT %d%%" % int(accuracy.get("effective_hit_chance", result.get("hit_chance", 100)))
 	if bool(ability.get("is_spell", false)):
 		chance += " · FIZZLE %.0f%%" % float(result.get("fizzle_percent", 0.0))
+		var tone_relief := float(result.get("fizzle_tone_relief", 0.0))
+		if tone_relief > 0.0:
+			chance += " (RESONANCE %.0f%% → −%.0f)" % [
+				float(result.get("fizzle_resonance", 0.0)), tone_relief
+			]
 	# Hidden draws remain masked even when the upcoming committed action will miss.
 	var hidden: Dictionary = landed.get("hidden_draw", {})
 	var shown_text := str(shown)
