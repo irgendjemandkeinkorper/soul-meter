@@ -2458,7 +2458,11 @@ func _actor_unit_id(actor: BattleActor) -> String:
 	return String(actor.archetype_id)
 
 
-func _fizzle_context(actor: BattleActor, options: Dictionary) -> Dictionary:
+## `elements` are the cast's composition elements. A party caster's held Tones lower fizzle
+## through `fizzle.tone_bonus` (SR9, owner 2026-11-08; `docs/architecture-chargen-dramgid.md`
+## §4.2): the learned part of the LOWEST tone across the composition. An untrained tone adds 0,
+## so off-tone casting is never penalized. An explicit `tone_bonus` in `options.fizzle` wins.
+func _fizzle_context(actor: BattleActor, options: Dictionary, elements: Array = []) -> Dictionary:
 	var raw: Variant = options.get("fizzle", {})
 	var context: Dictionary = raw.duplicate(true) if raw is Dictionary else {}
 	if not context.has("harmonic_accord") and not context.has("agreement_integrity"):
@@ -2481,6 +2485,13 @@ func _fizzle_context(actor: BattleActor, options: Dictionary) -> Dictionary:
 		context["pitch"] = actor.attribute_value(&"intuition")
 	if actor.source_member != null and not context.has("patron"):
 		context["patron"] = actor.source_member.patron
+	if (
+		actor.source_member != null
+		and skill_check_service != null
+		and not context.has("tone_bonus")
+		and not elements.is_empty()
+	):
+		context["tone_bonus"] = skill_check_service.tone_bonus_for(actor.source_member, elements)
 	return context
 
 
@@ -2925,7 +2936,9 @@ func forecast_context(
 		# Only the player's side spends the Gauge; a class-kit enemy has none, so it cannot
 		# overreach past its Breath.
 		"soul_meter": _soul_meter() if _pays_soul(actor) else 0.0,
-		"fizzle": _fizzle_context(actor, options),
+		"fizzle": _fizzle_context(
+			actor, options, ability_context["elements"] if ability_context.has("is_spell") else []
+		),
 		"caster_context": (options.get("caster_context", {}) as Dictionary).duplicate(true),
 		"positioning": {
 			"line_of_sight": line_of_sight,
@@ -3058,6 +3071,8 @@ func forecast_action(
 			"damage": int(card_resolution.get("damage", 0)),
 			"damage_on_hit": _forecast_damage_on_hit(gate["context"], target),
 			"fizzle_percent": float(card_resolution.get("fizzle_percent", 0.0)),
+			"fizzle_tone_relief": float(card_resolution.get("fizzle_tone_relief", 0.0)),
+			"fizzle_resonance": float(card_resolution.get("fizzle_resonance", 0.0)),
 			"breath_cost": action.breath_cost,
 			"soul_cost": float(gate.get("soul_cost", 0.0)),
 			"resolution": card_resolution,
@@ -3074,6 +3089,8 @@ func forecast_action(
 			"damage": int(cast_resolution.get("damage", 0)),
 			"damage_on_hit": _forecast_damage_on_hit(gate["context"], target),
 			"fizzle_percent": float(cast_resolution.get("fizzle_percent", 0.0)),
+			"fizzle_tone_relief": float(cast_resolution.get("fizzle_tone_relief", 0.0)),
+			"fizzle_resonance": float(cast_resolution.get("fizzle_resonance", 0.0)),
 			"breath_cost": int(gate.get("breath_cost", 0)),
 			"soul_cost": float(gate.get("soul_cost", 0.0)),
 			"resolution": cast_resolution,

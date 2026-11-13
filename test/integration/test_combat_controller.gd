@@ -257,6 +257,67 @@ func test_maiiam_forecast_override_preserves_controller_context() -> void:
 	assert_str(String(fizzle["patron"])).is_equal(ally.source_member.patron)
 
 
+## SR9 (owner, 2026-11-08): a held Tone lowers a party caster's fizzle; off-tone is unchanged.
+func test_a_held_tone_lowers_fizzle_and_off_tone_casting_is_unchanged() -> void:
+	var cast := CombatActionCatalog.by_id(&"cast-seam")
+	var ability := AbilityDefinition.new()
+	ability.id = "tone-fizzle-cast"
+	ability.element_id = &"zhur"
+	ability.elements = [&"zhur"]
+	ability.magnitude = &"note"
+	ability.power = 4
+	var tables := _cast_tables_for_actor(ally, [ability], "tone-fizzle-caster")
+	controller.configure([cast], battlefield, rules, null, [ability], tables)
+	controller.start([ally], [enemy], &"tone-fizzle-battle")
+	var options := {"ability_id": ability.id, "fizzle": {"agreement_integrity": 40.0}}
+	var tone_skill := DramgidSchema.tone_skill_for(&"zhur")
+
+	# Untrained in the cast's tone: no relief, so off-tone casting costs nothing extra.
+	var untrained := controller.forecast_action(cast, enemy, options)
+	assert_float(float(untrained["context"]["fizzle"]["tone_bonus"])).is_equal(0.0)
+	assert_float(float(untrained["fizzle_tone_relief"])).is_equal(0.0)
+
+	# Trained (+20) takes floori(20 / 4) = 5 off the applied chance.
+	ally.source_member.skill_tiers = {tone_skill: "trained"}
+	var trained := controller.forecast_action(cast, enemy, options)
+	assert_float(float(trained["context"]["fizzle"]["tone_bonus"])).is_equal(20.0)
+	assert_float(float(trained["fizzle_tone_relief"])).is_equal(5.0)
+	assert_float(float(trained["fizzle_percent"])).is_equal(
+		float(untrained["fizzle_percent"]) - 5.0
+	)
+	# §4.3 forecast step "Resonance N% → −k": the untrained tone reads intuition × 8.
+	var pitch := int(trained["context"]["fizzle"]["pitch"])
+	assert_float(float(trained["fizzle_resonance"])).is_equal(float(pitch * 8) + 20.0)
+
+	# Expert (+35) plus 10 advancement: floori(45 / 4) = 11.
+	ally.source_member.skill_tiers = {tone_skill: "expert"}
+	ally.source_member.skill_percentages = {tone_skill: 10.0}
+	var expert := controller.forecast_action(cast, enemy, options)
+	assert_float(float(expert["fizzle_tone_relief"])).is_equal(11.0)
+
+	# Holding a different tone does not touch this cast.
+	ally.source_member.skill_tiers = {DramgidSchema.tone_skill_for(&"khash"): "expert"}
+	ally.source_member.skill_percentages = {}
+	var off_tone := controller.forecast_action(cast, enemy, options)
+	assert_float(float(off_tone["fizzle_percent"])).is_equal(float(untrained["fizzle_percent"]))
+	assert_float(float(off_tone["fizzle_tone_relief"])).is_equal(0.0)
+
+	# An explicit frozen tone_bonus (headless replay) wins over the live member.
+	var frozen := controller.forecast_action(
+		cast, enemy, {"ability_id": ability.id, "fizzle": {"agreement_integrity": 40.0, "tone_bonus": 20.0}}
+	)
+	assert_float(float(frozen["fizzle_tone_relief"])).is_equal(5.0)
+
+	# Forecast and commit agree on the chance.
+	ally.source_member.skill_tiers = {tone_skill: "trained"}
+	var forecast := controller.forecast_action(cast, enemy, options)
+	var committed := controller.submit_action(cast.id, enemy, options)
+	assert_float(float(committed["resolution"]["fizzle_percent"])).is_equal(
+		float(forecast["fizzle_percent"])
+	)
+	assert_float(float(committed["resolution"]["fizzle_tone_relief"])).is_equal(5.0)
+
+
 func test_khash_consumes_target_aftertone_in_live_resolution() -> void:
 	var cast := CombatActionCatalog.by_id(&"cast-seam")
 	var ability := AbilityDefinition.new()
