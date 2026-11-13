@@ -111,6 +111,10 @@ static var locations_changed: Signal = _signals.locations_changed
 static var ALL: Array[LocationDefinition] = []
 ## Baked scene path -> canon `no_combat_zone`.
 static var _no_combat_zones: Dictionary = {}
+## Baked scene path -> the player-facing area it belongs to (U2 field HUD): a hub's own
+## `display_name`, or for an interior the area of its transition's `source_scene`.
+static var _area_names: Dictionary = {}
+static var _area_parents: Dictionary = {}
 ## In-session overlay (`register_runtime()`, P6): unbaked scenes, never written anywhere.
 static var _runtime: Array[LocationDefinition] = []
 ## `no_combat_zone` of runtime registrations, by scene path; `LocationDefinition` carries no such field.
@@ -131,6 +135,12 @@ static func _load_index() -> bool:
 		if not row is Dictionary:
 			continue
 		var entry: Dictionary = row
+		var row_scene := str(entry.get("scene_path", ""))
+		if not row_scene.is_empty():
+			_area_names[row_scene] = str(entry.get("display_name", ""))
+			var transition: Variant = entry.get("transition", null)
+			if transition is Dictionary:
+				_area_parents[row_scene] = str((transition as Dictionary).get("source_scene", ""))
 		var definition_path := str(entry.get("definition_path", ""))
 		if definition_path.is_empty():
 			continue # gazetteer-only city: no scene to travel to
@@ -209,6 +219,20 @@ static func by_id(location_id: StringName) -> LocationDefinition:
 		if location.id == location_id:
 			return location
 	return null
+
+
+## "Dom" for Dom and for the Lower Trial Hall whose door leads back to it; "" when the index
+## cannot say (an interior with no recorded transition, or an unbaked scene).
+static func area_name(scene_path: String) -> String:
+	var path := scene_path
+	for _hop: int in 4:
+		var name := str(_area_names.get(path, ""))
+		if not name.is_empty():
+			return name
+		path = str(_area_parents.get(path, ""))
+		if path.is_empty():
+			return ""
+	return ""
 
 
 static func by_scene(scene_path: String) -> LocationDefinition:

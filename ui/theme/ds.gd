@@ -52,6 +52,9 @@ const METER_HEALTH_A := CINDER_1
 const METER_HEALTH_B := CINDER_3
 const METER_MANA_A := VIOLET_1
 const METER_MANA_B := VIOLET_3
+## Breath (U2, 2026-11-02): mote cyan. Bronze is the Soul's, violet is magic's, cinder is HP's.
+const METER_BREATH_A := Color("#0E5563")
+const METER_BREATH_B := MOTE_2
 
 # ---- item rarity (closed set) ----
 const RARITY_COMMON := Color("#64748B")

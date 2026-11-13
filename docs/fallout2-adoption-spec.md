@@ -29,6 +29,10 @@ Owner rulings taken 2026-08-28 at the debate gate:
    `[#skill=persuasion]`-style tag rendered like existing cost/consequence tags
    ("[Persuasion]"); success chances stay hidden. Locked/visible behavior follows the
    existing dialogue-balloon convention.
+   **Superseded 2026-11-01 for conversations (owner: "Today supersedes").** A check now
+   shows the player's chance, a choice shows its exact effects, and only earnable locks
+   stay visible, with their reason (`docs/design/ui-rework-plan-2026-11-01.md`, U1;
+   `docs/dialogue-checks.md`). Field notices outside a conversation stay non-numeric.
 3. **Unused-AP payoff: YES, small capped bonus.** Ending a turn with AP ≥ 1 grants a
    modest defensive/Balance term, hard-capped so turtling never beats acting; the value is
    PROVISIONAL (balance flag, not canon).

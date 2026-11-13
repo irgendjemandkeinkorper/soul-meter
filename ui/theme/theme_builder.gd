@@ -106,6 +106,15 @@ static func build() -> Theme:
 	t.set_stylebox("pressed", "ChargenChoiceButton", _notched_style(29, DS.SPACE_4))
 	t.set_stylebox("focus", "ChargenChoiceButton", _notched_style(29, DS.SPACE_4))
 	t.set_stylebox("disabled", "ChargenChoiceButton", _notched_style(30, DS.SPACE_4))
+	# U3: the Register of Persons' Summary / Skills tabs. The open tab is selected, so it
+	# takes the violet edge (DS states); the others sit quiet in iron until hovered.
+	t.add_type("SheetTab")
+	t.set_type_variation("SheetTab", "Button")
+	t.set_stylebox("normal", "SheetTab", _notched_style(28, DS.SPACE_3, DS.SPACE_6))
+	t.set_stylebox("hover", "SheetTab", _notched_style(11, DS.SPACE_3, DS.SPACE_6))
+	t.set_stylebox("pressed", "SheetTab", _notched_style(29, DS.SPACE_3, DS.SPACE_6))
+	t.set_stylebox("hover_pressed", "SheetTab", _notched_style(29, DS.SPACE_3, DS.SPACE_6))
+	t.set_stylebox("focus", "SheetTab", _notched_style(13, DS.SPACE_3, DS.SPACE_6))
 	t.add_type("ChargenPortraitButton")
 	t.set_type_variation("ChargenPortraitButton", "Button")
 	t.set_stylebox("normal", "ChargenPortraitButton", _notched_style(26, DS.SPACE_2))
@@ -267,6 +276,11 @@ static func build() -> Theme:
 	t.add_type("LedgerHistory")
 	t.set_type_variation("LedgerHistory", "VBoxContainer")
 	t.set_constant("separation", "LedgerHistory", DS.SPACE_5)
+	# U3: a journal entry's title, objective and who/where lines sit close together; the
+	# column's own separation spaces one entry from the next.
+	t.add_type("JournalEntry")
+	t.set_type_variation("JournalEntry", "VBoxContainer")
+	t.set_constant("separation", "JournalEntry", DS.SPACE_2)
 
 	# Registry-driven world map. Screen nodes only select these semantic roles;
 	# route and marker geometry remains in the map control and uses DS tokens.
@@ -701,6 +715,17 @@ static func build() -> Theme:
 	t.set_color("font_hover_color", "ItemSlot", DS.PARCHMENT)
 	t.set_color("font_pressed_color", "ItemSlot", DS.PARCHMENT)
 
+	# U3: an inventory selection is violet edge-light drawn just outside the tile, so it
+	# reads apart from a rare item's own thin violet frame (DS: selected = violet edge).
+	var item_selection := StyleBoxFlat.new()
+	item_selection.draw_center = false
+	item_selection.set_border_width_all(2)
+	item_selection.border_color = DS.VIOLET_4
+	item_selection.set_expand_margin_all(2)
+	t.add_type("ItemSelection")
+	t.set_type_variation("ItemSelection", "PanelContainer")
+	t.set_stylebox("panel", "ItemSelection", item_selection)
+
 	# Reusable Badge and GLoot ItemSlot scenes choose only these semantic type
 	# variations; their nodes never carry local StyleBox overrides.
 	for badge_type: String in ["Badge", "BadgeZone", "BadgeWeak", "BadgeResist"]:
@@ -715,7 +740,10 @@ static func build() -> Theme:
 		t.set_type_variation(rarity_type, "PanelContainer")
 	t.set_stylebox("panel", "ItemSlotCommon", _notched_style(21, DS.SPACE_1))
 	t.set_stylebox("panel", "ItemSlotRare", _notched_style(22, DS.SPACE_1))
-	t.set_stylebox("panel", "ItemSlotMythic", _notched_style(24, DS.SPACE_1))
+	# Owner 2026-11-02: mythic is an amber edge on the dark well (atlas tile 0), like rare's
+	# violet edge. It was a solid amber fill (tile 24) that hid the art and competed with the
+	# screen's one bronze accent.
+	t.set_stylebox("panel", "ItemSlotMythic", _notched_style(0, DS.SPACE_1))
 
 	var track := inset.duplicate()
 	track.set_content_margin_all(0)
@@ -752,6 +780,88 @@ static func build() -> Theme:
 	t.set_stylebox("pressed", "DialogueChoice", _notched_style(29))
 	t.set_stylebox("focus", "DialogueChoice", _notched_style(29))
 	t.set_stylebox("disabled", "DialogueChoice", _notched_style(30))
+
+	# U1 conversation (owner 2026-11-01): exact effect chips, check odds, lock reasons, the
+	# ledger strip and the focused choice's promise line. Numbers stay in the stat face.
+	t.add_type("DialogueEffectLabel")
+	t.set_type_variation("DialogueEffectLabel", "StatLabel")
+	t.set_color("font_color", "DialogueEffectLabel", DS.BRONZE_4)
+	t.add_type("DialogueOddsLabel")
+	t.set_type_variation("DialogueOddsLabel", "StatLabel")
+	t.set_color("font_color", "DialogueOddsLabel", DS.BRONZE_3)
+	t.add_type("DialogueLockReasonLabel")
+	t.set_type_variation("DialogueLockReasonLabel", "StatLabel")
+	t.set_color("font_color", "DialogueLockReasonLabel", DS.ASH)
+	t.add_type("DialogueLedgerLabel")
+	t.set_type_variation("DialogueLedgerLabel", "StatLabel")
+	t.set_color("font_color", "DialogueLedgerLabel", DS.BRONZE_3)
+	t.add_type("DialoguePromiseLabel")
+	t.set_type_variation("DialoguePromiseLabel", "QuoteLabel")
+	t.set_color("font_color", "DialoguePromiseLabel", DS.ASH_DIM)
+	t.add_type("DialogueBlock")
+	t.set_type_variation("DialogueBlock", "HBoxContainer")
+	t.set_constant("separation", "DialogueBlock", DS.SPACE_8)
+	t.add_type("DialogueColumn")
+	t.set_type_variation("DialogueColumn", "VBoxContainer")
+	t.set_constant("separation", "DialogueColumn", DS.SPACE_4)
+	t.add_type("DialogueChoiceList")
+	t.set_type_variation("DialogueChoiceList", "VBoxContainer")
+	t.set_constant("separation", "DialogueChoiceList", DS.SPACE_3)
+	t.add_type("DialogueChoiceRows")
+	t.set_type_variation("DialogueChoiceRows", "VBoxContainer")
+	t.set_constant("separation", "DialogueChoiceRows", DS.SPACE_1)
+	t.add_type("DialogueChoiceMeta")
+	t.set_type_variation("DialogueChoiceMeta", "HBoxContainer")
+	t.set_constant("separation", "DialogueChoiceMeta", DS.SPACE_4)
+
+	# U2 field HUD (owner 2026-11-02): world labels in the display face, key hints that leave
+	# once learned, a party strip of portraits and meters, a one-line objective.
+	t.add_type("WorldLabel")  # names painted over the field: Cinzel, small, outlined
+	t.set_type_variation("WorldLabel", "Label")
+	t.set_font("font", "WorldLabel", display)
+	t.set_font_size("font_size", "WorldLabel", DS.FS_200)
+	t.set_color("font_color", "WorldLabel", DS.PARCHMENT)
+	t.set_color("font_outline_color", "WorldLabel", DS.VOID_0)
+	t.set_constant("outline_size", "WorldLabel", DS.SPACE_2)
+	t.add_type("HUDKeyHints")
+	t.set_type_variation("HUDKeyHints", "HBoxContainer")
+	t.set_constant("separation", "HUDKeyHints", DS.SPACE_8)
+	t.add_type("HUDKeyHint")
+	t.set_type_variation("HUDKeyHint", "EyebrowLabel")
+	t.set_color("font_outline_color", "HUDKeyHint", DS.VOID_0)
+	t.set_constant("outline_size", "HUDKeyHint", DS.SPACE_2)
+	t.add_type("HUDObjectiveLabel")
+	t.set_type_variation("HUDObjectiveLabel", "Label")
+	t.set_font("font", "HUDObjectiveLabel", body)
+	t.set_font_size("font_size", "HUDObjectiveLabel", DS.FS_300)
+	t.set_color("font_color", "HUDObjectiveLabel", DS.PARCHMENT)
+	t.add_type("HUDBarColumn")
+	t.set_type_variation("HUDBarColumn", "VBoxContainer")
+	t.set_constant("separation", "HUDBarColumn", DS.SPACE_3)
+	t.add_type("HUDPartyStrip")
+	t.set_type_variation("HUDPartyStrip", "HBoxContainer")
+	t.set_constant("separation", "HUDPartyStrip", DS.SPACE_8)
+	t.add_type("HUDPartyCard")
+	t.set_type_variation("HUDPartyCard", "HBoxContainer")
+	t.set_constant("separation", "HUDPartyCard", DS.SPACE_3)
+	t.add_type("HUDPartyMeters")
+	t.set_type_variation("HUDPartyMeters", "VBoxContainer")
+	t.set_constant("separation", "HUDPartyMeters", DS.SPACE_1)
+	t.add_type("HUDPartyName")
+	t.set_type_variation("HUDPartyName", "EyebrowLabel")
+	t.set_color("font_color", "HUDPartyName", DS.PARCHMENT)
+	t.add_type("HUDPartyNumbers")
+	t.set_type_variation("HUDPartyNumbers", "StatLabel")
+	t.set_font_size("font_size", "HUDPartyNumbers", DS.FS_100)
+	t.set_color("font_color", "HUDPartyNumbers", DS.PARCHMENT)
+	var hud_portrait := StyleBoxFlat.new()
+	hud_portrait.bg_color = DS.VOID_1
+	hud_portrait.border_color = DS.IRON_2
+	hud_portrait.set_border_width_all(1)
+	hud_portrait.set_content_margin_all(1)
+	t.add_type("HUDPortraitFrame")
+	t.set_type_variation("HUDPortraitFrame", "PanelContainer")
+	t.set_stylebox("panel", "HUDPortraitFrame", hud_portrait)
 
 	_build_editor_variations(t, display, body, numeric)
 	return t
@@ -840,6 +950,10 @@ static func build_ledger() -> Theme:
 	t.set_constant("h_separation", "LedgerGrid", DS.SPACE_8)
 	t.set_constant("v_separation", "LedgerGrid", DS.SPACE_5)
 	t.set_type_variation("LedgerRow", "HBoxContainer")
+	t.add_type("LedgerFlow")
+	t.set_type_variation("LedgerFlow", "HFlowContainer")
+	t.set_constant("h_separation", "LedgerFlow", DS.SPACE_9)
+	t.set_constant("v_separation", "LedgerFlow", DS.SPACE_8)
 	t.set_constant("separation", "LedgerRow", DS.SPACE_6)
 	t.set_type_variation("LedgerSection", "Label")
 	t.set_font("font", "LedgerSection", load(DS.FONT_DISPLAY))

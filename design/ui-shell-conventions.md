@@ -27,6 +27,14 @@ Screen
 Exactly three children. Not two, not four. **`HudBar` always ends with `SoulGauge`, rightmost** —
 so `SoulGauge` is added last, whatever else the bar carries.
 
+**BACK is the `HudBar`'s first child**, at the standard button width, opposite the gauge — never a
+full-width bar under the content (U3, owner-approved plan, 2026-11-02). `Screen._add_back_button()`
+places it there for every screen with a shell.
+
+**A screen opened on top draws on top.** `UIManager.open()` sets each screen `STACK_Z_STEP` (64)
+above the one beneath, because a screen may raise its own children (the battle HUD reaches z 10).
+The reward reveal stays above every screen.
+
 Implemented as `Screen._make_shell()` in `ui/screens/screen.gd`, which returns
 `[header, body, hud_bar]`. All spacing comes from theme type variations registered in
 `ui/theme/theme_builder.gd`; no per-node overrides, per the standing DS rule.
@@ -76,6 +84,10 @@ emoji · hue-only state encoding.
 ---
 
 ## Existing screens that violate these conventions
+
+> **Status, 2026-11-02:** resolved. #149 migrated the window-screens to `_make_shell()` (closed),
+> and U3 (`docs/design/ui-rework-plan-2026-11-01.md`) moved BACK into every `HudBar`. The text
+> below is the 2026 audit as written, kept for its history.
 
 Named here, **not fixed here** — the issue asks for follow-ups instead, and migrating ten live
 screens is not a documentation task. `_make_shell()` was therefore added *alongside* the existing
