@@ -80,7 +80,10 @@ func _assert_clear_through_transition(target_height: float, reduced_motion: bool
 	var overlap := ""
 	var deadline := Time.get_ticks_msec() + 5000
 	while Time.get_ticks_msec() < deadline:
-		await RenderingServer.frame_post_draw
+		# A process frame, not RenderingServer.frame_post_draw: the headless renderer never emits
+		# that signal, so CI waited on it until the 25-minute test timeout. Layout and the bar's
+		# height tween both advance per process frame.
+		await get_tree().process_frame
 		var bar_rect := _hud.bar().get_global_rect()
 		var notice_rect := _notices.get_global_rect()
 		var gap := bar_rect.position.y - notice_rect.end.y
