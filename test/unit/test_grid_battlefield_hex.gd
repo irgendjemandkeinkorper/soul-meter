@@ -282,3 +282,48 @@ func test_overlapping_party_seats_spread_to_free_hexes() -> void:
 		assert_bool(_grid(model).is_in_bounds(seat)).is_true()
 		assert_int(HexMath.distance(seat, anchor)).is_less_equal(2)
 	assert_int(distinct.size()).is_equal(5)
+
+
+# --- T1 (2026-11-07): a set-piece seat never lands across a wall from the party's anchor ---
+
+
+## The painted diagonal wall of `test_a_painted_wall_stops_a_path_on_hexes`: squares with
+## x + y = 9. The party stands on the near side (x + y < 9).
+func _diagonal_walls() -> Array[Vector2i]:
+	var walls: Array[Vector2i] = []
+	for i in 10:
+		walls.append(Vector2i(i, 9 - i))
+	return walls
+
+
+func _assert_near_side(model: GridBattlefieldModel, seat: Dictionary) -> void:
+	assert_bool(bool(seat.get("ok", false))).is_true()
+	var square := _grid(model).square_cell_of(seat["cell"])
+	assert_bool(square.x + square.y < 9).override_failure_message(
+		"seated on %s (square %s), across the wall" % [seat["cell"], square]
+	).is_true()
+
+
+func test_a_hex_seat_wanted_across_a_wall_stays_on_the_anchor_side() -> void:
+	var model := _model(Vector2i(10, 10), _diagonal_walls())
+	var anchor := _grid(model).cell_at_square(Vector2i(3, 3))
+	var wanted := _grid(model).cell_at_square(Vector2i(5, 5))
+	assert_that(model.seat_near(wanted, {anchor: true})["cell"]).is_equal(wanted)
+	_assert_near_side(model, model.seat_near(wanted, {anchor: true}, anchor))
+
+
+func test_a_hex_seat_wanted_inside_a_wall_stays_on_the_anchor_side() -> void:
+	var model := _model(Vector2i(10, 10), _diagonal_walls())
+	var anchor := _grid(model).cell_at_square(Vector2i(3, 3))
+	var wanted := _grid(model).cell_at_square(Vector2i(4, 5))
+	assert_bool(_grid(model).is_wall(wanted)).is_true()
+	_assert_near_side(model, model.seat_near(wanted, {anchor: true}, anchor))
+
+
+func test_a_hex_seat_with_no_reachable_free_hex_fails() -> void:
+	var model := _model(Vector2i(10, 10))
+	var anchor := _grid(model).cell_at_square(Vector2i(5, 5))
+	for step: Vector2i in HexMath.DIRECTIONS:
+		model.set_cliff(anchor + step, true)
+	var wanted := anchor + HexMath.DIRECTIONS[0] * 4
+	assert_bool(bool(model.seat_near(wanted, {anchor: true}, anchor)["ok"])).is_false()
