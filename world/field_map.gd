@@ -59,7 +59,13 @@ func _theme_world_labels() -> void:
 
 func _on_node_added(node: Node) -> void:
 	if node is Label and is_inside_tree() and _field_root().is_ancestor_of(node):
-		_theme_world_label.call_deferred(node)
+		# Defer by instance id: a label freed before the call would fail the typed
+		# argument check and print an engine error.
+		_theme_world_label_by_id.call_deferred(node.get_instance_id())
+
+
+func _theme_world_label_by_id(instance_id: int) -> void:
+	_theme_world_label(instance_from_id(instance_id) as Node)
 
 
 func _theme_world_label(node: Node) -> void:
@@ -428,6 +434,47 @@ func zone_anchor_cell(zone: AccordZone) -> Vector2i:
 	if layer != null:
 		return layer.local_to_map(layer.to_local(zone.global_position))
 	return Vector2i.ZERO # a field without ground has no cell space to anchor in
+
+
+## The cell under `world_position`: the battle grid's cell space when an `IsoGrid` is present,
+## otherwise the ground layer's.
+func world_to_cell(world_position: Vector2) -> Vector2i:
+	var grid := iso_grid()
+	if grid != null:
+		return grid.world_to_cell(world_position)
+	var layer := ground()
+	if layer != null:
+		return layer.local_to_map(layer.to_local(world_position))
+	return Vector2i.ZERO # a field without ground has no cell space to anchor in
+
+
+## Summed zone delta under `world_position`, the value field verbs (#284) hand to
+## `SkillCheck.loom_penalty()`.
+func zone_delta_at(world_position: Vector2) -> float:
+	return zone_delta(world_to_cell(world_position))
+
+
+## The `FieldMap` of the scene `node` stands in, or null off any field (an interior with no
+## zones, a bare test tree). Walks to the outermost scene root the way `Hostile._field_root()`
+## does, so an actor instanced from its own `.tscn` still finds the field above it.
+static func for_node(node: Node) -> FieldMap:
+	var root: Node = node
+	var cursor: Node = node.get_parent()
+	while cursor != null:
+		if not cursor.scene_file_path.is_empty():
+			root = cursor
+		cursor = cursor.get_parent()
+	if root is FieldMap:
+		return root as FieldMap
+	return root.find_child("FieldMap", true, false) as FieldMap
+
+
+## Zone delta under `node`, 0.0 when it stands on no field: the one-call form for field verbs.
+static func zone_delta_for(node: Node2D) -> float:
+	var field := for_node(node)
+	if field == null:
+		return 0.0
+	return field.zone_delta_at(node.global_position)
 
 
 ## Effective accord at `cell`: `clamp(base_adjusted + zone_delta(cell) + variation, 0, 100)`.

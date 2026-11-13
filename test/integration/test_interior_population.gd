@@ -171,7 +171,11 @@ func test_indoor_vendor_opens_existing_shop_and_buy_sell_leave_round_trip() -> v
 	assert_int(GameState.gp).is_equal(
 		gp_before - int(bread_entry["buy_price"]) + int(bread_entry["sell_price"])
 	)
-	UIManager.close_all()
+	# close_all() plays the exit transition before freeing the shop. Wait for both: a shop still
+	# alive at teardown re-renders its catalog on after_test's party_changed (P1.3 barter
+	# readout), and the rows it drops are counted as orphan nodes.
+	await UIManager.close_all()
+	await get_tree().process_frame
 	assert_bool(UIManager.is_open()).is_false()
 	_free_interior(interior)
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=66 format=3]
+[gd_scene load_steps=69 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
 [ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
@@ -11,6 +11,8 @@
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="9_hud"]
 [ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="10_townsfolk"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="26_chest"]
+[ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="27_interactable"]
 
 [ext_resource type="Texture2D" uid="uid://ct8n074851odr" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road--straight.png" id="1_weftlumin"]
 
@@ -216,6 +218,23 @@ position = Vector2(180, 900)
 
 [node name="OutdoorTownsfolk" type="Node" parent="."]
 script = ExtResource("10_townsfolk")
+npc_pockets = {
+"long-verge-cairn-warden": {
+"pocket_id": "long-verge-cairn-warden-purse",
+"pocket_gp": 9,
+"pocket_faction": "iron-companies"
+},
+"long-verge-old-soldier": {
+"pocket_id": "long-verge-old-soldier-purse",
+"pocket_gp": 9,
+"pocket_faction": "iron-companies"
+},
+"long-verge-recruit": {
+"pocket_id": "long-verge-recruit-purse",
+"pocket_gp": 9,
+"pocket_faction": "iron-companies"
+}
+}
 
 [node name="LongVergeDressing" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -717,3 +736,67 @@ position = Vector2(1560, 1290)
 unit_id = &"bog-wight"
 group_id = &"bog-wight"
 
+[node name="WestCache" parent="." instance=ExtResource("26_chest")]
+position = Vector2(650, 730)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_west_cache"
+container_id = "long-verge-west-cache"
+loot_table_id = &"verge-march-kit"
+
+[node name="CampCache" parent="." instance=ExtResource("26_chest")]
+position = Vector2(2370, 1000)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_camp_cache"
+container_id = "long-verge-camp-cache"
+loot_table_id = &"verge-march-kit"
+
+[node name="ShoulderStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(1740, 520)
+; DRAFT: recognize the root growth hiding the opening; Wildlore is Nature.
+display_name = "OVERGROWN CACHE"
+interaction_flag = "loot_opened_long_verge_shoulder_store"
+lock_skill = "wildlore"
+locked_message = "Find the opening beneath the roots."
+lock_failed_message = "You cannot find the opening."
+container_id = "long-verge-shoulder-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="ColumnStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(1930, 600)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_column_store"
+lock_skill = "slip"
+container_id = "long-verge-column-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="CartStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(2620, 640)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_cart_store"
+lock_skill = "strain"
+container_id = "long-verge-cart-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="CrateStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(2510, 430)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_crate_store"
+lock_skill = "slip"
+container_id = "long-verge-crate-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="FormationPlan" parent="." instance=ExtResource("27_interactable")]
+position = Vector2(1800, 790)
+; DRAFT: optional tactical reading, with no combat bonus or progression gate.
+display_name = "FORMATION PLAN"
+prompt_text = "ASSESS FORMATION"
+interaction_text = "Formation assessed."
+interaction_flag = "chapter_long_verge_formation_assessed"
+lock_skill = "vantage"
+lock_id = "long-verge-formation-plan"
+locked_message = "Read the formation."
+lock_failed_message = "You cannot assess the formation."

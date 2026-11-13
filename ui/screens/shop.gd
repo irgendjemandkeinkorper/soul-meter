@@ -16,6 +16,11 @@ var _catalog: VBoxContainer
 var _gp_label: Label
 var _status_label: Label
 var _treatment_notice: TreatmentNoticeScript
+var _barter_label: Label
+var _barter_hint: Label
+var _barter_subject: PartyMember
+## Set once the exit transition starts. The shop is freed when it ends.
+var _leaving := false
 
 
 func _uses_ledger_style() -> bool:
@@ -48,6 +53,17 @@ func _build() -> void:
 	_update_gp_label(GameState.gp)
 	GameState.gp_changed.connect(_update_gp_label)
 
+	_barter_label = Label.new()
+	_barter_label.name = "BarterReadout"
+	_barter_label.theme_type_variation = "StatLabel"
+	_barter_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_barter_label)
+	_barter_hint = Label.new()
+	_barter_hint.name = "BarterHint"
+	_barter_hint.theme_type_variation = "MutedLabel"
+	_barter_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_barter_hint)
+
 	_status_label = Label.new()
 	_status_label.theme_type_variation = "MutedLabel"
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -67,7 +83,61 @@ func _build() -> void:
 	scroll.add_child(_catalog)
 	_add_back_button(vbox)
 	_treatment_notice.dismissed.connect(shell_back_button.grab_focus)
+	GameState.party_changed.connect(_on_party_changed)
+	GameState.locale_changed.connect(_on_locale_changed)
+	Renown.renown_changed.connect(_on_renown_changed)
+	Reputation.reputation_changed.connect(_on_reputation_changed)
+	_on_party_changed()
+
+
+## A leaving shop keeps the rows it shows. The barter readout listens to party, Renown and
+## Reputation changes, which can still arrive during the exit fade; rebuilding then would only
+## detach rows that are about to be freed with the screen.
+func play_exit() -> void:
+	_leaving = true
+	super()
+
+
+func _exit_tree() -> void:
+	if _barter_subject != null and _barter_subject.changed.is_connected(_render_catalog):
+		_barter_subject.changed.disconnect(_render_catalog)
+
+
+func _on_party_changed() -> void:
+	if _barter_subject != null and _barter_subject.changed.is_connected(_render_catalog):
+		_barter_subject.changed.disconnect(_render_catalog)
+	# Match barter_ratio()'s subject, not the first slot in a reordered party.
+	_barter_subject = GameState.protagonist()
+	if _barter_subject != null:
+		_barter_subject.changed.connect(_render_catalog)
 	_render_catalog()
+
+
+func _on_renown_changed(kind: StringName, _total: float, _event: RenownEvent) -> void:
+	if kind == &"karma":
+		_render_catalog()
+
+
+func _on_reputation_changed(faction: String, _standing: float, _event: ReputationEvent) -> void:
+	if faction == str(VendorData.vendor(_vendor_id).get("faction_id", "")):
+		_render_catalog()
+
+
+func _on_locale_changed(_locale: String) -> void:
+	_render_catalog()
+
+
+func _update_barter_readout() -> void:
+	var ratio := GameState.barter_ratio()
+	var subject := GameState.protagonist()
+	var subject_name := subject.display_name if subject != null else tr("NO LEADER")
+	var percent := String.num(ratio * SkillCheck.MAX_EFFECTIVE_PERCENT, 2).trim_suffix(".0")
+	_barter_label.text = tr("BARTER  ·  %s  ·  SWAY %s%%  ·  BUY ×%.2f / SELL ×%.2f") % [
+		subject_name, percent,
+		VendorData.barter_multiplier(true, ratio), VendorData.barter_multiplier(false, ratio),
+	]
+	_barter_hint.text = tr("NO BARTER ADJUSTMENT")
+	_barter_hint.visible = is_zero_approx(ratio)
 
 
 ## Keeps the two existing starting-town doors compatible without hardcoded stock.
@@ -152,8 +222,9 @@ func _on_mirror_rewriting() -> void:
 
 
 func _render_catalog() -> void:
-	if _catalog == null:
+	if _catalog == null or _leaving or not is_inside_tree():
 		return
+	_update_barter_readout()
 	var focused := get_viewport().gui_get_focus_owner()
 	var focus_name := ""
 	if focused != null and _catalog.is_ancestor_of(focused):
@@ -341,11 +412,28 @@ func _add_stock_entry(entry: Dictionary, trade_mode: String) -> void:
 	buy.disabled = quantity <= 0 or not GameState.can_afford(buy_price)
 
 	var sell_price := int(entry["sell_price"])
-	if trade_mode == "commerce" and VendorData.accepts_sales(_vendor_id, item_id):
+	var accepts_sales := trade_mode == "commerce" and VendorData.accepts_sales(_vendor_id, item_id)
+	if accepts_sales:
 		var sell := _menu_button(top, "SELL  ·  %d SILVER" % sell_price, _sell.bind(entry))
 		sell.name = "Sell_" + item_id.replace("/", "_")
 		sell.custom_minimum_size = Vector2(155, DS.CONTROL_H)
 		sell.disabled = GameState.item_count(item_id) <= 0
+
+	var base_prices: PackedStringArray = []
+	if buy_price != int(entry["base_buy_price"]):
+		base_prices.append(
+			(tr("BASE OFFER  ·  %d SILVER") if trade_mode == "offering" else tr("BASE BUY  ·  %d SILVER"))
+			% int(entry["base_buy_price"])
+		)
+	if accepts_sales and sell_price != int(entry["base_sell_price"]):
+		base_prices.append(tr("BASE SELL  ·  %d SILVER") % int(entry["base_sell_price"]))
+	if not base_prices.is_empty():
+		var base := Label.new()
+		base.name = "BasePrice_" + item_id.replace("/", "_")
+		base.text = "  /  ".join(base_prices)
+		base.theme_type_variation = "MutedLabel"
+		base.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.add_child(base)
 
 	var use_label := str(entry.get("equip_slot", entry.get("rarity", "item"))).replace("_", " ")
 	var meta := Label.new()
