@@ -13,7 +13,14 @@ static func field_texture(member: PartyMember) -> Texture2D:
 	if member == null:
 		return null
 	var portrait_path := member.portrait.resource_path if member.portrait != null else ""
-	var unit_id := UnitArtScript.field_unit_id(member.id, portrait_path)
+	# Saves store the ancestry display name; resolve it through the existing table
+	# without changing saved identity or interpreting unresolved lore labels.
+	var ancestry_id := ""
+	for ancestry: Dictionary in ChargenData.ANCESTRIES:
+		if member.race == str(ancestry["id"]) or member.race == str(ancestry["name"]):
+			ancestry_id = str(ancestry["id"])
+			break
+	var unit_id := UnitArtScript.field_unit_id(member.id, portrait_path, ancestry_id, member.class_id)
 	return load(UnitArtScript.texture_path(unit_id)) as Texture2D
 
 

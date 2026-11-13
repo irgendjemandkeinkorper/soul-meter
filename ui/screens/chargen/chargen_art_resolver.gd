@@ -23,7 +23,7 @@ static func portrait_path(likeness_id: String, pattern: String = PORTRAIT_PATTER
 		return generated_path
 	# Gallery likeness ids map to a paired crowd field sprite; legacy ids WERE
 	# unit ids and fall through unchanged.
-	return UnitArtScript.texture_path(ChargenData.likeness_fallback_unit(likeness_id))
+	return UnitArtScript.texture_path(UnitArtScript.player_unit_id("", "", likeness_id))
 
 
 ## Loads the portrait as a texture, falling through to the paired field sprite
@@ -37,7 +37,7 @@ static func portrait_texture(likeness_id: String, pattern: String = PORTRAIT_PAT
 		if generated is Texture2D:
 			return generated as Texture2D
 	var fallback_path: String = UnitArtScript.texture_path(
-		ChargenData.likeness_fallback_unit(likeness_id)
+		UnitArtScript.player_unit_id("", "", likeness_id)
 	)
 	if _art_exists(fallback_path):
 		var fallback: Resource = load(fallback_path)
