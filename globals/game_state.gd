@@ -5,6 +5,7 @@ extends Node
 const VendorData := preload("res://globals/vendor_registry.gd")
 
 signal soul_meter_changed(value: float)
+signal soul_traced(entry: Dictionary)
 signal husked_state_changed(husked: bool)
 signal hollowing_state_changed(active: bool)
 signal gp_changed(value: int)
@@ -12,6 +13,7 @@ signal flag_changed(flag: String, value: Variant)
 signal inventory_changed
 signal vendor_stock_changed(vendor_id: String, item_id: String, quantity: int)
 signal party_changed
+signal equipment_changed(member: PartyMember)
 signal milestone_level_granted(milestone_id: StringName, new_levels: Dictionary)
 signal xp_awarded(amount: int, cause: String, levels_gained: Dictionary)
 signal locale_changed(locale: String)
@@ -26,6 +28,8 @@ const REQUIRED_COMPANIONS := 2
 const DEFAULT_LOCALE := "en"
 const SUPPORTED_LOCALES := ["en", "es"]
 const DEFAULT_GP := 250
+const EQUIPMENT_SLOTS: Array[StringName] = [&"main", &"off", &"head", &"body", &"trinket"]
+const EQUIP_SLOT_ALIASES: Dictionary = {"main_hand": &"main", "off_hand": &"off"}
 const MIN_VAR_HARMONY := -5
 const MAX_VAR_HARMONY := 5
 const SKILL_TIERS := ["Untrained", "Trained", "Expert"]
@@ -73,6 +77,7 @@ const HUSKED_RECOVERY_CEILING_FLAG := "soul_husked_recovery_ceiling"
 ## that shape and has had no balance sweep. The tactical amendment §1.1 records
 ## what happens when a magnitude is treated as settled without one.
 const HUSKED_CEILING_RATIO := 0.5
+const SOUL_TRACE_LIMIT := 512
 
 var flags: Dictionary = {}
 ## Per-save deterministic world seed. New games draw it explicitly; legacy
@@ -80,6 +85,13 @@ var flags: Dictionary = {}
 var world_seed: int = 0
 var soul_meter: float = 50.0:
 	set = set_soul_meter
+## The lowest the Gauge has been this run. Chapter One's ledger reads it back beside the
+## final value, so a chapter that went to the edge and came back says so.
+var soul_lowest: float = 50.0
+## Developer diagnostics only; deliberately absent from the save payload.
+var soul_trace: Array[Dictionary] = []
+var _soul_trace_index: int = 0
+var _pending_soul_cause: String = ""
 var gp: int = DEFAULT_GP:
 	set = set_gp
 var party: Array[PartyMember] = []
@@ -101,10 +113,9 @@ var var_harmony: Dictionary = {}
 ## Stable Pandora Combatant Id -> {encounters, weaknesses}. Weakness IDs are
 ## stable world-fact IDs from the generated Defining Strike table.
 var combat_knowledge: Dictionary = {}
-## Equipment slot name (String) -> equipped item prototype id (String). The items
-## themselves always live in `inventory`; the inventory screen re-seats them into its
-## ephemeral per-slot GLoot inventories from this record on open.
-var equipped_slots: Dictionary = {}
+## Unrecognized legacy equipment payload only. Never read for gameplay; retained
+## so an old unrelated/nested record survives re-saving without reinterpretation.
+var _legacy_equipped_slots: Dictionary = {}
 ## Serialized TravelPlan payload. GameFlow owns the live resource and lifecycle.
 var travel_plan: Dictionary = {}
 ## Stable loot-container id -> {items: [{item_id, quantity}], theft_recorded: bool}.
@@ -113,6 +124,10 @@ var loot_containers: Dictionary = {}
 var settings_path: String = SETTINGS_PATH
 
 var _settings := ConfigFile.new()
+var _restoring_inventory := false
+## Runtime reservations of physical bag items. Saves retain only member slot ->
+## prototype ids; equivalent copies are assigned in party/bag order after loading.
+var _equipment_items: Dictionary = {}
 
 
 func _ready() -> void:
@@ -121,12 +136,16 @@ func _ready() -> void:
 	inventory = Inventory.new()
 	inventory.protoset = load("res://data/generated/gloot_prototree.json")
 	add_child(inventory)
-	inventory.item_added.connect(func(_item: InventoryItem) -> void: inventory_changed.emit())
-	inventory.item_removed.connect(func(_item: InventoryItem) -> void: inventory_changed.emit())
+	inventory.item_added.connect(func(_item: InventoryItem) -> void:
+		if not _restoring_inventory:
+			_sync_equipment_items()
+		inventory_changed.emit())
+	inventory.item_removed.connect(_on_inventory_item_removed)
 	inventory.item_property_changed.connect(
 		func(_item: InventoryItem, _property: String) -> void: inventory_changed.emit()
 	)
 	inventory.item_moved.connect(func() -> void: inventory_changed.emit())
+	party_changed.connect(_sync_equipment_items)
 	_seed_demo_data()
 
 
@@ -140,19 +159,176 @@ func refill_party_breath() -> void:
 		party_changed.emit()
 
 
+## Equipment state belongs to Systems. UI requests these operations; physical
+## items always stay in the shared bag. Separate copies of a prototype can have
+## separate wearers; a single physical item can never be reserved twice.
+func can_equip_item(member: PartyMember, item: InventoryItem, slot: StringName) -> bool:
+	if member == null or not party.has(member) or not is_instance_valid(item):
+		return false
+	if not inventory.has_item(item) or slot not in EQUIPMENT_SLOTS or equipment_slot_of(item) != slot:
+		return false
+	var owner := equipment_owner(item)
+	return owner == null or owner == member
+
+
+func equip_item(member: PartyMember, item: InventoryItem, slot: StringName) -> bool:
+	if not can_equip_item(member, item, slot):
+		return false
+	var prototype_id := item.get_prototype().get_prototype_id()
+	if equipped_item(member, slot) == item:
+		return true
+	for prior_slot: Variant in member.equipped_slots.keys():
+		if _equipment_items[member].get(prior_slot) == item:
+			member.equipped_slots.erase(prior_slot)
+			_equipment_items[member].erase(prior_slot)
+	member.equipped_slots[String(slot)] = prototype_id
+	_equipment_items[member][String(slot)] = item
+	equipment_changed.emit(member)
+	party_changed.emit()
+	return true
+
+
+func unequip_item(member: PartyMember, slot: StringName) -> bool:
+	if member == null or not party.has(member) or not member.equipped_slots.erase(String(slot)):
+		return false
+	if _equipment_items.has(member):
+		_equipment_items[member].erase(String(slot))
+	equipment_changed.emit(member)
+	party_changed.emit()
+	return true
+
+
+func equipment_owner(item: InventoryItem) -> PartyMember:
+	_sync_equipment_items()
+	for member: PartyMember in party:
+		if _equipment_items[member].values().has(item):
+			return member
+	return null
+
+
+func equipped_item(member: PartyMember, slot: StringName) -> InventoryItem:
+	_sync_equipment_items()
+	return (_equipment_items.get(member, {}) as Dictionary).get(String(slot))
+
+
+func _sync_equipment_items() -> void:
+	var assigned: Dictionary = {}
+	var reserved: Dictionary = {}
+	# Preserve live identities first, even if the bag/party has been reordered.
+	for member: PartyMember in party:
+		assigned[member] = {}
+		var previous: Dictionary = _equipment_items.get(member, {})
+		for slot: Variant in member.equipped_slots:
+			var item: InventoryItem = previous.get(slot)
+			if item == null or not inventory.has_item(item) or reserved.has(item):
+				continue
+			if item.get_prototype().get_prototype_id() == member.equipped_slots[slot]:
+				assigned[member][slot] = item
+				reserved[item] = true
+	# Reconstruct unbound saved slots from the remaining physical copies.
+	for member: PartyMember in party:
+		for slot: Variant in member.equipped_slots:
+			var prototype_id: Variant = member.equipped_slots[slot]
+			if assigned[member].has(slot) or not prototype_id is String:
+				continue
+			for item: InventoryItem in inventory.get_items_with_prototype_id(prototype_id):
+				if not reserved.has(item):
+					assigned[member][slot] = item
+					reserved[item] = true
+					break
+	_equipment_items = assigned
+
+
+static func equipment_slot_of(item: InventoryItem) -> StringName:
+	if not is_instance_valid(item):
+		return &""
+	var raw := str(item.get_property("slot", item.get_property("equip_slot", "")))
+	return EQUIP_SLOT_ALIASES.get(raw, StringName(raw))
+
+
+func _on_inventory_item_removed(item: InventoryItem) -> void:
+	var prototype_id := item.get_prototype().get_prototype_id()
+	if not _restoring_inventory:
+		for member: PartyMember in party:
+			var reserved: Dictionary = _equipment_items.get(member, {})
+			for slot: Variant in member.equipped_slots.keys():
+				if reserved.get(slot) == item or (
+					member.equipped_slots[slot] == prototype_id
+					and inventory.get_items_with_prototype_id(prototype_id).is_empty()
+				):
+					unequip_item(member, StringName(slot))
+	inventory_changed.emit()
+
+
 # --- Soul Meter and facts ----------------------------------------------------
 
 
+func set_soul_meter_with_cause(value: float, cause: String) -> void:
+	_pending_soul_cause = cause
+	soul_meter = value
+
+
 func set_soul_meter(value: float) -> void:
+	var cause := _pending_soul_cause if not _pending_soul_cause.is_empty() else "unattributed"
+	# Consume before emitting any signals, including on a no-op assignment.
+	_pending_soul_cause = ""
 	var pre_zero_value := soul_meter
+	var husked_before := is_husked()
 	var ceiling := husked_recovery_ceiling() if has_been_husked() else 100.0
 	soul_meter = clampf(value, 0.0, ceiling)
+	var after := soul_meter
+	soul_lowest = minf(soul_lowest, soul_meter)
 	soul_meter_changed.emit(soul_meter)
 	if is_zero_approx(soul_meter):
 		if not is_husked():
 			_enter_husked_state(pre_zero_value)
 	elif is_husked():
 		_exit_husked_state()
+	if after != pre_zero_value or value != after:
+		_soul_trace_index += 1
+		var entry: Dictionary = {
+			"index": _soul_trace_index,
+			"cause": cause,
+			"requested": value,
+			"before": pre_zero_value,
+			"after": after,
+			"changed": after != pre_zero_value,
+			"clamped": after != value,
+			"ceiling": ceiling,
+			"husked_before": husked_before,
+			"husked_after": is_husked(),
+			"band_id": soul_band_id_for(after),
+		}
+		soul_trace.append(entry)
+		if soul_trace.size() > SOUL_TRACE_LIMIT:
+			soul_trace.pop_front()
+		print_verbose("Soul trace: %s" % JSON.stringify(entry))
+		soul_traced.emit(entry.duplicate(true))
+
+
+func soul_trace_entries() -> Array[Dictionary]:
+	return soul_trace.duplicate(true)
+
+
+func clear_soul_trace() -> void:
+	soul_trace.clear()
+	_soul_trace_index = 0
+	_pending_soul_cause = ""
+
+
+## Existing SoulGauge presentation identifiers, shared without changing their thresholds.
+## The exact percentage remains authoritative for rules and dialogue checks.
+static func soul_band_id_for(value: float) -> String:
+	var clamped := clampf(value, 0.0, 100.0)
+	if clamped >= 75.0:
+		return "bright"
+	if clamped >= 50.0:
+		return "whole"
+	if clamped >= 25.0:
+		return "frayed"
+	if clamped > 0.0:
+		return "guttering"
+	return "husked"
 
 
 ## True while the Soul Gauge is husked — casting is refused (see CastingGate).
@@ -501,8 +677,8 @@ func vendor_trade_status(vendor_id: String) -> Dictionary:
 ## barter modifier applied at only one of the two sites is invisible until a
 ## player notices the total does not match.
 ##
-## Barter reads the party leader, not the protagonist: the person doing the
-## talking is the one at the counter.
+## Barter uses SkillCheck's default subject (the protagonist), even when the
+## party is reordered. The shop must name that same person in its readout.
 func barter_ratio() -> float:
 	# The subject is left to SkillCheck rather than picked here. #415 originally
 	# read `party[0]`, which is not the same thing as the protagonist — the
@@ -521,12 +697,15 @@ func available_vendor_stock(vendor_id: String) -> Array[Dictionary]:
 		return []
 	_ensure_vendor_stock(vendor_id)
 	var result: Array[Dictionary] = []
+	var barter := barter_ratio()
 	for row: Dictionary in VendorData.stock_for(vendor_id):
 		var item_id := str(row.get("id", ""))
 		row["quantity"] = vendor_item_quantity(vendor_id, item_id)
-		var barter := barter_ratio()
 		row["buy_price"] = VendorData.price_for(vendor_id, item_id, true, &"", barter)
 		row["sell_price"] = VendorData.price_for(vendor_id, item_id, false, &"", barter)
+		# Keep the vendor and reputation band; remove only the Sway modifier.
+		row["base_buy_price"] = VendorData.price_for(vendor_id, item_id, true)
+		row["base_sell_price"] = VendorData.price_for(vendor_id, item_id, false)
 		result.append(row)
 	return result
 
@@ -1133,10 +1312,11 @@ func to_dict() -> Dictionary:
 	var custom_recruit_rows: Array[Dictionary] = []
 	for member in custom_recruits:
 		custom_recruit_rows.append(member.to_dict())
-	return {
+	var result: Dictionary = {
 		"flags": flags.duplicate(true),
 		"world_seed": world_seed,
 		"soul_meter": soul_meter,
+		"soul_lowest": soul_lowest,
 		"gp": gp,
 		"party": party_rows,
 		"custom_recruits": custom_recruit_rows,
@@ -1146,17 +1326,27 @@ func to_dict() -> Dictionary:
 		"skills": skills.duplicate(true),
 		"var_harmony": var_harmony.duplicate(true),
 		"combat_knowledge": combat_knowledge.duplicate(true),
-		"equipped_slots": equipped_slots.duplicate(true),
 		"travel_plan": travel_plan.duplicate(true),
 		"loot_containers": loot_containers.duplicate(true),
 	}
+	if not _legacy_equipped_slots.is_empty():
+		result["equipped_slots"] = _legacy_equipped_slots.duplicate(true)
+	return result
 
 
 func from_dict(data: Dictionary) -> bool:
 	if not _validate_save_data(data):
 		return false
+	data = SaveMigrations.migrate_equipment_state(data)
 	var inventory_data: Variant = data.get("inventory", {})
-	if not inventory_data is Dictionary or not inventory.deserialize(inventory_data):
+	if not inventory_data is Dictionary:
+		return false
+	# Deserialization removes the old bag before loading the new party. Those
+	# removals are a restore operation, not gameplay unequips of the old resources.
+	_restoring_inventory = true
+	var inventory_loaded := inventory.deserialize(inventory_data)
+	_restoring_inventory = false
+	if not inventory_loaded:
 		return false
 	flags.clear()
 	var raw_flags: Variant = data.get("flags", {})
@@ -1168,15 +1358,16 @@ func from_dict(data: Dictionary) -> bool:
 		world_seed = int(data["world_seed"])
 	else:
 		regenerate_world_seed()
-	soul_meter = float(data.get("soul_meter", 50.0))
+	set_soul_meter_with_cause(float(data.get("soul_meter", 50.0)), "save:from_dict")
+	# Additive key: a save from before the ledger read it back starts from the loaded value.
+	soul_lowest = minf(float(data.get("soul_lowest", soul_meter)), soul_meter)
 	gp = maxi(0, int(data.get("gp", DEFAULT_GP)))
 	vendor_stock = data.get("vendor_stock", {}).duplicate(true)
 	vendor_restock_cycles = data.get("vendor_restock_cycles", {}).duplicate(true)
 	skills = data.get("skills", {}).duplicate(true)
 	var_harmony = data.get("var_harmony", {}).duplicate(true)
 	combat_knowledge = data.get("combat_knowledge", {}).duplicate(true)
-	# Additive key: absent in saves written before the equipment rail persisted (defaults empty).
-	equipped_slots = data.get("equipped_slots", {}).duplicate(true)
+	_legacy_equipped_slots = data.get("equipped_slots", {}).duplicate(true)
 	# Additive key: absent when no journey is active and in saves from before world-map travel.
 	travel_plan = data.get("travel_plan", {}).duplicate(true)
 	# Additive key: absent in saves from before inspectable world containers.
@@ -1187,6 +1378,8 @@ func from_dict(data: Dictionary) -> bool:
 	custom_recruits.clear()
 	for row in data.get("custom_recruits", []):
 		custom_recruits.append(PartyMember.from_dict(row))
+	_equipment_items.clear()
+	_sync_equipment_items()
 	inventory_changed.emit()
 	party_changed.emit()
 	return true
@@ -1204,6 +1397,7 @@ func _validate_save_data(data: Dictionary) -> bool:
 		"vendor_stock",
 		"vendor_restock_cycles",
 		"loot_containers",
+		"equipped_slots",
 	]:
 		if data.has(key) and not data[key] is Dictionary:
 			return false

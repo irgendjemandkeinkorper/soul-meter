@@ -95,3 +95,14 @@ interaction_flag = "loot_opened_cask_warehouse_supply_crate"
 loot = Array[Dictionary]([{"item_id": "materials/lamp_oil", "quantity": 2}, {"item_id": "materials/binding_thread", "quantity": 1}])
 container_id = "cask-warehouse-supply-crate"
 owned_by_faction = "iron-companies"
+
+[node name="LockedStockCrate" parent="." instance=ExtResource("2_chest")]
+position = Vector2(1450, 1000)
+display_name = "Supply Crate"
+prompt_text = "Open"
+interaction_flag = "loot_opened_cask_warehouse_locked_stock_crate"
+lock_skill = "slip"
+lock_modifier = 0.0
+container_id = "cask-warehouse-locked-stock-crate"
+owned_by_faction = "iron-companies"
+loot_table_id = &"dom-workshop-stores"

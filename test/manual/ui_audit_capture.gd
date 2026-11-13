@@ -106,7 +106,8 @@ func test_panels() -> void:
 		members.append(candidate)
 	GameState.set_party(members)
 	GameState.inventory.clear()
-	GameState.equipped_slots = {}
+	for member: PartyMember in members:
+		member.equipped_slots = {}
 	var axe := GameState.inventory.create_and_add_item(ItemIds.WEAPONS_TAUBSTUMMER_AXE)
 	var bread := GameState.inventory.create_and_add_item(ItemIds.CONSUMABLES_HEARTHLOAF)
 	GameState.inventory.create_and_add_item(ItemIds.WEAPONS_FORGE_HAMMER)

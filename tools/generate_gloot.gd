@@ -155,6 +155,10 @@ static func generate(check_only: bool = false) -> Dictionary:
 		var slot := ent.get_string("Equip Slot")
 		if not slot.is_empty():
 			props["equip_slot"] = slot
+		# Optional flat equipment stats; omit the neutral defaults on other items.
+		for property: String in ["Attack Bonus", "Defense Bonus"]:
+			if ent.has_entity_property(property) and ent.get_integer(property) != 0:
+				props[property.to_snake_case()] = ent.get_integer(property)
 		# GLoot's InventoryItem.get_texture() reads the "image" property. The
 		# icon path is a pure naming convention (item slug → icon file), so the
 		# generator stays deterministic whether or not the PNG exists yet;

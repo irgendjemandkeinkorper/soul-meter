@@ -341,18 +341,17 @@ func _condition(member: PartyMember) -> GridContainer:
 	return grid
 
 
-## What the person carries into a fight. The inventory's equipment rail is the hero's
-## (`GameState.equipped_slots`); a class Kit names the ARMS skill it trains.
+## What the person carries into a fight: their own equipment (per member since P1.4,
+## `PartyMember.equipped_slots`); a class Kit names the ARMS skill it trains.
 func _render_equipped(column: VBoxContainer, member: PartyMember) -> void:
 	var lines: PackedStringArray = []
-	if member.id == GameState.PROTAGONIST_ID:
-		for slot_name: StringName in InventoryScreenScript.EQUIPMENT_SLOTS:
-			var proto_id := str(GameState.equipped_slots.get(String(slot_name), ""))
-			if not proto_id.is_empty():
-				lines.append("%s  ·  %s" % [
-					String(slot_name).to_upper(),
-					ItemLocalization.text(proto_id, "name", proto_id.get_file().capitalize()),
-				])
+	for slot_name: StringName in InventoryScreenScript.EQUIPMENT_SLOTS:
+		var proto_id := str(member.equipped_slots.get(String(slot_name), ""))
+		if not proto_id.is_empty():
+			lines.append("%s  ·  %s" % [
+				String(slot_name).to_upper(),
+				ItemLocalization.text(proto_id, "name", proto_id.get_file().capitalize()),
+			])
 	if not member.kit_weapon_skill.is_empty():
 		lines.append("KIT  ·  %s" % DramgidSchema.skill_label(member.kit_weapon_skill))
 	if lines.is_empty():

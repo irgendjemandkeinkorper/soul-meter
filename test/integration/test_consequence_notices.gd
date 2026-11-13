@@ -143,3 +143,27 @@ func _contains_digit(value: String) -> bool:
 		if character >= "0" and character <= "9":
 			return true
 	return false
+
+
+func test_a_level_gained_is_announced_and_a_perk_level_says_so() -> void:
+	var notices: ConsequenceNoticesScript = _notices()
+	var member := PartyMember.new()
+	member.id = "gdunit-vex"
+	member.display_name = "Vex"
+	GameState.set_party([member] as Array[PartyMember])
+
+	GameState.xp_awarded.emit(40, "quest", {"gdunit-vex": 2, "gdunit-stranger": 3})
+
+	assert_array(notices.visible_notice_texts()).contains_exactly([
+		"VEX REACHES LEVEL 2 — a perk awaits on the sheet",
+		"GDUNIT-STRANGER REACHES LEVEL 3 — skill points to spend",
+	])
+	assert_int(notices.pending_notice_count()).is_equal(0)
+
+
+func test_an_award_without_a_level_says_nothing() -> void:
+	var notices: ConsequenceNoticesScript = _notices()
+
+	GameState.xp_awarded.emit(15, "kill", {})
+
+	assert_array(notices.visible_notice_texts()).is_empty()

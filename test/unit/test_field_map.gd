@@ -1,4 +1,4 @@
-extends GdUnitTestSuite
+extends "res://test/helpers/error_assert_suite.gd"
 
 const TEST_ROOM_SCENE := "res://world/test_room.tscn"
 const TEST_ROOM_BLOCKED_CELL := Vector2i(23, 23)
@@ -14,6 +14,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	super()
 	GameState.from_dict(_game_state_before)
 
 func test_every_gameplay_scene_exposes_field_layers_and_shared_iso_grid() -> void:
@@ -220,6 +221,28 @@ func test_combat_mode_hides_field_labels_and_prompts_and_restores_them() -> void
 		assert_bool(labels[index].self_modulate.is_equal_approx(before[index])).is_true()
 	assert_bool(_shows(sign)).is_true()
 	assert_bool(_shows(prompt)).is_true()
+	scene.queue_free()
+	await get_tree().process_frame
+
+
+func test_a_world_label_freed_before_its_deferred_theming_is_skipped() -> void:
+	var scene: Node = (load(TEST_ROOM_SCENE) as PackedScene).instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	assert_object(_find_field_map(scene)).is_not_null()
+	# A label that lives for less than a frame (spawn churn on a populated field) must not
+	# reach the deferred theming call as a freed object: that prints an engine error.
+	var kept := Label.new()
+	await assert_error(func() -> void:
+		var brief := Label.new()
+		scene.add_child(brief)
+		brief.free()
+		# A label that stays gets the world face once the deferred call runs.
+		scene.add_child(kept)
+		await get_tree().process_frame
+	).is_success()
+	assert_object(kept.theme).is_not_null()
+	assert_str(String(kept.theme_type_variation)).is_equal("WorldLabel")
 	scene.queue_free()
 	await get_tree().process_frame
 

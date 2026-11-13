@@ -87,7 +87,10 @@ func _ledger_text() -> String:
 		"COMPANY  Vex + %s\n" % " + ".join(companion_names)
 		+ "BLOODBELLOW  %s\n" % _outcome_label()
 		+ "RULING  %s\n" % _ruling_label()
-		+ "SOUL  %d / 100\n" % roundi(GameState.soul_meter)
+		+ (
+			"SOUL  %d / 100  ·  LOWEST %d\n"
+			% [roundi(GameState.soul_meter), roundi(GameState.soul_lowest)]
+		)
 		+ (
 			"IRON COMPANIES  %+d    IRONBRAND SENTINELS  %+d\n"
 			% [
@@ -108,13 +111,18 @@ func _side_quest_ledger_text() -> String:
 	# ratio stay committed-only. A loaded campaign must not move the denominator,
 	# and — the part that is easy to miss — it must not inflate the numerator
 	# either: completed_side_quests() reports the runtime-aware universe, so
-	# filtering only the denominator would render "RESOLVED 11 / 10".
+	# filtering only the denominator would render "RESOLVED 12 / 11". The committed set is
+	# every resolvable side quest, Dom's ten and the field quests, so the Hollowmere stake
+	# counts; the stubs stay out (see QuestRegistry.STUB_SIDE_QUESTS).
 	var completed := _committed_only(QuestRegistry.completed_side_quests())
 	var lines := PackedStringArray(
-		["RESOLVED  %d / %d" % [completed.size(), QuestRegistry.DOM_SIDE_QUESTS.size()]]
+		[
+			"RESOLVED  %d / %d"
+			% [completed.size(), QuestRegistry.resolvable_side_quests().size()]
+		]
 	)
 	if completed.is_empty():
-		lines.append("No Dom side commission was resolved before the road ruling.")
+		lines.append("No side commission was resolved before the road ruling.")
 	else:
 		for quest: DomSideQuest in completed:
 			lines.append(
@@ -195,7 +203,8 @@ func _format_time(seconds: int) -> String:
 ## Chapter One's own side quests, excluding any loaded campaign package.
 static func _committed_only(quests: Array[DomSideQuest]) -> Array[DomSideQuest]:
 	var result: Array[DomSideQuest] = []
+	var committed := QuestRegistry.resolvable_side_quests()
 	for quest: DomSideQuest in quests:
-		if QuestRegistry.DOM_SIDE_QUESTS.has(quest):
+		if committed.has(quest):
 			result.append(quest)
 	return result
