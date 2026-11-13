@@ -224,6 +224,28 @@ func test_combat_mode_hides_field_labels_and_prompts_and_restores_them() -> void
 	await get_tree().process_frame
 
 
+func test_a_world_label_freed_before_its_deferred_theming_is_skipped() -> void:
+	var scene: Node = (load(TEST_ROOM_SCENE) as PackedScene).instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	assert_object(_find_field_map(scene)).is_not_null()
+	# A label that lives for less than a frame (spawn churn on a populated field) must not
+	# reach the deferred theming call as a freed object: that prints an engine error.
+	var kept := Label.new()
+	await assert_error(func() -> void:
+		var brief := Label.new()
+		scene.add_child(brief)
+		brief.free()
+		# A label that stays gets the world face once the deferred call runs.
+		scene.add_child(kept)
+		await get_tree().process_frame
+	).is_success()
+	assert_object(kept.theme).is_not_null()
+	assert_str(String(kept.theme_type_variation)).is_equal("WorldLabel")
+	scene.queue_free()
+	await get_tree().process_frame
+
+
 func _shows(label: Label) -> bool:
 	return label.is_visible_in_tree() and label.self_modulate.a > 0.0 and label.modulate.a > 0.0
 
