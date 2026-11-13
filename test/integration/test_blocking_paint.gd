@@ -163,23 +163,30 @@ func test_a_trial_hall_gate_opens_its_cells_with_the_gate() -> void:
 	var scene := await _load_map(TRIAL_HALL)
 	var grid := (scene.find_child("FieldMap", true, false) as FieldMap).iso_grid()
 	var door := scene.get_node("SkillDoor/CollisionShape2D") as CollisionShape2D
-	# Points along the door; the walk grid's one-cell clearance keeps those beside the counter.
-	var line: Array[Vector2i] = []
-	for x in range(-840, 841, 40):
-		line.append(grid.world_to_cell(door.global_position + Vector2(x, 0)))
-	var shut := _blocked(grid, line)
-	assert_int(shut).override_failure_message("the shut skill door blocks %d of %d" % [shut, line.size()]).is_equal(line.size())
-	# Where the door meets the east wall the wall keeps the cell.
-	var wall_end := grid.world_to_cell(door.global_position + Vector2(930, 0))
-	assert_bool(grid.is_blocked_for(wall_end)).is_true()
+	# The skill door shuts one doorway of the rooms' plan (2026-11-04); the walls beside it are
+	# walls whatever the door does. The rooms are a walk-in plan, so no clearance ring.
+	var doorway := grid.world_to_cell(door.global_position)
+	var beside: Array[Vector2i] = [
+		grid.world_to_cell(door.global_position + Vector2(-32, -16)),
+		grid.world_to_cell(door.global_position + Vector2(32, 16)),
+	]
+	var through: Array[Vector2i] = [
+		grid.world_to_cell(door.global_position + Vector2(32, -16)),
+		grid.world_to_cell(door.global_position + Vector2(-32, 16)),
+	]
+	assert_bool(grid.is_blocked_for(doorway)).override_failure_message("the shut skill door is open").is_true()
+	assert_int(_blocked(grid, beside)).is_equal(2)
+	assert_int(grid.path_cells(through[0], through[1]).size()).override_failure_message(
+		"a path crosses the shut skill door"
+	).is_equal(0)
 	GameState.set_flag(SKILL_DOOR_FLAG, true)
 	await get_tree().process_frame
-	var open := _blocked(grid, line)
-	assert_int(open).override_failure_message("the open skill door still blocks %d of %d" % [open, line.size()]).is_less(line.size() / 2)
-	assert_bool(grid.is_blocked_for(wall_end)).override_failure_message("opening the door opened the wall").is_true()
+	assert_bool(grid.is_blocked_for(doorway)).override_failure_message("the open skill door still blocks").is_false()
+	assert_int(_blocked(grid, beside)).override_failure_message("opening the door opened the wall").is_equal(2)
+	assert_int(grid.path_cells(through[0], through[1]).size()).is_greater(0)
 	GameState.set_flag(SKILL_DOOR_FLAG, false)
 	await get_tree().process_frame
-	assert_int(_blocked(grid, line)).override_failure_message("the door did not shut again").is_equal(line.size())
+	assert_bool(grid.is_blocked_for(doorway)).override_failure_message("the door did not shut again").is_true()
 	await _unload(scene)
 
 

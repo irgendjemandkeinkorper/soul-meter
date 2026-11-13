@@ -103,6 +103,22 @@ func test_a_kit_floor_tile_is_one_ground_cell() -> void:
 	assert_int(int(size[1])).is_between(32, 34)
 
 
+## An unroofed building (the Lower Trial Hall's rooms, 2026-11-04) places no roof, so the kit needs
+## no roof for its layout, and its rooms still open around the party.
+func test_an_unroofed_building_places_no_roof_and_still_opens_its_rooms() -> void:
+	var map := await _map("res://world/buildings/layouts/trial_hall.tres", 0, PackedStringArray(), Vector2i.ZERO, false)
+	var building: WalkInBuilding = map.get_node("Building")
+	assert_object(building.get_node_or_null("Roof")).is_null()
+	assert_bool(_manifest()["pieces"].has(building.roof_piece())).is_false()
+	assert_int(building.get_node("Walls").get_child_count()).is_equal(building.plan().pieces.size())
+
+	var walker := map.get_node("Walker") as Node2D
+	walker.global_position = building.to_global(building.corner(23.5, 24.5))
+	await _settle()
+	assert_int(building.current_look()).is_equal(WalkInBuilding.Look.INSIDE)
+	assert_array(building.open_rooms()).is_equal(building.plan().rooms_of(Vector2i(23, 24)))
+
+
 ## The roof sits over every wall piece: no opaque pixel of a full-height wall, window, lintel, post
 ## or pillar shows above the roof's outline, for every layout and turn the kit has a roof for.
 func test_the_roof_covers_every_wall_piece() -> void:
@@ -214,13 +230,17 @@ func test_a_vendor_keeps_shop_behind_the_counter() -> void:
 	map.free()
 
 
-func _map(layout_path: String, turns: int, vendor_ids := PackedStringArray(), vendor_cell := Vector2i.ZERO) -> Node2D:
+func _map(
+	layout_path: String, turns: int, vendor_ids := PackedStringArray(), vendor_cell := Vector2i.ZERO,
+	roofed := true,
+) -> Node2D:
 	var map := Node2D.new()
 	map.add_child(_ground(true))
 	var building := WalkInBuilding.new()
 	building.name = "Building"
 	building.layout = load(layout_path)
 	building.quarter_turns = turns
+	building.roofed = roofed
 	building.origin_cell = ORIGIN
 	building.vendor_ids = vendor_ids
 	building.vendor_cell = vendor_cell
