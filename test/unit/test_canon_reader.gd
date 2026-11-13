@@ -1,4 +1,4 @@
-extends GdUnitTestSuite
+extends "res://test/helpers/error_assert_suite.gd"
 
 const SeedPandora := preload("res://tools/seed_pandora.gd")
 
@@ -30,6 +30,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	super()
 	Pandora._entity_backend._clear()
 	Pandora._entity_backend = _original_backend
 	Pandora._id_generator = _original_ids

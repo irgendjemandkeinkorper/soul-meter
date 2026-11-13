@@ -176,9 +176,14 @@ func resolve_placement(desired: Array[Vector2i]) -> Dictionary:
 ## reachable cell under the same bounded search `resolve_placement()` uses for an overlapping
 ## companion. `taken` holds the cells this placement pass already handed out. Same return
 ## shape as that search: `{"ok": true, "cell": Vector2i}` or `{"ok": false}`.
-func seat_near(wanted: Vector2i, taken: Dictionary) -> Dictionary:
+##
+## With `reach_from` (a cell, the party's anchor), the seat must also stand on the anchor's
+## side of every wall: see `_nearest_cell_reached_from()`. Without it the search is unchanged.
+func seat_near(wanted: Vector2i, taken: Dictionary, reach_from: Variant = null) -> Dictionary:
 	if _grid == null:
 		return {"ok": false}
+	if reach_from is Vector2i:
+		return _nearest_cell_reached_from(reach_from, wanted, taken)
 	if not taken.has(wanted) and _is_seatable(wanted):
 		return {"ok": true, "cell": wanted}
 	return _nearest_free_cell(wanted, taken)
@@ -228,6 +233,65 @@ func _nearest_free_cell(from: Vector2i, taken: Dictionary) -> Dictionary:
 			break
 		frontier = ring
 	return {"ok": false}
+
+
+## Set-piece seats that cannot land across a wall (T1, 2026-11-07). `wanted` comes from a fixed
+## screen offset, so it may lie in the next room, or inside the wall itself; the search around
+## it then accepts only cells the anchor reaches. The candidates are the free cells within
+## `PLACEMENT_SEARCH_RADIUS` of `wanted`, nearest ring first, each ring by row then column, as in
+## `_nearest_free_cell()`. A candidate is reached when a path from the anchor gets there without
+## entering a wall or cliff, crossing a walled hex edge, or cutting a wall corner on squares, and
+## that path is at most `PLACEMENT_SEARCH_RADIUS` steps longer than the straight distance. The
+## bound keeps a door far along the wall from opening the far side: a party inside a building
+## does not get its foes seated in the street beyond the wall it stands against. Actors do not
+## close a path; they only take their own cells.
+func _nearest_cell_reached_from(anchor: Vector2i, wanted: Vector2i, taken: Dictionary) -> Dictionary:
+	var radius := GridMetric.radius(PLACEMENT_SEARCH_RADIUS)
+	var depth := _wall_free_steps(anchor, GridMetric.distance(anchor, wanted) + 2 * radius)
+	for ring_steps in radius + 1:
+		var ring := GridMetric.ring(wanted, ring_steps)
+		ring.sort_custom(_row_then_column)
+		for cell: Vector2i in ring:
+			if not depth.has(cell) or taken.has(cell) or not _is_seatable(cell):
+				continue
+			if int(depth[cell]) <= GridMetric.distance(anchor, cell) + radius:
+				return {"ok": true, "cell": cell}
+	return {"ok": false}
+
+
+## Steps from `from` to every cell a wall-free path reaches within `limit` steps (breadth-first,
+## so each count is the shortest). Hex steps may not cross a walled edge; a square diagonal may
+## not cut the corner of a blocked cell, the rule movement uses. A cell an actor stands on is
+## passable here: a body is not a wall.
+func _wall_free_steps(from: Vector2i, limit: int) -> Dictionary:
+	var depth: Dictionary = {from: 0}
+	var frontier: Array[Vector2i] = [from]
+	var steps: Array[Vector2i] = _grid.neighbor_offsets() if _grid.hex_mode else _PLACEMENT_STEPS
+	for count in range(1, limit + 1):
+		var next_frontier: Array[Vector2i] = []
+		for cell: Vector2i in frontier:
+			for step: Vector2i in steps:
+				var next := cell + step
+				if depth.has(next) or _blocks_path(next):
+					continue
+				if _grid.hex_mode:
+					if _grid.is_edge_walled(cell, next):
+						continue
+				elif step.x != 0 and step.y != 0:
+					if _blocks_path(cell + Vector2i(step.x, 0)) or _blocks_path(cell + Vector2i(0, step.y)):
+						continue
+				depth[next] = count
+				next_frontier.append(next)
+		if next_frontier.is_empty():
+			break
+		frontier = next_frontier
+	return depth
+
+
+func _blocks_path(cell: Vector2i) -> bool:
+	if not _grid.is_in_bounds(cell):
+		return true
+	return _grid.is_point_solid(cell) and not _occupancy.has(cell)
 
 
 func _row_then_column(a: Vector2i, b: Vector2i) -> bool:
