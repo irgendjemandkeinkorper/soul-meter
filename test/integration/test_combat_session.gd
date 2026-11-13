@@ -751,3 +751,46 @@ func test_the_drive_loop_outlasts_the_wait_cap_when_the_foe_is_still_out_of_reac
 	if not _drive_until_ended(foe, 40):
 		return
 	assert_int(Battle.last_result.state).is_equal(BattleResult.State.VICTORY)
+
+
+## SR7 (owner, 2026-11-08): losing an ambient fight is not a game over. HP is halved as built,
+## a PROVISIONAL share of coin is lost, the beating group's authored loss stake writes ONE
+## Reputation entry, and the result names the nearest discovered hub to wake at. The field
+## gets no checkpoint: GameFlow requests the session's one checkpoint at the hub.
+func test_losing_an_ambient_fight_costs_coin_and_standing_and_names_the_wake_hub() -> void:
+	var reputation_before := Reputation.to_dict().duplicate(true)
+	var autosave_before := SaveGame._pending_autosave_reason
+	SaveGame._pending_autosave_reason = ""
+	GameState.set_flag("defeated_bog_wight", false)
+	GameState.discover_fast_travel_hub(&"dom")
+	GameState.discover_fast_travel_hub(&"kesselford")
+	GameState.set_gp(205)
+	var field := await _field()
+	var wight := _hostile(field, "Wight", Vector2i(30, 30), &"bog-wight", &"bog-wight")
+	assert_bool(Battle.start_session(field, wight).get("allowed", false)).is_true()
+	var lead: PartyMember = GameState.party[0]
+	var events_before := Reputation.event_count()
+
+	Battle.controller.force_finish(CombatController.ResultState.DEFEAT, Battle.OUTCOME_DEFEAT)
+	await get_tree().process_frame
+
+	var result: BattleResult = Battle.last_result
+	assert_int(result.state).is_equal(BattleResult.State.DEFEAT)
+	assert_bool(Battle.session_active).is_false()
+	assert_int(lead.hp).is_equal(maxi(1, ceili(lead.max_hp * 0.5)))
+	assert_int(result.coin_lost).override_failure_message("10% of 205 gp, rounded down").is_equal(20)
+	assert_int(GameState.gp).is_equal(185)
+	assert_int(Reputation.event_count()).override_failure_message(
+		"an ambient defeat writes exactly one reputation entry"
+	).is_equal(events_before + 1)
+	assert_str(Reputation.history(1)[0].faction).is_equal("ssae-seeders")
+	assert_float(Reputation.history(1)[0].delta).is_equal(-3.0)
+	# test_room is the Wilds: Dom is 8 steps away, Kesselford 18.
+	assert_str(String(result.wake_hub_id)).is_equal("dom")
+	assert_int(result.xp_awarded).is_equal(0)
+	assert_bool(GameState.flag_is_true("defeated_bog_wight")).is_false()
+	assert_str(SaveGame._pending_autosave_reason).override_failure_message(
+		"the field must not be checkpointed under the beaten party"
+	).is_equal("")
+	Reputation.from_dict(reputation_before)
+	SaveGame._pending_autosave_reason = autosave_before

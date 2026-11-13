@@ -285,6 +285,23 @@ func test_defeat_restores_half_health_without_story_resolution() -> void:
 	assert_float(Reputation.standing("ironbrand-sentinels")).is_equal(0.0)
 
 
+## SR7 touches ambient sessions only: an authored defeat keeps its own stake, takes no coin
+## and names no wake hub.
+func test_an_authored_defeat_keeps_its_own_stake_and_takes_no_coin() -> void:
+	GameState.discover_fast_travel_hub(&"dom")
+	GameState.set_gp(200)
+	var events_before := Reputation.event_count()
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle._finish(BattleResult.State.DEFEAT, &"defeat")
+
+	assert_int(GameState.gp).is_equal(200)
+	assert_int(battle.last_result.coin_lost).is_equal(0)
+	assert_str(String(battle.last_result.wake_hub_id)).is_equal("")
+	assert_int(Reputation.event_count()).is_equal(events_before + 1)
+	assert_str(Reputation.history(1)[0].faction).is_equal("ssae-seeders")
+	assert_float(Reputation.history(1)[0].delta).is_equal(-3.0)
+
+
 ## To-hit can whiff (#169/#98), so strike repeatedly — but budgeted, so a
 ## refused strike can never hang the whole suite (the Wave R lesson: an
 ## unbudgeted `while not battle.ended` assert loop spins forever on refusal).
