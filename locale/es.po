@@ -708,3 +708,8 @@ msgstr ""
 msgctxt "quest_1/quest_description"
 msgid "Iris wants a few loamroot sprigs from the grove for her work."
 msgstr ""
+
+#. DRAFT: owner approval pending (chargen randomize, 2026-11-01).
+#: ui/screens/character_creation.gd
+msgid "RANDOMIZE"
+msgstr ""
