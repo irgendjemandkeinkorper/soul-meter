@@ -178,6 +178,10 @@ retire the static path. Roll keys are untouched (`ability_id = "attack"`).
 
 ### 4.2 TONES in fizzle (parameter lands in F3a; the live read in F3c)
 
+**Ruled 2026-11-08 (owner, SR9; closes owner item 27):** held tones lower fizzle through this
+read, and off-tone casting carries no penalty. Built under issue "[SR9] Held tones lower fizzle"
+(`docs/roadmap-issues-2026-10-30.md`, 2026-11-08 additions).
+
 `SkillCheck.fizzle_percent(..., intuition, mastery, patron, tone_bonus := 0.0)`:
 
 ```
