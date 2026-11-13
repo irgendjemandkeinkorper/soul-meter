@@ -1,4 +1,4 @@
-extends GdUnitTestSuite
+extends "res://test/helpers/error_assert_suite.gd"
 ## #285 slice 1: patron-class perks as canon → Pandora → generated data, the pick rules
 ## (levels 2 / 4 / 6, one pick each, in order) and the gates (owner items 2 and 22).
 
@@ -13,6 +13,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	super()
 	Renown.from_dict(_renown_before)
 
 
