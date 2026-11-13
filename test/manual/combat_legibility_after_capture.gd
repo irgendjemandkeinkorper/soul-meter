@@ -43,9 +43,11 @@ var _dir := ""
 var _hud: FieldHUD
 var _stage: BattleStageRegion
 var _overlay: CombatOverlay
+var _window_size_before: Vector2i
 
 
 func before_test() -> void:
+	_window_size_before = get_tree().root.size
 	_dir = OS.get_environment("SOUL_METER_LEGIBILITY_CAPTURE_DIR")
 	if _dir.is_empty():
 		_dir = ProjectSettings.globalize_path("user://qa/combat-legibility")
@@ -72,6 +74,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	Engine.time_scale = 1.0
+	get_tree().root.size = _window_size_before
 	if _state_is_active(BATTLE_STATE):
 		GameFlow.send_event(&"battle_end")
 		await get_tree().process_frame
@@ -175,15 +178,34 @@ func test_bog_wight_encounter_beats_with_the_log_hidden() -> void:
 			Engine.time_scale = 1.0
 			await _real(0.2)
 			await _capture("11-ko-fading")
+			_assert_ko_notices_clear_the_bar()
 			await _settle(1.0)
 			await _capture("12-ko-downed")
+			_assert_ko_notices_clear_the_bar()
 			await _settle(1.5)
 			await _capture("13-ko-settled")
+			_assert_ko_notices_clear_the_bar()
 			break
 		Engine.time_scale = 1.0
 		await _settle(2.0)
 	print("KO ", not foe.is_alive(), " ended ", Battle.ended)
+	assert_bool(foe.is_alive()).is_false()
 	Engine.time_scale = 1.0
+
+
+## #628: assert the real Reputation/Renown payoff is visible while the combat bar remains.
+func _assert_ko_notices_clear_the_bar() -> void:
+	var notices := _hud.get_node("ConsequenceNotices") as ConsequenceNotices
+	var stack := notices.get_node("NoticeStack") as VBoxContainer
+	assert_bool(_hud.combat_active()).is_true()
+	assert_int(notices.visible_notice_texts().size()).is_equal(2)
+	assert_int(notices.pending_notice_count()).is_equal(0)
+	var bar_rect := _hud.bar().get_global_rect()
+	assert_bool(notices.get_global_rect().intersects(bar_rect)).is_false()
+	for panel: Control in stack.get_children():
+		assert_bool(panel.is_visible_in_tree()).is_true()
+		assert_float(panel.modulate.a).is_greater(0.0)
+		assert_bool(panel.get_global_rect().intersects(bar_rect)).is_false()
 
 
 ## The party stops `offset` cells from the wight, inside its alert radius; the real field

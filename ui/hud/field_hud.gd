@@ -101,6 +101,10 @@ func _ready() -> void:
 	)
 	bar.queue_redraw()
 	bar.resized.connect(_apply_insets)
+	# Preserve the authored exploration gap while the bar grows or retracts (#628).
+	var notices := $ConsequenceNotices as ConsequenceNotices
+	var notice_gap := -notices.offset_bottom - bar_height()
+	bar.resized.connect(func() -> void: notices.set_bar_clearance(bar_height() + notice_gap))
 	# Objective over party strip; the right edge stays reserved for the SoulGauge.
 	var column := VBoxContainer.new()
 	column.name = "BarColumn"

@@ -71,6 +71,13 @@ func pending_notice_count() -> int:
 	return _pending_texts.size()
 
 
+## Keep the stack's authored height while following the HUD's animated bottom inset.
+func set_bar_clearance(clearance: float) -> void:
+	var height := offset_bottom - offset_top
+	offset_bottom = -clearance
+	offset_top = offset_bottom - height
+
+
 func _on_reputation_changed(
 	faction: String, _standing: float, event: ReputationEvent
 ) -> void:
