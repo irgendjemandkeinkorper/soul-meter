@@ -1,0 +1,66 @@
+[
+	{
+		"current_look": 2,
+		"layout": "tavern",
+		"open_rooms": [
+			2
+		],
+		"origin_cell": [
+			25,
+			39
+		],
+		"party_cell": [
+			9,
+			11
+		],
+		"turns": 0
+	},
+	{
+		"current_look": 2,
+		"layout": "shop",
+		"open_rooms": [
+			1
+		],
+		"origin_cell": [
+			42,
+			31
+		],
+		"party_cell": [
+			8,
+			6
+		],
+		"turns": 0
+	},
+	{
+		"current_look": 2,
+		"layout": "cottage",
+		"open_rooms": [
+			1
+		],
+		"origin_cell": [
+			44,
+			69
+		],
+		"party_cell": [
+			7,
+			7
+		],
+		"turns": 1
+	},
+	{
+		"current_look": 2,
+		"layout": "warehouse",
+		"open_rooms": [
+			1
+		],
+		"origin_cell": [
+			56,
+			73
+		],
+		"party_cell": [
+			3,
+			12
+		],
+		"turns": 1
+	}
+]
