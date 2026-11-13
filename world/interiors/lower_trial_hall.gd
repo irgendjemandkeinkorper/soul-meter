@@ -150,7 +150,8 @@ func _on_battle_ended(result: BattleResult) -> void:
 
 func _on_flag_changed(flag: String, value: Variant) -> void:
 	if flag == KEEPER_FIGHT_REQUESTED_FLAG and bool(value):
-		request_keeper_encounter()
+		# "Fight me, then." sets the flag mid-conversation; the fight opens once it closes.
+		GameFlow.after_conversation(request_keeper_encounter)
 	if flag == BLAST_CHARGE_FLAG and bool(value) and not GameState.flag_is_true(BLAST_DOOR_FLAG):
 		_light_fuse()
 	if flag in [

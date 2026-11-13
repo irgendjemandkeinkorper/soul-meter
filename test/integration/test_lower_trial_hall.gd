@@ -294,6 +294,30 @@ func test_keeper_fight_starts_authored_battle_and_victory_completes_gauntlet() -
 	assert_bool(GameState.flag_is_true("tutorial_gauntlet_complete")).is_true()
 
 
+## Owner playtest 2026-11-02: "Fight me, then." opened the fight under the open balloon. The
+## balloon pauses the tree and the battle HUD covers it, so "Then stand ready." could never be
+## dismissed. The fight now waits for the conversation to close.
+func test_keeper_fight_asked_in_conversation_opens_once_the_balloon_closes() -> void:
+	var hall: Node = auto_free((load(SCENE_PATH) as PackedScene).instantiate())
+	add_child(hall)
+	var resource := load(DIALOGUE_PATH) as DialogueResource
+	var balloon := DialogueManager.show_dialogue_balloon(resource, "trial_keeper") as Node
+	await get_tree().process_frame
+	assert_bool(GameFlow.conversation_open()).is_true()
+
+	GameState.set_flag("tutorial_keeper_fight_requested", true)
+	await get_tree().process_frame
+	assert_bool(Battle.session_active).override_failure_message("fight opened under the balloon").is_false()
+
+	balloon.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_bool(GameFlow.conversation_open()).is_false()
+	assert_bool(get_tree().paused).is_false()
+	assert_bool(Battle.session_active).is_true()
+	assert_str(Battle.encounter_id).is_equal("trial-keeper")
+
+
 func _response_containing(
 	resource: DialogueResource, title: String, response_text: String
 ) -> DialogueResponse:

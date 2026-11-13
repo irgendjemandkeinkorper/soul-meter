@@ -93,8 +93,9 @@ func test_every_canon_character_validates_and_the_bake_is_clean() -> void:
 
 
 func test_canon_text_reproduces_every_canonically_written_document() -> void:
-	# Two authored files predate the canonical writer (an escaped em dash, a missing final
-	# newline); every other file is exactly what canon_text writes, and all are same_content.
+	# One authored file predates the canonical writer (a missing final newline); every other
+	# file is exactly what canon_text writes, and all are same_content. Themka Gaath's escaped
+	# em dash left with the item 9 approval (2026-10-30).
 	var differing: Array[String] = []
 	for row: Dictionary in _canon():
 		var path: String = row[WeftluminCharactersKind.META_FILE]
@@ -102,7 +103,7 @@ func test_canon_text_reproduces_every_canonically_written_document() -> void:
 		assert_bool(WeftluminCharactersKind.same_content(JSON.parse_string(text), row)).is_true()
 		if WeftluminCharactersKind.canon_text(row) != text:
 			differing.append(path.get_file())
-	assert_array(differing).contains_exactly_in_any_order(["loam-maddened-boar.json", "themka-gaath.json"])
+	assert_array(differing).contains_exactly_in_any_order(["loam-maddened-boar.json"])
 
 
 func test_npc_and_archetype_contracts_match_the_canon_reader() -> void:

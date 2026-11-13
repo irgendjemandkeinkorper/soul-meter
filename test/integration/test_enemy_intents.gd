@@ -63,6 +63,32 @@ func test_a_read_spends_one_clarity_and_shows_target_aim_and_odds() -> void:
 	assert_str(str(again.get("blocked_by", ""))).is_equal("intent_read")
 
 
+func test_the_scan_names_and_discovers_weaknesses_and_shows_resistances() -> void:
+	var saved := GameState.to_dict()
+	var controller := _battle([_member_actor("Stuid", ["lensbearer-sacred-clarity"])])
+	var enemy := controller.enemies[0]
+	enemy.archetype_id = &"bog-wight"
+	enemy.element_id = &"mozh"
+	enemy.discovered_weakness_ids.clear()
+	var authored := CombatIdentityCatalog.weaknesses_for(&"bog-wight")
+	assert_bool(authored.is_empty()).is_false()
+	assert_bool(controller.submit_action(&"sacred-clarity", enemy).allowed).is_true()
+
+	assert_int(enemy.discovered_weakness_ids.size()).is_equal(authored.size())
+	for weakness: Dictionary in authored:
+		var weakness_id := StringName(str(weakness["id"]))
+		assert_bool(GameState.has_discovered_weakness(&"bog-wight", weakness_id)).is_true()
+	assert_bool(controller._query_defining_strike(enemy, StringName(str(authored[0]["id"]))).get("allowed", false)) \
+		.override_failure_message("a scanned weakness is ready for a Defining Strike").is_true()
+	var shown: Dictionary = controller.snapshot()["enemies"][0]["intent"]
+	assert_array(Array(shown["weaknesses"])).contains([str(authored[0]["display_name"])])
+	assert_str(str(shown["element"])).is_equal("mozh")
+	assert_array(Array(shown["resists"])).contains_exactly_in_any_order(["vekh", "mozh", "khash"])
+	assert_str(CTTimelineRegion.intent_line(shown)).contains("resists ")
+	assert_str(CTTimelineRegion.intent_line(shown)).contains("weak: ")
+	GameState.from_dict(saved)
+
+
 func test_a_read_enemy_keeps_its_target_when_another_ally_is_first_in_line() -> void:
 	var controller := _battle([_member_actor("Stuid", ["lensbearer-sacred-clarity"]), _member_actor("", [])])
 	var stuid := controller.allies[0]

@@ -81,6 +81,13 @@ func _build() -> void:
 			button_column, "Walk Kesselford", func() -> void: GameFlow.start_kesselford_walk()
 		)
 		walk_button.name = "WalkKesselfordButton"
+	# Debug builds only: the developer room (PR #551) on its own sandbox. Its own block, which
+	# test_dev_room_inert pins as the only shipped wiring for it.
+	if OS.is_debug_build():
+		var dev_button := _main_menu_button(
+			button_column, "DEV ROOM", func() -> void: GameFlow.send_event("dev_room")
+		)
+		dev_button.name = "DevRoomButton"
 	_main_menu_button(
 		button_column, "Settings", func() -> void: UIManager.open(UIManager.SETTINGS)
 	)
