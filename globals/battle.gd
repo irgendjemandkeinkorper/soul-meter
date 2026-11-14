@@ -24,6 +24,9 @@ const ACTION_PARADOX := &"paradox"
 const ACTION_SPEECH := &"speech-seam"
 const OUTCOME_DEFEAT := &"defeat"
 const OUTCOME_FLED := &"fled"
+## SR7: the share of the party's gp a lost ambient fight takes. PROVISIONAL, proposed for
+## owner item 5 (Breath and Soul numbers).
+const AMBIENT_DEFEAT_COIN_SHARE := 0.10
 var allies: Array[BattleActor] = []
 var enemies: Array[BattleActor] = []
 var active_ally_index := 0
@@ -50,6 +53,9 @@ var _spawned_hostiles: Array[Hostile] = []
 ## field-grid model seats the party where it stands and the enemies across from it.
 var _set_piece_pending: bool = false
 var _set_piece_seats: Array[Vector2i] = []
+## Why the set-piece being started could not seat everyone by the party; "" when it could, or
+## when the field has no placed party. `start()` stops on it and `start_set_piece` refuses.
+var _set_piece_seat_failure := ""
 ## PROVISIONAL: where a set-piece's enemies are seated when the encounter authors no cells of
 ## its own (authored set-piece cells are #348's contract). The first enemy stands this many
 ## grid steps to the player's right on screen, so the two read side by side rather than one
@@ -104,6 +110,7 @@ var _definition: Dictionary = {}
 
 func start(encounter: Variant) -> void:
 	_release_field_grid()
+	_set_piece_seat_failure = ""
 	_combat_history.clear()
 	allies.clear()
 	enemies.clear()
@@ -139,12 +146,25 @@ func start(encounter: Variant) -> void:
 		return
 	var rules := (load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(true) as CombatRules
 	rules.use_charge_time = bool(_definition.get("use_charge_time", rules.use_charge_time))
+	var battlefield := _battlefield_for_definition(rules)
+	if not _set_piece_seat_failure.is_empty():
+		# A set-piece that cannot seat everyone by the party does not open (2026-11-04). The
+		# model's default seats lie off the map: the 5v5 demo fought from them beside the
+		# Wayhouse ran thousands of turns and grew past 7 GB instead of failing.
+		if battlefield is GridBattlefieldModel:
+			(battlefield as GridBattlefieldModel).release_field_grid()
+		ended = true
+		push_error(
+			"Encounter '%s' cannot seat its fighters by the party: %s"
+			% [encounter_id, _set_piece_seat_failure]
+		)
+		return
 	controller = CombatController.new()
 	controller.event_emitted.connect(_on_combat_event)
 	controller.battle_finished.connect(_on_controller_finished)
 	controller.configure(
 		available_actions(true),
-		_battlefield_for_definition(rules),
+		battlefield,
 		rules,
 		null,
 		_casting_abilities(),
@@ -162,6 +182,9 @@ func start(encounter: Variant) -> void:
 				"Encounter '%s' authors unknown weather '%s'; battle starts calm."
 				% [encounter_id, weather_default]
 			)
+	controller.autoplay_allies = bool(_definition.get("autoplay", false))
+	controller.even_sides = bool(_definition.get("even_sides", false))
+	controller.fight_seed = FightDice.draw()
 	controller.start(allies, enemies, encounter_id)
 	if not _pending_class_resources.is_empty():
 		controller.restore_class_resources(_pending_class_resources)
@@ -268,6 +291,7 @@ func start_session(field: FieldMap, first: Hostile) -> Dictionary:
 		var weather_result := controller.configure_weather(weather)
 		if not bool(weather_result.get("allowed", false)):
 			push_warning("Field authors unknown weather '%s'; the session starts calm." % weather)
+	controller.fight_seed = FightDice.draw()
 	controller.start(allies, enemies, encounter_id)
 	if not _pending_class_resources.is_empty():
 		controller.restore_class_resources(_pending_class_resources)
@@ -334,9 +358,10 @@ func admit(hostile: Hostile) -> Dictionary:
 ## An authored encounter, fought on the field it is handed (#281 D5). The grid is the field's,
 ## the party is seated where it stands with the enemies across from it (`_seat_set_piece`),
 ## and every encounter enemy gets a Hostile body spawned for the fight
-## (`_spawn_set_piece_hostiles`). Whether deployment opens afterwards is the caller's call
-## (F0 D3 as read 2026-10-02): the Trial Hall sends `enter_set_piece` and keeps its slate, a
-## journey ambush sends `enter_battle` because an ambush gives no time to deploy. Either way
+## (`_spawn_set_piece_hostiles`). Whether deployment opens afterwards is the caller's call.
+## Owner 2026-11-02 (item 33, "drop it on the map"): a fight on a map starts where everyone
+## stands, so the Trial Hall and the class demo send `enter_battle` like a journey ambush; the
+## `enter_set_piece` deployment chain stays in the chart, unused by on-map fights. Either way
 ## everything that reads `session_active` sees a set-piece the same way it sees an ambient
 ## fight. `start(encounter_id)` stays underneath as the internal composition builder; no game
 ## scene calls it directly.
@@ -355,6 +380,13 @@ func start_set_piece(field: FieldMap, encounter: StringName) -> Dictionary:
 	_set_piece_seats = []
 	start(encounter)
 	_set_piece_pending = false
+	if not _set_piece_seat_failure.is_empty():
+		var why := _set_piece_seat_failure
+		_set_piece_seat_failure = ""
+		_session_field = null
+		return _session_refusal(
+			&"seating", &"open_ground", "There is no open ground here to seat both sides (%s)." % why
+		)
 	if ended:
 		_session_field = null
 		return _session_refusal(
@@ -392,6 +424,11 @@ func _spawn_set_piece_hostiles(field: FieldMap) -> void:
 		hostile.name = "SetPiece%d_%s" % [index, String(actor.archetype_id)]
 		hostile.group_id = encounter_id
 		hostile.adopt_actor(actor)
+		if actor.source_member != null:
+			# A member-built enemy (class demo) wears its member's field body, not an archetype's.
+			var member := actor.source_member
+			var portrait_path := member.portrait.resource_path if member.portrait != null else ""
+			hostile.unit_id = StringName(UnitArt.field_unit_id(member.id, portrait_path))
 		var seated: Variant = model.cell_of(actor)
 		var world: Vector2 = grid.cell_to_world(seated) if seated is Vector2i else Vector2.INF
 		if seated is Vector2i:
@@ -472,8 +509,10 @@ func _end_session(result: BattleResult) -> void:
 		if _session_field.tree_exiting.is_connected(_on_session_field_exiting):
 			_session_field.tree_exiting.disconnect(_on_session_field_exiting)
 	_settle_session_hostiles()
-	if _ambient_session and result != null:
-		# One checkpoint per session, not one per resolved group (D7).
+	if _ambient_session and result != null and result.wake_hub_id == &"":
+		# One checkpoint per session, not one per resolved group (D7). A defeat that wakes the
+		# party at a hub (SR7) is checkpointed by GameFlow on arrival there instead, so the save
+		# never holds the beaten party on the field it lost.
 		SaveGame.request_checkpoint(
 			SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, "session-" + String(result.outcome_id)
 		)
@@ -793,17 +832,29 @@ func _battlefield_for_definition(rules: CombatRules) -> BattlefieldModel:
 ## A set-piece is fought where the party stands, like an ambient session (ruling 4), with the
 ## enemies seated on the nearest free cells across from the player. An encounter that authors
 ## its own cells is a later contract (#348); until then this is the one placement rule. When
-## the field has no placed party, or a seat cannot be found, the model keeps its default
-## column seating and the presentation party is left where it is.
+## the field has no placed party, the model keeps its default column seating and the
+## presentation party is left where it is. When a seat cannot be found, the reason goes in
+## `_set_piece_seat_failure` and the fight does not open: the default seats lie off the map.
+## Every enemy seat is one the party's anchor reaches without crossing a wall (T1, 2026-11-07),
+## so a foe is never seated in the next room or in the street beyond the wall.
 func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 	var live_cells := field.party_cells()
 	if live_cells.is_empty():
 		return
+	var grid := field.iso_grid()
+	var formation_value: Variant = _definition.get("formation", {})
+	var formation: Dictionary = formation_value if formation_value is Dictionary else {}
+	var lines := bool(formation.get("lines", false)) and grid != null
+	var gap := int(formation.get("gap", SET_PIECE_ENEMY_SCREEN_STEPS))
 	var desired: Array[Vector2i] = []
-	for index in allies.size():
-		desired.append(live_cells[mini(index, live_cells.size() - 1)])
+	if lines:
+		desired = _open_line(model, grid, live_cells[0], allies.size(), {}, live_cells[0])
+	else:
+		for index in allies.size():
+			desired.append(live_cells[mini(index, live_cells.size() - 1)])
 	var placement := model.resolve_placement(desired)
 	if not bool(placement.get("allowed", false)):
+		_set_piece_seat_failure = str(placement.get("message", "the party cannot be seated"))
 		return
 	var seats: Array = placement.get("cells", [])
 	var initial: Dictionary = {}
@@ -812,32 +863,89 @@ func _seat_set_piece(model: GridBattlefieldModel, field: FieldMap) -> void:
 		initial[allies[index]] = seats[index]
 		taken[seats[index]] = true
 	var anchor: Vector2i = seats[0]
-	var grid := field.iso_grid()
 	var first_seat := (
-		_screen_steps(grid, anchor, Vector2.RIGHT, SET_PIECE_ENEMY_SCREEN_STEPS) if grid != null
+		_screen_steps(grid, anchor, Vector2.RIGHT, gap) if grid != null
 		else anchor + SET_PIECE_ENEMY_OFFSET
 	)
+	var enemy_line: Array[Vector2i] = []
+	if lines:
+		var centre := model.seat_near(first_seat, taken, anchor)
+		if not bool(centre.get("ok", false)):
+			_set_piece_seat_failure = "no open cell near the enemy line's first seat %s" % first_seat
+			return
+		enemy_line = _open_line(model, grid, centre["cell"], enemies.size(), taken, anchor)
 	for index in enemies.size():
 		var wanted: Vector2i = (
-			_screen_steps(grid, first_seat, Vector2.DOWN, SET_PIECE_ENEMY_ROW_STEPS * index)
+			enemy_line[index] if lines
+			else _screen_steps(grid, first_seat, Vector2.DOWN, SET_PIECE_ENEMY_ROW_STEPS * index)
 			if grid != null else first_seat + Vector2i(0, index)
 		)
-		var found := model.seat_near(wanted, taken)
+		var found := model.seat_near(wanted, taken, anchor)
 		if not bool(found.get("ok", false)):
+			_set_piece_seat_failure = "no open cell near %s for %s" % [wanted, enemies[index].display_name]
 			return
 		initial[enemies[index]] = found["cell"]
 		taken[found["cell"]] = true
-	if bool(model.configure_initial_cells(initial).get("allowed", false)):
-		_set_piece_seats.assign(seats)
+	var configured := model.configure_initial_cells(initial)
+	if not bool(configured.get("allowed", false)):
+		_set_piece_seat_failure = str(configured.get("message", "the seats were refused"))
+		return
+	_set_piece_seats.assign(seats)
 
 
-## The cell `steps` neighbour-steps from `from` in a screen direction; the field's TileMap owns
-## the projection, so this holds for any grid transform.
+## An encounter may ask for two facing lines (`"formation": {"lines": true, "gap": <screen
+## steps>}`; the 5v5 class demo does): each side stands in a screen column centred on its first
+## seat, growing from the middle (below, above, below...), with the enemy column `gap` screen
+## steps right of the party's anchor. Without it the seating above is unchanged.
+##
+## A column stops growing in a direction at the first wall on its way or at a seat it cannot
+## take, and grows on the other side instead, so nobody is seated inside a building or behind
+## it (2026-11-03: once Kesselford's walls were painted, the demo's party column ran into the
+## Wayhouse front, and the whole seating fell back to the model's default seats, off the map).
+## When both directions close early, the rest repeat the centre and the caller's nearest-free
+## search seats them around it. `centre` is a free cell. A line seat must also be one the
+## party's `anchor` reaches without crossing a wall (T1), so a hex line stops at a walled edge
+## as a square line stops at a wall cell.
+func _open_line(
+	model: GridBattlefieldModel,
+	grid: IsoGrid,
+	centre: Vector2i,
+	count: int,
+	taken: Dictionary,
+	anchor: Vector2i,
+) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = [centre]
+	var held := taken.duplicate()
+	held[centre] = true
+	var reached := {Vector2.DOWN: 0, Vector2.UP: 0}  # direction -> screen steps cleared so far
+	var index := 1
+	while cells.size() < count and not reached.is_empty():
+		var direction := Vector2.DOWN if index % 2 == 1 else Vector2.UP
+		index += 1
+		if not reached.has(direction):
+			continue
+		var steps: int = reached[direction] + SET_PIECE_ENEMY_ROW_STEPS
+		var open := true
+		for step in range(int(reached[direction]) + 1, steps + 1):
+			if grid.is_wall(_screen_steps(grid, centre, direction, step)):
+				open = false
+				break
+		var cell := _screen_steps(grid, centre, direction, steps)
+		if not open or model.seat_near(cell, held, anchor).get("cell", null) != cell:
+			reached.erase(direction)
+			continue
+		cells.append(cell)
+		held[cell] = true
+		reached[direction] = steps
+	while cells.size() < count:
+		cells.append(centre)
+	return cells
+
+
+## The cell `steps` cell-steps from `from` in a screen direction; the field's TileMap owns
+## the projection, so this holds for any grid transform. On hexes it covers the same ground.
 func _screen_steps(grid: IsoGrid, from: Vector2i, direction: Vector2, steps: int) -> Vector2i:
-	var cell := from
-	for _step in steps:
-		cell = grid.screen_direction_to_neighbor(cell, direction)
-	return cell
+	return grid.screen_steps(from, direction, steps)
 
 
 func _current_field_map() -> FieldMap:
@@ -900,8 +1008,35 @@ func can_use(action: CombatAction) -> bool:
 	return bool(action_refusal(action, null, _availability_options(action)).get("allowed", false))
 
 
+## The current ally's availability refusal for `action` ({"allowed", "blocked_by", "message"}),
+## for presentation that needs the lock's kind as well as its words (the hotbar).
+func action_lock(action: CombatAction) -> Dictionary:
+	return action_refusal(action, null, _availability_options(action))
+
+
+## Refusals that only say where the selected target stands: out of reach, out of sight,
+## behind a body or a ledge, not adjacent for a melee blow. They never lock a command, because
+## another foe may be in reach and a far one is a walk-in order (owner 2026-11-02, item 33
+## follow-up: "couldn't use any ranged attacks" — the bar checked every command against the
+## selected enemy only, so at a fight's start every targeted command read as locked).
+const POSITIONAL_REFUSALS: Array[StringName] = [
+	&"blocked_by_range", &"blocked_by_obstacle", &"blocked_by_occupancy", &"blocked_by_elevation",
+]
+
+
+static func is_positional_refusal(refusal: Dictionary) -> bool:
+	if bool(refusal.get("allowed", false)):
+		return false
+	var blocked_by := StringName(str(refusal.get("blocked_by", "")))
+	var unblock: Variant = refusal.get("nearest_unblock", {})
+	var unblock_type := StringName(str((unblock as Dictionary).get("type", ""))) if unblock is Dictionary else &""
+	if unblock_type == &"present_combatant":
+		return false
+	return POSITIONAL_REFUSALS.has(blocked_by) or (blocked_by == &"position" and unblock_type == &"adjacency")
+
+
 func action_lock_reason(action: CombatAction) -> String:
-	var refusal := action_refusal(action, null, _availability_options(action))
+	var refusal := action_lock(action)
 	return "" if bool(refusal.get("allowed", false)) else str(refusal.get("message", "Action unavailable."))
 
 
@@ -995,7 +1130,9 @@ func use_action(
 		return true
 	# CAST resource writes come from Resolution so forecast and commit cannot diverge.
 	if action.verb != CombatAction.Verb.CAST and action.class_resource_action.is_empty() and action.soul_cost > 0.0:
-		GameState.set_soul_meter(GameState.soul_meter - action.soul_cost)
+		GameState.set_soul_meter_with_cause(
+			GameState.soul_meter - action.soul_cost, "battle:soul_cost:%s" % action.id
+		)
 	var outcome := controller.submit_action(action_id, target, resolved_options)
 	return bool(outcome.get("allowed", false))
 
@@ -1125,6 +1262,7 @@ func abandon() -> void:
 	_measures_out_of_reach = 0
 	_set_piece_pending = false
 	_set_piece_seats.clear()
+	_set_piece_seat_failure = ""
 	active_ally_index = 0
 	target_enemy_index = 0
 	balance = 0
@@ -1209,36 +1347,6 @@ static func calculate_damage(
 	)
 
 
-func _advance_party_turn() -> void:
-	var next := _next_living_index(allies, active_ally_index)
-	if next > active_ally_index:
-		active_ally_index = next
-		return
-	_resolve_enemy_round()
-	if _has_living(allies):
-		active_ally_index = _next_living_index(allies, -1)
-	else:
-		_finish(BattleResult.State.DEFEAT, &"defeat")
-
-
-func _resolve_enemy_round() -> void:
-	enemy_rounds += 1
-	for foe in enemies:
-		if not foe.is_alive():
-			continue
-		var index := _next_living_index(allies, -1)
-		if index < 0:
-			return
-		var target := allies[index]
-		var damage := maxi(1, foe.attack - target.defense)
-		if target.guarding:
-			damage = maxi(1, damage / 2)
-			target.guarding = false
-		target.hp = maxi(0, target.hp - damage)
-		shift_balance(foe.balance_affinity * foe.balance_pressure)
-		last_message += " %s strikes %s for %d." % [foe.display_name, target.display_name, damage]
-
-
 func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 	if ended:
 		return
@@ -1276,9 +1384,8 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 
 ## D7 for an ambient session. Groups already paid out when their last member fell; victory
 ## only sweeps up whatever is left (a group whose last member fell on the finishing blow) and
-## hands the accumulated spoils and XP to the result. Defeat and flight write no ledger for
-## the groups still standing — PROVISIONAL: D7 rules a fled group writes nothing, and a
-## session has no authored loss stake, so defeat is treated the same until one is ratified.
+## hands the accumulated spoils and XP to the result. Flight writes no ledger for the groups
+## still standing (D7). Defeat carries the SR7 stake: see `_apply_ambient_defeat()`.
 func _finish_ambient(result: BattleResult) -> void:
 	match result.state:
 		BattleResult.State.VICTORY:
@@ -1288,12 +1395,65 @@ func _finish_ambient(result: BattleResult) -> void:
 		BattleResult.State.DEFEAT:
 			result.message = "The company falls back and recovers to half strength."
 			result.cause = "Overrun on the field"
+			_apply_ambient_defeat(result)
 		_:
 			result.message = "The company disengages without reward or resolution."
 			result.cause = "Broke off the fight"
 	result.spoils = _session_spoils.duplicate(true)
 	result.xp_awarded = _session_xp
 	result.levels_gained = _session_levels.duplicate(true)
+
+
+## SR7 (owner, 2026-11-08): a lost ambient fight is never a game over. `_finish()` has
+## already halved HP and kept serious injuries. This adds the rest of the stake:
+## - coin: `AMBIENT_DEFEAT_COIN_SHARE` of the party's gp, rounded down (PROVISIONAL, owner
+##   item 5);
+## - one Reputation entry: the authored loss stake (`loss_faction`, `loss_delta`,
+##   `loss_cause`) of the first still-standing group that has one, the same stake a set-piece
+##   defeat by that group writes. A group with no authored loss faction (a beast, say) writes
+##   none;
+## - the wake hub: the discovered hub nearest the field, which GameFlow travels to once the
+##   outcome is dismissed. The session's one checkpoint then saves there, not on the field.
+func _apply_ambient_defeat(result: BattleResult) -> void:
+	var lost := floori(float(GameState.gp) * AMBIENT_DEFEAT_COIN_SHARE)
+	if lost > 0 and GameState.spend_gp(lost):
+		result.coin_lost = lost
+	var stake := _ambient_defeat_stake()
+	if not stake.is_empty():
+		Reputation.record("player", stake["faction"], stake["delta"], stake["cause"], "field")
+	result.wake_hub_id = GameState.nearest_discovered_hub(_session_location_id())
+
+
+func _ambient_defeat_stake() -> Dictionary:
+	for tracked: Variant in _session_hostiles.values():
+		if not is_instance_valid(tracked):
+			continue
+		var actor := (tracked as Hostile).battle_actor()
+		if actor == null or not actor.is_alive():
+			continue
+		if actor.loss_faction.is_empty() or is_zero_approx(actor.loss_delta):
+			continue
+		var cause := actor.loss_cause if not actor.loss_cause.is_empty() else "Overrun on the field"
+		return {"faction": actor.loss_faction, "delta": actor.loss_delta, "cause": cause}
+	return {}
+
+
+## The LocationRegistry id of the scene the session's field belongs to: the nearest ancestor
+## whose scene file is a known location (the FieldMap is often its own sub-scene).
+func _session_location_id() -> StringName:
+	var node: Node = _session_field if is_instance_valid(_session_field) else null
+	while node != null:
+		if not node.scene_file_path.is_empty():
+			var location := LocationRegistry.by_scene(node.scene_file_path)
+			if location != null:
+				return location.id
+		node = node.get_parent()
+	var current := get_tree().current_scene if is_inside_tree() else null
+	if current != null:
+		var location := LocationRegistry.by_scene(current.scene_file_path)
+		if location != null:
+			return location.id
+	return &""
 
 
 func _apply_victory(result: BattleResult) -> void:
@@ -1331,9 +1491,12 @@ func _apply_victory(result: BattleResult) -> void:
 
 
 ## Ruling 9 (2026-09-02), re-affirmed by the owner 2026-09-08: XP comes from
-## combat. Called AFTER the `already_resolved` guard on purpose — re-entering a
-## fight the party has already won pays nothing, so an encounter cannot be farmed
-## by walking out and back in.
+## combat. SR10 (owner, 2026-11-08) adds that a bypassed fight pays the same; see
+## `award_bypass_xp()`. A combat-speech victory (`released`, `named`) reaches this
+## through `_apply_victory()` like `slain`, so talking a fight down mid-battle already
+## pays the full kill XP. Called AFTER the `already_resolved` guard on purpose —
+## re-entering a fight the party has already won pays nothing, so an encounter cannot
+## be farmed by walking out and back in.
 func _award_victory_xp(result: BattleResult) -> void:
 	var foes := _defeated_attributes(enemies)
 	var earned := GameState.kill_xp_for_lead(foes)
@@ -1343,6 +1506,46 @@ func _award_victory_xp(result: BattleResult) -> void:
 	result.levels_gained = GameState.award_party_kill_xp(
 		foes, "Won %s" % String(encounter_id)
 	)
+
+
+const BYPASS_KINDS: Array[StringName] = [&"talk", &"stealth", &"soul"]
+
+
+## SR10 (owner, 2026-11-08): getting past a fight without fighting it, by talk, stealth or a
+## Soul route, pays the same kill XP as winning it, so the game never pays the player to
+## fight. This is the one award call every out-of-battle bypass uses.
+##
+## The encounter's `defeated_flag` is the once-only guard in both directions: a bypass sets
+## it, and `_apply_victory()` / `_resolve_group()` pay nothing once it is set; a won fight
+## sets it, and a later bypass pays nothing. An encounter with no `defeated_flag` is refused,
+## because nothing would stop it paying twice. The foes are the encounter's own catalog
+## actors, so the award equals what the same foes pay when defeated.
+##
+## Writes XP and the flag only. Reputation, Renown and spoils stay with the route that
+## calls this, which owns what getting past the fight means.
+func award_bypass_xp(bypass_encounter_id: StringName, bypass_kind: StringName) -> Dictionary:
+	var refused := {"allowed": false, "xp_awarded": 0, "levels_gained": {}}
+	if not BYPASS_KINDS.has(bypass_kind):
+		refused["blocked_by"] = "unknown_bypass"
+		return refused
+	if EncounterCatalog.definition(bypass_encounter_id).is_empty():
+		refused["blocked_by"] = "unknown_encounter"
+		return refused
+	var defeated_flag := EncounterCatalog.defeated_flag(bypass_encounter_id)
+	if defeated_flag.is_empty():
+		refused["blocked_by"] = "no_defeated_flag"
+		return refused
+	if GameState.flag_is_true(defeated_flag):
+		refused["blocked_by"] = "already_resolved"
+		return refused
+	GameState.set_flag(defeated_flag, true)
+	var foes := _defeated_attributes(EncounterCatalog.make_actors(bypass_encounter_id))
+	var cause := "Got past %s (%s)" % [String(bypass_encounter_id), String(bypass_kind)]
+	var earned := GameState.kill_xp_for_lead(foes)
+	var levels: Dictionary = {}
+	if earned > 0:
+		levels = GameState.award_party_kill_xp(foes, cause)
+	return {"allowed": true, "xp_awarded": earned, "levels_gained": levels, "cause": cause}
 
 
 ## Kill XP scales per member against each foe (Advancement.kill_xp_for), so the award

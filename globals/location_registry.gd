@@ -63,12 +63,6 @@ const DOM_TAVERN: LocationDefinition = preload(
 )
 # Kesselford, hub 2 (C1 / #238): baked by the Weftlumin `kesselford` package.
 const KESSELFORD: LocationDefinition = preload("res://world/locations/kesselford.tres")
-const KESSELFORD_WAYHOUSE: LocationDefinition = preload(
-	"res://world/locations/interiors/kesselford_wayhouse.tres"
-)
-const KESSELFORD_CHANDLERY: LocationDefinition = preload(
-	"res://world/locations/interiors/kesselford_chandlery.tres"
-)
 # Ashlaren, hub 3 (C2 / #239): baked by the Weftlumin `ashlaren` package.
 const ASHLAREN: LocationDefinition = preload("res://world/locations/ashlaren.tres")
 const ASHLAREN_WEIGHING_HALL: LocationDefinition = preload(
@@ -88,6 +82,20 @@ const HOLLOWMERE: LocationDefinition = preload("res://world/locations/hollowmere
 const INDEX_PATH := "res://data/generated/location_index.json"
 const INDEX_SCHEMA := "weftlumin.location_index.v2"
 const _INTERIOR_SCENES_ROOT := "res://world/interiors/"
+## Retired locations, by id: the scene a save there names, and where it loads now
+## (`retired_redirect()`).
+const RETIRED := {
+	&"kesselford_wayhouse": {
+		"scene": "res://world/interiors/kesselford_wayhouse.tscn",
+		"location": &"kesselford",
+		"spawn": &"in_kesselford_wayhouse",
+	},
+	&"kesselford_chandlery": {
+		"scene": "res://world/interiors/kesselford_chandlery.tscn",
+		"location": &"kesselford",
+		"spawn": &"in_kesselford_chandlery",
+	},
+}
 
 
 ## Static classes cannot declare signals, so the registry's lives on one shared emitter.
@@ -103,6 +111,10 @@ static var locations_changed: Signal = _signals.locations_changed
 static var ALL: Array[LocationDefinition] = []
 ## Baked scene path -> canon `no_combat_zone`.
 static var _no_combat_zones: Dictionary = {}
+## Baked scene path -> the player-facing area it belongs to (U2 field HUD): a hub's own
+## `display_name`, or for an interior the area of its transition's `source_scene`.
+static var _area_names: Dictionary = {}
+static var _area_parents: Dictionary = {}
 ## In-session overlay (`register_runtime()`, P6): unbaked scenes, never written anywhere.
 static var _runtime: Array[LocationDefinition] = []
 ## `no_combat_zone` of runtime registrations, by scene path; `LocationDefinition` carries no such field.
@@ -123,6 +135,12 @@ static func _load_index() -> bool:
 		if not row is Dictionary:
 			continue
 		var entry: Dictionary = row
+		var row_scene := str(entry.get("scene_path", ""))
+		if not row_scene.is_empty():
+			_area_names[row_scene] = str(entry.get("display_name", ""))
+			var transition: Variant = entry.get("transition", null)
+			if transition is Dictionary:
+				_area_parents[row_scene] = str((transition as Dictionary).get("source_scene", ""))
 		var definition_path := str(entry.get("definition_path", ""))
 		if definition_path.is_empty():
 			continue # gazetteer-only city: no scene to travel to
@@ -203,6 +221,20 @@ static func by_id(location_id: StringName) -> LocationDefinition:
 	return null
 
 
+## "Dom" for Dom and for the Lower Trial Hall whose door leads back to it; "" when the index
+## cannot say (an interior with no recorded transition, or an unbaked scene).
+static func area_name(scene_path: String) -> String:
+	var path := scene_path
+	for _hop: int in 4:
+		var name := str(_area_names.get(path, ""))
+		if not name.is_empty():
+			return name
+		path = str(_area_parents.get(path, ""))
+		if path.is_empty():
+			return ""
+	return ""
+
+
 static func by_scene(scene_path: String) -> LocationDefinition:
 	for location in _known():
 		if location.scene_path == scene_path:
@@ -219,6 +251,19 @@ static func resolve(scene_path: String, location_id: StringName = &"") -> Locati
 		if by_name != null and (scene_path.is_empty() or by_name.scene_path == scene_path):
 			return by_name
 	return by_scene(scene_path)
+
+
+## Where a save made at a location that has left the game loads now: {"location", "spawn"}, or {}
+## when the save's location (by id, or by its old scene) is still here. The Ferry Bell Wayhouse
+## room retired when the Wayhouse became a walk-in building on the Kesselford map (owner list
+## item 35, "Retire, redirect saves", 2026-11-03), and the Ford Chandlery's room when it became the
+## walk-in shop (layouts ruling, 2026-11-04).
+static func retired_redirect(scene_path: String, location_id: StringName) -> Dictionary:
+	for retired_id: StringName in RETIRED:
+		var row: Dictionary = RETIRED[retired_id]
+		if location_id == retired_id or (not scene_path.is_empty() and scene_path == row["scene"]):
+			return row
+	return {}
 
 
 static func is_gameplay_scene(scene_path: String) -> bool:

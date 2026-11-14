@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P3.1 — three named facts, 2/3</title>
+<style>
+  body { margin: 24px; background: #15191f; color: #edf1f5; font: 17px/1.5 system-ui, sans-serif; }
+  main { max-width: 1920px; margin: auto; }
+  h1 { font-size: 26px; margin-bottom: 8px; }
+  a { color: #a8d8ff; }
+  select, button { font: inherit; padding: 6px 12px; margin: 0 16px 12px 6px; }
+  figure { margin: 20px 0; }
+  .frame { position: relative; }
+  img { width: 100%; display: block; }
+  .mark { position: absolute; border: 2px solid var(--color); box-sizing: border-box; pointer-events: none; }
+  .mark span { position: absolute; right: 100%; top: 0; padding: 0 5px; background: #101318; color: var(--color); font-weight: bold; }
+  .one { --color: #ffe16a; left: 5.2%; top: .2%; width: 11.5%; height: 2%; }
+  .two { --color: #67e8f9; left: 5.2%; top: 3.8%; width: 35.7%; height: 2.2%; }
+  .three { --color: #ff8d9f; left: 32.7%; top: 71.3%; width: 15.7%; height: 9.8%; }
+  .damage { --color: #ff8d9f; left: 3.6%; top: 84.8%; width: 7.8%; height: 2.2%; }
+  .unmarked .mark { display: none; }
+  figcaption { padding: 8px 0; color: #c3cbd7; }
+  li { margin: 10px 0; }
+  .fail { color: #ff8d9f; }
+</style>
+<main>
+  <h1>Legibility: PROVISIONAL 2/3 — FAIL</h1>
+  <p>Retained rendered captures, converted to JPEG quality 90, with report-only markers. The game HUD is unchanged.
+    All three comparisons retained 100 hostiles in CT. <a href="README.md">Read the measurements</a>.</p>
+  <label for="variant">Comparator</label>
+  <select id="variant">
+    <option value="cached">Uncapped tiered/cached</option>
+    <option value="full">Uncapped full</option>
+    <option value="fallback24">PROVISIONAL 24-decider fallback</option>
+  </select>
+  <button id="marks" type="button" aria-pressed="true">Hide markers</button>
+  <ol>
+    <li><strong>Next actor — PASS:</strong> Benchmark Wight 001 follows Vex's active turn.</li>
+    <li><strong>Revealed intent — PASS:</strong> strike Vex the Unbowed; 74% hit, 13 damage on hit.</li>
+    <li><strong class="fail">Right response — FAIL:</strong> Guard says “Reduces the next hit.”
+      It is accepted and sets guarding, but the forecast remains 13 and Vex loses 13 HP.
+      The capture does not credit an ineffective advertised response.</li>
+  </ol>
+  <figure>
+    <div class="frame">
+      <img id="before" src="cached-legibility-before.jpg" width="1920" height="1080"
+        alt="Before response: Benchmark Wight 001's revealed strike targets Vex, and Guard's hover card promises to reduce the next hit.">
+      <div class="mark one"><span>1</span></div>
+      <div class="mark two"><span>2</span></div>
+      <div class="mark three"><span>3</span></div>
+    </div>
+    <figcaption>Before: actual CT projection and locked intent. The long intent also overflows the strip's left edge; no HUD repair is included.</figcaption>
+  </figure>
+  <figure>
+    <div class="frame">
+      <img id="response" src="cached-legibility-response.jpg" width="1920" height="1080"
+        alt="After Guard and the wight's strike: Vex has 87 of 100 HP, confirming 13 damage despite the advertised mitigation.">
+      <div class="mark damage"><span>3</span></div>
+    </div>
+    <figcaption>After: Guard was submitted through Battle.use_action; the wight struck the revealed target. Vex: 100 → 87 HP.</figcaption>
+  </figure>
+  <p>Capture-only fixtures: one adjacent existing wight with attack 20; party HP 100;
+    deterministic readiness; existing reveal and replay seams. All values PROVISIONAL.
+    These changes occur after timing. Agent-inspected static evidence, not a human playtest.</p>
+</main>
+<script>
+  document.querySelector('#variant').addEventListener('change', event => {
+    const variant = event.target.value;
+    document.querySelector('#before').src = `${variant}-legibility-before.jpg`;
+    document.querySelector('#response').src = `${variant}-legibility-response.jpg`;
+  });
+  document.querySelector('#marks').addEventListener('click', event => {
+    const hidden = document.body.classList.toggle('unmarked');
+    event.target.textContent = hidden ? 'Show markers' : 'Hide markers';
+    event.target.setAttribute('aria-pressed', String(!hidden));
+  });
+</script>
+</html>

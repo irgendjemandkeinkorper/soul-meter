@@ -13,6 +13,9 @@ const SLIDE_DISTANCE: float = 32.0
 @onready var _notice_stack: VBoxContainer = %NoticeStack
 
 var _pending_texts: Array[String] = []
+## Parallel to `_pending_texts`: each notice's ledger key, "" when it has none. A key a
+## conversation already showed on its ledger strip is skipped at flush (DialogueLedgerEcho).
+var _pending_keys: Array[String] = []
 var _seen_events: Dictionary = {}
 var _notice_sequence: int = 0
 
@@ -27,6 +30,9 @@ func _ready() -> void:
 	var hollowing_handler := Callable(self, "_on_hollowing_state_changed")
 	if not GameState.hollowing_state_changed.is_connected(hollowing_handler):
 		GameState.hollowing_state_changed.connect(hollowing_handler)
+	var xp_handler := Callable(self, "_on_xp_awarded")
+	if not GameState.xp_awarded.is_connected(xp_handler):
+		GameState.xp_awarded.connect(xp_handler)
 	_flush_pending()
 
 
@@ -40,6 +46,9 @@ func _exit_tree() -> void:
 	var hollowing_handler := Callable(self, "_on_hollowing_state_changed")
 	if GameState.hollowing_state_changed.is_connected(hollowing_handler):
 		GameState.hollowing_state_changed.disconnect(hollowing_handler)
+	var xp_handler := Callable(self, "_on_xp_awarded")
+	if GameState.xp_awarded.is_connected(xp_handler):
+		GameState.xp_awarded.disconnect(xp_handler)
 
 
 func _notification(what: int) -> void:
@@ -62,6 +71,13 @@ func pending_notice_count() -> int:
 	return _pending_texts.size()
 
 
+## Keep the stack's authored height while following the HUD's animated bottom inset.
+func set_bar_clearance(clearance: float) -> void:
+	var height := offset_bottom - offset_top
+	offset_bottom = -clearance
+	offset_top = offset_bottom - height
+
+
 func _on_reputation_changed(
 	faction: String, _standing: float, event: ReputationEvent
 ) -> void:
@@ -69,7 +85,7 @@ func _on_reputation_changed(
 		return
 	_enqueue("%s WILL REMEMBER — %s" % [
 		_faction_display_name(faction).to_upper(), event.cause.strip_edges()
-	])
+	], DialogueLedgerEcho.key_for(event))
 
 
 func _on_renown_changed(
@@ -77,7 +93,9 @@ func _on_renown_changed(
 ) -> void:
 	if not _remember_event(event):
 		return
-	_enqueue("WORD OF YOU SPREADS — %s" % event.cause.strip_edges())
+	_enqueue(
+		"WORD OF YOU SPREADS — %s" % event.cause.strip_edges(), DialogueLedgerEcho.key_for(event)
+	)
 
 
 ## #286: the hollowed protagonist has stopped volunteering, so a companion
@@ -98,6 +116,29 @@ func _on_hollowing_state_changed(active: bool) -> void:
 	])
 
 
+## Ruling 9 progression read-back. XP lands silently otherwise: the sheet is the only place
+## a level or a perk shows, and nothing told the player to open it. A perk level says so
+## because the pick is manual (`PerkCatalog.pick()` from the sheet).
+func _on_xp_awarded(_amount: int, _cause: String, levels_gained: Dictionary) -> void:
+	for member_id: Variant in levels_gained:
+		var level := int(levels_gained[member_id])
+		var hint := (
+			"a perk awaits on the sheet"
+			if PerkCatalog.PICK_LEVELS.has(level)
+			else "skill points to spend"
+		)
+		_enqueue(
+			"%s REACHES LEVEL %d — %s" % [_member_name(str(member_id)).to_upper(), level, hint]
+		)
+
+
+func _member_name(member_id: String) -> String:
+	for member: PartyMember in GameState.party:
+		if member.id == member_id:
+			return member.display_name
+	return member_id
+
+
 ## Deduplicates by the event's LEDGER IDENTITY, not by object identity.
 ##
 ## This used to key on the event object itself, which quietly assumed the ledger
@@ -111,16 +152,16 @@ func _on_hollowing_state_changed(active: bool) -> void:
 func _remember_event(event: RefCounted) -> bool:
 	if event == null:
 		return false
-	var ledger: StringName = &"renown" if event is RenownEvent else &"reputation"
-	var key: String = "%s:%d" % [ledger, int(event.get("order"))]
+	var key: String = DialogueLedgerEcho.key_for(event)
 	if _seen_events.has(key):
 		return false
 	_seen_events[key] = true
 	return true
 
 
-func _enqueue(text: String) -> void:
+func _enqueue(text: String, ledger_key: String = "") -> void:
 	_pending_texts.append(text)
+	_pending_keys.append(ledger_key)
 	_flush_pending()
 
 
@@ -132,6 +173,9 @@ func _flush_pending() -> void:
 		and not _pending_texts.is_empty()
 	):
 		var text: String = _pending_texts.pop_front()
+		var ledger_key: String = _pending_keys.pop_front() if not _pending_keys.is_empty() else ""
+		if DialogueLedgerEcho.consume(ledger_key):
+			continue
 		_show_notice(text)
 
 
@@ -175,4 +219,4 @@ func _finish_notice(panel: PanelContainer) -> void:
 
 
 static func _faction_display_name(faction: String) -> String:
-	return faction.replace("-", " ").replace("_", " ").capitalize()
+	return DialogueChoiceInfo.faction_label(faction)

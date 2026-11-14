@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 ## Rendered acceptance evidence for #281's carried-forward #211 sentence: "A Bog Wight encounter
 ## is readable end-to-end with the log hidden: you can see who acted, on whom, from where, and
 ## what it cost." The fight opens through the production flow (field watch -> alert -> chart
-## Battle state -> UIManager-mounted battle HUD), the dock's log label is hidden, and frames are
+## Battle state -> the field HUD grows its combat bar), the bar's message log is hidden, and frames are
 ## captured at each beat. Presentation only: no combat rule, actor stat or art is changed except
 ## the Bog Wight's HP before the KO strike, so the KO beat is reachable in one hit.
 ##
@@ -34,7 +34,7 @@ var _renown_before: Dictionary
 var _quests_before: Dictionary
 var _boot_visible := true
 var _dir := ""
-var _hud: Screen
+var _hud: FieldHUD
 var _stage: BattleStageRegion
 var _overlay: CombatOverlay
 
@@ -201,8 +201,10 @@ func _open_session(wight: Hostile, offset: Vector2i) -> BattleInterface:
 	assert_bool(Battle.session_active).is_true()
 	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
 	assert_bool(_state_is_active(DEPLOYMENT_SLATE_STATE)).is_false()
-	_hud = UIManager._stack.back() as Screen
-	var interface := _hud.find_child("BattleInterface", true, false) as BattleInterface
+	# One bar, both modes (owner 2026-11-01): the field's own HUD carries the fight.
+	_hud = _field.field_hud()
+	assert_bool(_hud.combat_active()).is_true()
+	var interface := _hud.battle_interface
 	_stage = interface.stage
 	_overlay = _field.combat_overlay() as CombatOverlay
 	assert_object(_overlay).is_not_null()
@@ -213,8 +215,8 @@ func _open_session(wight: Hostile, offset: Vector2i) -> BattleInterface:
 	var camera := player.get_node("Camera2D") as Camera2D
 	camera.make_current()
 	camera.reset_smoothing()
-	# Log hidden: the dock's message label is the combat log.
-	(_hud.get("_log_lbl") as Control).hide()
+	# Log hidden: the combat bar's message window is the combat log.
+	_hud.combat_bar.log_scroll.hide()
 	await _settle(1.5)
 	return interface
 

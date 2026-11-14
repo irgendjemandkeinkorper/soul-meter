@@ -51,13 +51,14 @@ func _fixture(path: String) -> Dictionary:
 	return fixture
 
 
-func test_current_schema_is_ten() -> void:
+func test_current_schema_is_eleven() -> void:
 	# Schema 7 = schema 6 + the FR-504a world_clock envelope.
 	# Schema 8 = the 2026-09-06 elemental rename (every Wheel id but `khor`).
 	# Schema 9 = the DRAMGID migration (docs/architecture-dramgid.md §2.1).
 	# Schema 10 = shared location ids for world-map journeys and discovery flags.
-	assert_int(SaveGameScript.SCHEMA_VERSION).is_equal(10)
-	assert_int(SaveMigrations.CURRENT_SCHEMA_VERSION).is_equal(10)
+	# Schema 11 = per-member equipment; the old flat rail belongs to the protagonist.
+	assert_int(SaveGameScript.SCHEMA_VERSION).is_equal(11)
+	assert_int(SaveMigrations.CURRENT_SCHEMA_VERSION).is_equal(11)
 
 
 func test_the_schema_five_fixture_still_loads_and_gains_a_tactical_section() -> void:

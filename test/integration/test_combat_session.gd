@@ -44,6 +44,11 @@ func _field() -> FieldMap:
 	return scene.find_child("FieldMap", true, false) as FieldMap
 
 
+## The field grid's cell at an authored ground cell's centre: the cell itself on squares, the hex
+## there on hexes (hex slice H3b). The cells below are test_room ground cells.
+func _on_grid(field: FieldMap, ground_cell: Vector2i) -> Vector2i:
+	return field.iso_grid().cell_at_square(ground_cell)
+
 ## Seats a hostile on a named cell of the live field, so its battlefield position is the cell
 ## the scene put it on rather than a default column seat. A `group_id` names the encounter the
 ## ledger pays out for; a test that passes one must clear that group's `defeated_*` flag first,
@@ -58,7 +63,7 @@ func _hostile(
 	hostile.group_id = group_id
 	hostile.realert_cooldown = 0.0
 	field.get_parent().add_child(hostile)
-	hostile.global_position = field.iso_grid().cell_to_world(cell)
+	hostile.global_position = field.iso_grid().cell_to_world(_on_grid(field, cell))
 	hostile.sync_cell()
 	return hostile
 
@@ -195,8 +200,8 @@ func test_start_session_seats_a_stacked_party_on_distinct_cells() -> void:
 		distinct[seat] = true
 	# The hostile keeps the cell the scene authored; the party is spread around it, never
 	# through it. Read from the opening result: positions move as soon as the clock runs.
-	assert_that(opened["first_cell"]).is_equal(Vector2i(30, 30))
-	assert_bool(distinct.has(Vector2i(30, 30))).override_failure_message(
+	assert_that(opened["first_cell"]).is_equal(_on_grid(field, Vector2i(30, 30)))
+	assert_bool(distinct.has(_on_grid(field, Vector2i(30, 30)))).override_failure_message(
 		"a party member was seated on the hostile's cell"
 	).is_false()
 
@@ -218,42 +223,64 @@ func test_ambient_hud_updates_without_the_legacy_stage() -> void:
 	var hostile := _hostile(field, "OverlayWight", Vector2i(30, 30))
 	var opened := Battle.start_session(field, hostile)
 	assert_bool(opened.get("allowed", false)).is_true()
-	var screen := load("res://ui/screens/battle.tscn").instantiate() as Screen
-	add_child(screen)
-	assert_object(screen.get("_stage")).is_null()
-	assert_str((screen.get("_enemy_lbl") as Label).text).contains("BOG WIGHT")
-	assert_int((screen.get("_party_box") as VBoxContainer).get_child_count()).is_greater(0)
-	assert_bool((screen.get_node("Backdrop") as ColorRect).visible).is_false()
+	# The field HUD stays up and grows its bar (owner 2026-11-01); no screen opens.
+	var hud := field.field_hud()
+	assert_bool(hud.visible).is_true()
+	hud.enter_combat(field)
+	var bar := hud.combat_bar
+	assert_object(bar).is_not_null()
+	assert_str((bar.get("_enemy_lbl") as Label).text).contains("BOG WIGHT")
+	assert_int((bar.get("_party_box") as VBoxContainer).get_child_count()).is_greater(0)
 	assert_object(field.combat_overlay()).is_not_null()
-	screen.free()
+	assert_bool(hud.battle_interface.stage._backdrop.visible).is_false()
+	hud.exit_combat()
 	Battle._end_session(null)
 	field.get_parent().queue_free()
 	await get_tree().process_frame
 
 
 func test_full_command_catalog_leaves_the_live_battlefield_visible() -> void:
+	get_tree().root.size = Vector2i(1920, 1080)
 	var field := await _field()
 	var hostile := _hostile(field, "LayoutWight", Vector2i(30, 30))
 	assert_bool(Battle.start_session(field, hostile).get("allowed", false)).is_true()
-	var runner := scene_runner("res://ui/screens/battle.tscn")
-	var screen := runner.scene() as Screen
-	screen.theme = ThemeBuilder.build()
-	await runner.simulate_frames(3)
-	var dock := screen.find_child("CommandDock", true, false) as Control
-	var battlefield := screen.find_child("BattlefieldViewport", true, false) as Control
-	assert_float(dock.size.y).override_failure_message("Commands must not push the field off-screen").is_less(screen.size.y * 0.35)
-	assert_float(battlefield.size.y).is_greater(screen.size.y * 0.5)
-	assert_int((screen.get("_action_buttons") as Array).size()).is_equal(Battle.available_actions().size())
-	var scroll := screen.find_child("ActionScroll", true, false) as ScrollContainer
+	var hud := field.field_hud()
+	hud.enter_combat(field)
+	await get_tree().create_timer(DS.DUR_BASE + 0.1).timeout
+	await get_tree().process_frame
+	var bar := hud.bar()
+	var viewport := get_tree().root.get_visible_rect()
+	assert_float(bar.size.y).override_failure_message("Commands must not push the field off-screen").is_less(viewport.size.y * 0.35)
+	var open_window := hud.battle_interface.stage.open_window()
+	assert_float(open_window.size.y).is_greater(viewport.size.y * 0.5)
+	var combat_bar := hud.combat_bar
+	assert_int((combat_bar.get("_action_buttons") as Array).size()).is_equal(Battle.available_actions().size())
+	var scroll := combat_bar.find_child("ActionScroll", true, false) as ScrollContainer
 	assert_object(scroll).is_not_null()
-	var buttons: Array = screen.get("_action_buttons")
-	assert_float((buttons[0] as Button).size.x).is_greater(100.0)
-	var last_button := buttons.back() as Button
+	var buttons: Array = combat_bar.get("_action_buttons")
+	# Ready commands read at full label width; MORE lists the rest, scrolling inside the bar
+	# rather than growing it.
+	var first_ready := combat_bar.ready_buttons()[0]
+	assert_float(first_ready.size.x).is_greater_equal(first_ready.get_combined_minimum_size().x - 0.5)
+	combat_bar.set_show_all(true)
+	await get_tree().process_frame
+	# The MORE list sits under the ready flow; its last locked row is the farthest command.
+	var last_button: Button = null
+	for button: Button in buttons:
+		if button.is_visible_in_tree() and button.disabled:
+			last_button = button
+	assert_object(last_button).is_not_null()
 	scroll.ensure_control_visible(last_button)
-	await runner.simulate_frames(2)
-	assert_int(scroll.scroll_vertical).is_greater(0)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_int(scroll.scroll_vertical).override_failure_message(
+		"MORE list must scroll to %s: scroll %s, stack %s, bar max %s, button %s" % [
+			last_button.text, scroll.size, (scroll.get_child(0) as Control).size,
+			scroll.get_v_scroll_bar().max_value, last_button.get_global_rect(),
+		]
+	).is_greater(0)
 	assert_bool(scroll.get_global_rect().intersects(last_button.get_global_rect())).is_true()
-	screen.free()
+	hud.exit_combat()
 	Battle._end_session(null)
 	field.get_parent().queue_free()
 	await get_tree().process_frame
@@ -287,8 +314,12 @@ func test_chain_alerts_spread_one_hop_per_measure_and_none_at_session_start() ->
 	var hop0 := _hostile(field, "Hop0", Vector2i(30, 30))
 	var hop1 := _hostile(field, "Hop1", Vector2i(32, 30))
 	var hop2 := _hostile(field, "Hop2", Vector2i(34, 30))
-	# Reach exactly one hop: hop1 from hop0, hop2 from hop1, never hop2 from hop0.
-	var one_hop := hop0.global_position.distance_to(hop1.global_position) + 1.0
+	# Reach exactly one hop: hop1 from hop0, hop2 from hop1, never hop2 from hop0. Hex centres
+	# are not evenly spaced along a row of ground cells, so the longer hop sets the reach.
+	var one_hop := maxf(
+		hop0.global_position.distance_to(hop1.global_position),
+		hop1.global_position.distance_to(hop2.global_position)
+	) + 1.0
 	assert_float(hop0.global_position.distance_to(hop2.global_position)).is_greater(one_hop)
 	for hostile: Hostile in [hop0, hop1, hop2]:
 		hostile.chain_radius = one_hop
@@ -463,7 +494,12 @@ func test_a_group_resolves_when_its_last_member_falls_while_the_session_continue
 			if Battle.session_active and GameState.flag_is_true("defeated_bog_wight"):
 				seen_live_resolution[0] = true
 	)
-	_drive_until_ended(foe, 60, false)
+	# Drive only until the wight falls. Left longer, the 999-HP boar can overrun the party and
+	# end the session, which is not what this test is about.
+	for _step: int in 60:
+		if wight.state == Hostile.State.DOWNED or Battle.ended:
+			break
+		_drive_until_ended(foe, 1, false)
 
 	assert_bool(seen_live_resolution[0]).override_failure_message(
 		"the bog-wight group must resolve while the boar keeps the session alive"
@@ -656,7 +692,7 @@ func test_a_spawn_slot_group_resolves_through_the_ledger_and_clears_its_slot() -
 	var anchor := Marker2D.new()
 	anchor.name = "SpawnSlotLedgerTest"
 	field.get_parent().add_child(anchor)
-	anchor.global_position = field.iso_grid().cell_to_world(Vector2i(30, 30))
+	anchor.global_position = field.iso_grid().cell_to_world(_on_grid(field, Vector2i(30, 30)))
 	SpawnDirector.set_tables_for_testing({TEST_ROOM_SCENE: [{
 		"schema": SpawnDirector.TABLE_SCHEMA,
 		"id": "ledger-test",
@@ -704,14 +740,57 @@ func test_a_spawn_slot_group_resolves_through_the_ledger_and_clears_its_slot() -
 ## the CI hang. The loop must commit an action instead, so the wight gets the clock back.
 func test_the_drive_loop_outlasts_the_wait_cap_when_the_foe_is_still_out_of_reach() -> void:
 	var field := await _field()
-	field.player().global_position = field.iso_grid().cell_to_world(Vector2i(35, 36))
+	field.player().global_position = field.iso_grid().cell_to_world(_on_grid(field, Vector2i(35, 36)))
 	var wight := _hostile(field, "Wight", Vector2i(30, 30))
 	var opened := Battle.start_session(field, wight)
 	assert_bool(opened.get("allowed", false)).is_true()
-	assert_that(opened["seats"][0]).is_equal(Vector2i(35, 36))
+	assert_that(opened["seats"][0]).is_equal(_on_grid(field, Vector2i(35, 36)))
 	var foe := wight.battle_actor()
 	foe.hp = 1
 
 	if not _drive_until_ended(foe, 40):
 		return
 	assert_int(Battle.last_result.state).is_equal(BattleResult.State.VICTORY)
+
+
+## SR7 (owner, 2026-11-08): losing an ambient fight is not a game over. HP is halved as built,
+## a PROVISIONAL share of coin is lost, the beating group's authored loss stake writes ONE
+## Reputation entry, and the result names the nearest discovered hub to wake at. The field
+## gets no checkpoint: GameFlow requests the session's one checkpoint at the hub.
+func test_losing_an_ambient_fight_costs_coin_and_standing_and_names_the_wake_hub() -> void:
+	var reputation_before := Reputation.to_dict().duplicate(true)
+	var autosave_before := SaveGame._pending_autosave_reason
+	SaveGame._pending_autosave_reason = ""
+	GameState.set_flag("defeated_bog_wight", false)
+	GameState.discover_fast_travel_hub(&"dom")
+	GameState.discover_fast_travel_hub(&"kesselford")
+	GameState.set_gp(205)
+	var field := await _field()
+	var wight := _hostile(field, "Wight", Vector2i(30, 30), &"bog-wight", &"bog-wight")
+	assert_bool(Battle.start_session(field, wight).get("allowed", false)).is_true()
+	var lead: PartyMember = GameState.party[0]
+	var events_before := Reputation.event_count()
+
+	Battle.controller.force_finish(CombatController.ResultState.DEFEAT, Battle.OUTCOME_DEFEAT)
+	await get_tree().process_frame
+
+	var result: BattleResult = Battle.last_result
+	assert_int(result.state).is_equal(BattleResult.State.DEFEAT)
+	assert_bool(Battle.session_active).is_false()
+	assert_int(lead.hp).is_equal(maxi(1, ceili(lead.max_hp * 0.5)))
+	assert_int(result.coin_lost).override_failure_message("10% of 205 gp, rounded down").is_equal(20)
+	assert_int(GameState.gp).is_equal(185)
+	assert_int(Reputation.event_count()).override_failure_message(
+		"an ambient defeat writes exactly one reputation entry"
+	).is_equal(events_before + 1)
+	assert_str(Reputation.history(1)[0].faction).is_equal("ssae-seeders")
+	assert_float(Reputation.history(1)[0].delta).is_equal(-3.0)
+	# test_room is the Wilds: Dom is 8 steps away, Kesselford 18.
+	assert_str(String(result.wake_hub_id)).is_equal("dom")
+	assert_int(result.xp_awarded).is_equal(0)
+	assert_bool(GameState.flag_is_true("defeated_bog_wight")).is_false()
+	assert_str(SaveGame._pending_autosave_reason).override_failure_message(
+		"the field must not be checkpointed under the beaten party"
+	).is_equal("")
+	Reputation.from_dict(reputation_before)
+	SaveGame._pending_autosave_reason = autosave_before

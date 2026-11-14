@@ -3,6 +3,20 @@ extends GdUnitTestSuite
 ## cards (Quick Cut, Open Seam, Blinding Throw) and the Nightfeeder kit (Fed in the Dark,
 ## Blindside Bite, Eclipse Feast) on the Vhorr Hunger engine.
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
+
 const NO_FIZZLE := {"fizzle": {"harmonic_accord": 100.0, "pitch": 10}}
 const FEEDER_CELLS := {"feeder": Vector2i(1, 1), "ally": Vector2i(0, 0), "enemy": Vector2i(2, 1)}
 

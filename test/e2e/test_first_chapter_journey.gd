@@ -11,6 +11,9 @@ const COUNCIL_ELDER_DIALOGUE_PATH := "res://dialogue/council_elder.dialogue"
 const MARSHAL_DIALOGUE_PATH := "res://dialogue/marshal_coiljaw.dialogue"
 const IRIS_DIALOGUE_PATH := "res://dialogue/iris_illepah.dialogue"
 const SELLA_DIALOGUE_PATH := "res://dialogue/sella_varn.dialogue"
+const WILDS_ROOM_SCENE := "res://world/test_room.tscn"
+const ZHAVAR_TELEGRAPH_SCENE := "res://actors/zhavar_telegraph/zhavar_telegraph.tscn"
+const ZHAVAR_TOLL_SCENE := "res://actors/zhavar_toll/zhavar_toll.tscn"
 const SERAI_LUN_DIALOGUE_PATH := "res://dialogue/companions/serai_lun.dialogue"
 const WYNETH_DIALOGUE_PATH := "res://dialogue/companions/wyneth_hallow_tide.dialogue"
 const GRUMBRAND_DIALOGUE_PATH := "res://dialogue/companions/old_grumbrand.dialogue"
@@ -95,7 +98,9 @@ func after_test() -> void:
 
 
 func test_opening_arc_reaches_the_elder_and_starts_the_driving_journey() -> void:
+	GameState.set_soul_meter_with_cause(37.0, "test:previous_run")
 	SaveGame.new_game()
+	assert_array(GameState.soul_trace_entries()).is_empty()
 	GameFlow._on_intro_narration_entered()
 	var intro := UIManager._stack.back() as IntroNarrationScreen
 	assert_object(intro).is_not_null()
@@ -455,7 +460,7 @@ func test_extreme_soul_values_keep_an_unconditional_ruling_route() -> void:
 		_resolve_vanguard()
 		_resolve_muster(&"slain")
 		GameState.set_flag("reported_bloodbellow", true)
-		GameState.soul_meter = case["soul"]
+		GameState.set_soul_meter_with_cause(case["soul"], "test:setup")
 		assert_bool(QuestRegistry.resolve_broken_muster(case["ruling"])).is_true()
 		assert_int(ChapterOneProgress.current_stage()).is_equal(
 			ChapterOneProgress.Stage.COMPLETE
@@ -466,7 +471,7 @@ func test_extreme_soul_values_keep_an_unconditional_ruling_route() -> void:
 	_resolve_vanguard()
 	_resolve_muster(&"slain")
 	GameState.set_flag("reported_bloodbellow", true)
-	GameState.soul_meter = 0.0
+	GameState.set_soul_meter_with_cause(0.0, "test:setup")
 	assert_bool(QuestRegistry.resolve_broken_muster(&"hold-both")).is_false()
 	assert_bool(QuestRegistry.resolve_broken_muster(&"demons-first")).is_true()
 
@@ -724,12 +729,186 @@ func _winning_percentile_seed() -> int:
 
 func _reset_fixture() -> void:
 	GameState.flags.clear()
-	GameState.soul_meter = 50.0
+	GameState.set_soul_meter_with_cause(50.0, "test:setup")
+	GameState.clear_soul_trace()
 	GameState._seed_demo_data()
 	Reputation.from_dict({})
 	Renown.from_dict({})
 	QuestRegistry.reset()
 	SaveGame._pending_autosave_reason = ""
+
+
+func test_soul_touching_journey_paths_trace_each_mutation_once_with_its_cause() -> void:
+	_select_companions()
+	var iris := load(IRIS_DIALOGUE_PATH) as DialogueResource
+	var before := GameState.soul_meter
+	await _choose_response(iris, "hub", "Show me what the Loam remembers")
+	_assert_soul_trace_step(1, "dialogue:iris_illepah:loam_memory", before, before - 6.0)
+
+	await _choose_response(iris, "hub", "work I could do")
+	for i: int in 3:
+		GameState.inventory.create_and_add_item(ItemIds.MATERIALS_LOAMROOT_SPRIG)
+	QuestSystem.update_quest(QuestRegistry.LOAMROOT_SPRIGS)
+	before = GameState.soul_meter
+	await _choose_response(iris, "hub", "Use my pattern to root them")
+	_assert_soul_trace_step(2, "dialogue:iris_illepah:root_sprigs", before, before - 8.0)
+
+	var quest := QuestRegistry.COLD_BOWL
+	assert_bool(QuestRegistry.offer_side_quest(quest)).is_true()
+	for flag: String in quest.required_flags:
+		GameState.set_flag(flag, true)
+	before = GameState.soul_meter
+	assert_bool(QuestRegistry.resolve_side_quest(quest, &"bring-them-home")).is_true()
+	_assert_soul_trace_step(
+		3, "quest:%s:bring-them-home" % quest.id, before, before + 8.0
+	)
+	assert_bool(QuestRegistry.resolve_side_quest(quest, &"bring-them-home")).is_false()
+	assert_int(GameState.soul_trace_entries().size()).is_equal(3)
+
+	before = GameState.soul_meter
+	assert_bool(QuestRegistry.resolve_companion_quest(
+		"serai-lun", QuestRegistry.SERAI_LUN_QUEST, 6.0, "test:companion_resolution"
+	)).is_true()
+	_assert_soul_trace_step(
+		4, "quest:companion_agreement:serai-lun",
+		before, before + QuestRegistry.COMPANION_AGREEMENT_SOUL,
+	)
+	assert_bool(QuestRegistry.resolve_companion_quest(
+		"serai-lun", QuestRegistry.SERAI_LUN_QUEST, 6.0, "test:companion_resolution"
+	)).is_false()
+	assert_int(GameState.soul_trace_entries().size()).is_equal(4)
+
+	var battle: Node = auto_free(BattleScript.new())
+	battle.start(EncounterIds.BOG_WIGHT)
+	before = GameState.soul_meter
+	assert_bool(battle.use_action(BattleScript.ACTION_PARADOX)).is_true()
+	_assert_soul_trace_step(5, "battle:soul_cost:paradox", before, before - 3.0)
+
+	# The whole sequence is continuous: missing, duplicate, empty, or fallback
+	# entries fail independently of the individual final-value assertions.
+	var entries := GameState.soul_trace_entries()
+	var previous_after := 50.0
+	for i: int in entries.size():
+		assert_int(entries[i]["index"]).is_equal(i + 1)
+		assert_str(entries[i]["cause"]).is_not_empty()
+		assert_str(entries[i]["cause"]).is_not_equal("unattributed")
+		assert_float(entries[i]["before"]).is_equal(previous_after)
+		previous_after = entries[i]["after"]
+	assert_float(previous_after).is_equal(GameState.soul_meter)
+
+
+func _assert_soul_trace_step(count: int, cause: String, before: float, after: float) -> void:
+	var entries := GameState.soul_trace_entries()
+	assert_int(entries.size()).override_failure_message(
+		"%s must append exactly one Soul entry" % cause
+	).is_equal(count)
+	assert_float(GameState.soul_meter).is_equal(after)
+	var entry: Dictionary = entries.back()
+	assert_str(entry["cause"]).is_equal(cause)
+	assert_float(entry["before"]).is_equal(before)
+	assert_float(entry["after"]).is_equal(GameState.soul_meter)
+	assert_float(entry["requested"]).is_equal(after)
+	assert_bool(entry["changed"]).is_true()
+	assert_bool(entry["clamped"]).is_false()
+
+
+## P1.6 (#535): every authored Zhavar route is reached through production writers only.
+## Every authored route keys on the `wilds` zone: the rumour rules (`globals/npc_reactions.gd`),
+## the telegraph (the Wilds' `ZhavarTelegraph` overlay and Toma Reedhand's line) and the toll (the
+## Wilds' `ZhavarToll` stroke and Marshal Coiljaw's witnessed line). Its two production writers are
+## the bell-house turn-in (`dialogue/sella_varn.dialogue`) and the Broken Muster ruling
+## (`QuestRegistry.resolve_broken_muster()`). Each rung is written once, and no other zone moves.
+func test_production_writers_reach_every_authored_zhavar_route_once() -> void:
+	_reset_fixture()
+	SaveGame.zhavar = {}
+	_assert_wilds_room_hosts_the_zhavar_actors()
+	var writes: Array[String] = []
+	var record := func(zone_id: String, rung: String) -> void:
+		writes.append("%s:%s" % [zone_id, rung])
+	SaveGame.zhavar_rung_changed.connect(record)
+	var telegraph := auto_free(
+		(load(ZHAVAR_TELEGRAPH_SCENE) as PackedScene).instantiate()
+	) as ZhavarTelegraph
+	var toll := auto_free((load(ZHAVAR_TOLL_SCENE) as PackedScene).instantiate()) as ZhavarToll
+	var tolls: Array[String] = []
+	toll.tolled.connect(func(zone_id: String) -> void: tolls.append(zone_id))
+	add_child(telegraph)
+	add_child(toll)
+	assert_str(SaveGame.zhavar_rung("wilds")).is_equal("low")
+	assert_float(telegraph.intensity).is_equal(0.0)
+	assert_str(_zhavar_rumor_title("nalla-gatebeat")).is_empty()
+
+	# Writer 1: the bell-house turn-in. The bell house's interactable writes the inspected flag.
+	var sella := load(SELLA_DIALOGUE_PATH) as DialogueResource
+	await _start_quest_from_dialogue(
+		QuestRegistry.BELLHOUSE_REPAIR, SELLA_DIALOGUE_PATH, "start", "What happened"
+	)
+	GameState.set_flag("dom_bellhouse_inspected", true)
+	await _choose_response(sella, "start", "I inspected the bell house")
+	assert_str(SaveGame.zhavar_rung("wilds")).is_equal("rising")
+	# Route class 1, rumours: the rising floor opens, the tolling floor stays shut.
+	assert_str(_zhavar_rumor_title("nalla-gatebeat")).is_equal("dom_nalla_gatebeat_rising")
+	assert_str(_zhavar_rumor_title("kessa-nightrail")).is_equal("dom_kessa_nightrail_rising")
+	assert_str(_zhavar_rumor_title("tern-hollowbeat")).is_empty()
+	# Route class 2, the telegraph: the Wilds overlay rises and Toma hears the east.
+	assert_float(telegraph.intensity).is_equal(ZhavarTelegraph.intensity_for_rung("rising"))
+	var toma := load("res://dialogue/toma_reedhand.dialogue") as DialogueResource
+	await _choose_response(toma, "start", "carrying a sound from the east")
+	assert_array(tolls).is_empty()
+
+	# Writer 2: the Broken Muster ruling.
+	_assert_journey_prerequisites()
+	_resolve_vanguard()
+	_resolve_muster(&"slain")
+	GameState.set_flag("reported_bloodbellow", true)
+	assert_bool(QuestRegistry.resolve_broken_muster(&"hold-both")).is_true()
+	assert_str(SaveGame.zhavar_rung("wilds")).is_equal("tolling")
+	assert_float(telegraph.intensity).is_equal(ZhavarTelegraph.intensity_for_rung("tolling"))
+	# Route class 3, the toll: the Wilds stroke plays once, then the marshal's witnessed line.
+	assert_array(tolls).contains_exactly(["wilds"])
+	assert_bool(GameState.flag_is_true(ZhavarToll.witness_flag("wilds"))).is_true()
+	assert_bool(GameState.flag_is_true("zhavar_tolling_wilds")).is_true()
+	var marshal := load(MARSHAL_DIALOGUE_PATH) as DialogueResource
+	await _choose_response(marshal, "start", "Something answered over the east road")
+	assert_bool(GameState.flag_is_true("zhavar_tolling_witnessed")).is_true()
+	assert_str(_zhavar_rumor_title("tern-hollowbeat")).is_equal("dom_tern_hollowbeat_tolling")
+	assert_str(_zhavar_rumor_title("yssra-coldnet")).is_equal("dom_yssra_coldnet_tolling")
+	# Arriving again finds the toll already witnessed.
+	var second_toll := auto_free(
+		(load(ZHAVAR_TOLL_SCENE) as PackedScene).instantiate()
+	) as ZhavarToll
+	second_toll.tolled.connect(func(zone_id: String) -> void: tolls.append(zone_id))
+	add_child(second_toll)
+	assert_array(tolls).contains_exactly(["wilds"])
+
+	assert_array(writes).override_failure_message(
+		"each rung must be written once, by a production writer, on the wilds zone only"
+	).contains_exactly(["wilds:rising", "wilds:tolling"])
+	for zone_id: Variant in SaveGame.zhavar:
+		assert_str(str(zone_id)).is_equal("wilds")
+	SaveGame.zhavar_rung_changed.disconnect(record)
+
+
+## The Wilds room is where the telegraph and the toll play. Both actors keep their default
+## `wilds` zone there, so the scene must not override it.
+func _assert_wilds_room_hosts_the_zhavar_actors() -> void:
+	var state := (load(WILDS_ROOM_SCENE) as PackedScene).get_state()
+	var found := {}
+	for node_index in state.get_node_count():
+		var node_name := str(state.get_node_name(node_index))
+		if node_name != "ZhavarTelegraph" and node_name != "ZhavarToll":
+			continue
+		found[node_name] = true
+		for property_index in state.get_node_property_count(node_index):
+			var property_name := str(state.get_node_property_name(node_index, property_index))
+			assert_str(property_name).override_failure_message(
+				"%s in the Wilds room must keep its default wilds zone" % node_name
+			).is_not_equal("zone_id")
+	assert_dict(found).contains_keys(["ZhavarTelegraph", "ZhavarToll"])
+
+
+func _zhavar_rumor_title(npc_id: String) -> String:
+	return str(NpcReactions.resolve(npc_id).get("dialogue_title", ""))
 
 
 func _assert_journey_prerequisites() -> void:
@@ -868,7 +1047,7 @@ func _assert_objective_surfaces(runner: GdUnitSceneRunner) -> void:
 	await runner.simulate_frames(2)
 	var journal_objective := journal.find_child("NextObjective", true, false) as Label
 	assert_object(journal_objective).is_not_null()
-	assert_str(journal_objective.text).is_equal("NEXT OBJECTIVE\n" + expected)
+	assert_str(journal_objective.text).is_equal(expected)
 	UIManager.back()
 	await runner.simulate_frames(2)
 

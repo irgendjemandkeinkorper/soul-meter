@@ -21,5 +21,10 @@ func after_test() -> void:
 func test_field_hud_shows_party_breath() -> void:
 	var runner := scene_runner("res://ui/hud/field_hud.tscn")
 
-	var party_status := runner.find_child("PartyStatus", true, false) as Label
-	assert_str(party_status.text).contains("BREATH 6/15")
+	await runner.simulate_frames(1)
+	# U2: the party is a strip of cards; Breath is a meter, its numbers on hover.
+	var card := runner.find_child("PartyStrip", true, false).get_child(0)
+	var breath := card.find_child("Breath", true, false) as MeterBar
+	assert_float(breath.value).is_equal_approx(6.0 / 15.0, 0.001)
+	var numbers := card.find_child("Numbers", true, false) as Label
+	assert_str(numbers.text).contains("BR 6/15")

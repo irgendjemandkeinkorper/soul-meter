@@ -9,7 +9,9 @@ extends CanvasLayer
 ## and closed by the chart; Esc on them sends "resume" instead of popping.
 
 const INVENTORY := preload("res://ui/screens/inventory.tscn")
-const PARTY := preload("res://ui/screens/party.tscn")
+## U3 (owner-approved plan, 2026-11-01): P opens the Register of Persons. The separate Party
+## screen repeated its roster with one HP bar and a bio, and was folded into it.
+const PARTY := preload("res://ui/screens/character_sheet.tscn")
 const STANDING := preload("res://ui/screens/standing.tscn")
 const CHARACTER_SHEET := preload("res://ui/screens/character_sheet.tscn")
 const TAVERN := preload("res://ui/screens/tavern.tscn")
@@ -24,6 +26,9 @@ const BUTTON_PRESS_SOUND := preload("res://assets/audio/sfx/metalClick.ogg")
 const SCREEN_OPEN_SOUND := preload("res://assets/audio/sfx/bookOpen.ogg")
 const SCREEN_CLOSE_SOUND := preload("res://assets/audio/sfx/bookClose.ogg")
 const INVENTORY_MOVE_SOUND := preload("res://assets/audio/sfx/handleSmallLeather2.ogg")
+## Screens draw in the order they were opened. A screen may raise its own children with z_index
+## (the battle HUD reaches 10), so each screen opened on top sits this far above the one beneath.
+const STACK_Z_STEP := 64
 
 var ui_theme: Theme
 var _stack: Array[Control] = []
@@ -54,7 +59,8 @@ func _create_reward_reveal() -> void:
 	_reward_reveal = REWARD_REVEAL.instantiate()
 	_reward_reveal.name = "RewardReveal"
 	_reward_reveal.theme = ui_theme
-	_reward_reveal.z_index = 100
+	# Above every stacked screen.
+	_reward_reveal.z_index = RenderingServer.CANVAS_ITEM_Z_MAX
 	_reward_reveal.dismissed.connect(_on_reward_reveal_dismissed)
 	add_child(_reward_reveal)
 
@@ -94,6 +100,7 @@ func open(scene: PackedScene, pause: bool = false, flow_owned: bool = false) -> 
 	var inst: Control = scene.instantiate()
 	inst.flow_owned = flow_owned
 	inst.theme = ui_theme  # CanvasLayer children don't inherit the root Window theme
+	inst.z_index = _stack.size() * STACK_Z_STEP
 	add_child(inst)
 	_stack.append(inst)
 	if inst is Screen:

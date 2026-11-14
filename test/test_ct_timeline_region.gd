@@ -13,5 +13,5 @@ func test_timeline_reads_scheduler_forecast_instead_of_estimating() -> void:
 	scheduler.setup([actor])
 	timeline.bind_scheduler(scheduler)
 	assert_int(timeline.marker_count()).is_greater(0)
-	assert_str((timeline.markers.get_child(0) as Label).text).contains("Vex")
+	assert_str(timeline.marker_text(0)).contains("Vex")
 	assert_int(scheduler.peek_order(8).size()).is_equal(timeline.marker_count())

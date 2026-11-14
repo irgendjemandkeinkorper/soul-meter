@@ -2,9 +2,10 @@ extends GdUnitTestSuite
 
 
 func test_current_locations_are_registered_as_gameplay_only() -> void:
-	# 25 Dom-era locations plus Kesselford and its two interiors (C1 / #238), Ashlaren and
-	# its two interiors (C2 / #239), The Long Verge (C3 / #240) and Hollowmere (C4 / #241).
-	assert_int(LocationRegistry.ALL.size()).is_equal(33)
+	# 25 Dom-era locations plus Kesselford (C1 / #238; its Wayhouse and Chandlery rooms retired
+	# when the buildings became walk-in, item 35), Ashlaren and its two interiors (C2 / #239),
+	# The Long Verge (C3 / #240) and Hollowmere (C4 / #241).
+	assert_int(LocationRegistry.ALL.size()).is_equal(31)
 	for location in LocationRegistry.ALL:
 		assert_bool(location.allowed_gameplay).is_true()
 		assert_bool(LocationRegistry.is_gameplay_scene(location.scene_path)).is_true()
@@ -170,15 +171,22 @@ func test_named_consts_are_the_same_resources_the_index_loads() -> void:
 	assert_int(named).is_equal(LocationRegistry.ALL.size())
 
 
+## Interiors whose canon allows ambient fights: the Lower Trial Hall's side-room fights (owner
+## rulings of 2026-11-04, "Side-room fights").
+const FIGHTING_INTERIORS: Array[String] = ["res://world/interiors/lower_trial_hall.tscn"]
+
+
 func test_no_combat_zone_is_read_from_canon_and_matches_the_old_prefix_rule() -> void:
 	for row: Dictionary in _index_rows():
 		var scene_path := str(row["scene_path"])
 		assert_bool(LocationRegistry.no_combat_zone_by_scene(scene_path)).override_failure_message(
 			scene_path
 		).is_equal(bool(row["no_combat_zone"]))
-		# Players see no change: canon agrees with the rule the runtime used before #342.
+		# Players see no change: canon agrees with the rule the runtime used before #342, except
+		# for the interiors canon has since opened to fights (FIGHTING_INTERIORS).
 		assert_bool(bool(row["no_combat_zone"])).override_failure_message(scene_path).is_equal(
 			scene_path.begins_with("res://world/interiors/")
+			and not scene_path in FIGHTING_INTERIORS
 		)
 	# An unindexed scene keeps the prefix rule.
 	assert_bool(LocationRegistry.no_combat_zone_by_scene("res://world/interiors/unbaked.tscn")).is_true()

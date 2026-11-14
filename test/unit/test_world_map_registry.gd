@@ -298,3 +298,24 @@ func test_encounter_tables_stay_untyped_like_the_former_literal() -> void:
 	for route: Dictionary in WorldMapRegistry.all_routes():
 		var table: Array = route["encounter_table"]
 		assert_bool(table.is_typed()).is_false()
+
+
+## SR7: the nearest candidate over the route graph by total route steps, either direction.
+func test_nearest_location_walks_the_route_graph_by_steps() -> void:
+	var hubs: Array[StringName] = [DOM_ID, KESSELFORD_ID, ASHLAREN_ID]
+	# Hollowmere → Dorthkor Road (5) → Dom (12) is 17; Kesselford is 27 through Dom.
+	assert_str(String(WorldMapRegistry.nearest_location(HOLLOWMERE_ID, hubs))).is_equal("dom")
+	# Wilds → Dom is 8; with Dom left out, Kesselford is 8 + 10 and Ashlaren 8 + 10 + 8.
+	var past_dom: Array[StringName] = [KESSELFORD_ID, ASHLAREN_ID]
+	assert_str(String(WorldMapRegistry.nearest_location(WILDS_ID, past_dom))).is_equal("kesselford")
+	# Long Verge sits 6 from both Dom and Kesselford: the candidates' order breaks the tie.
+	assert_str(String(WorldMapRegistry.nearest_location(LONG_VERGE_ID, hubs))).is_equal("dom")
+	var kesselford_first: Array[StringName] = [KESSELFORD_ID, DOM_ID]
+	assert_str(String(WorldMapRegistry.nearest_location(LONG_VERGE_ID, kesselford_first))) \
+		.is_equal("kesselford")
+	# Standing in a candidate is distance 0.
+	assert_str(String(WorldMapRegistry.nearest_location(KESSELFORD_ID, hubs))).is_equal("kesselford")
+	# No route reaches a candidate, or there are none: empty.
+	assert_str(String(WorldMapRegistry.nearest_location(&"dom_tavern_interior", past_dom))).is_equal("")
+	var none: Array[StringName] = []
+	assert_str(String(WorldMapRegistry.nearest_location(DOM_ID, none))).is_equal("")

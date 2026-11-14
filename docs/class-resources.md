@@ -49,13 +49,23 @@ twice per action, it must be pure with respect to its own state — consume one-
 resolution has actually happened.
 
 Context keys a resource may override today (all already honoured by `Resolution.resolve()`):
-`to_hit_enabled`, `fizzle.*` (`agreement_integrity`, `pitch`, `mastery`, `patron`),
+`to_hit_enabled`, `fizzle.*` (`agreement_integrity`, `pitch`, `mastery`, `patron`, `tone_bonus`),
 `caster_context.*`, `unit.attack_scale`, `unit.harmony`, plus the v2 terms below
 (`reveal`, `hidden_draw`, `fizzle_percent_override`). Overrides are applied with
 `CombatController.deep_merge()` — a **key-level** merge: `{"unit": {"attack_scale": 1.25}}`
 changes only `unit.attack_scale` and keeps `unit.id`/`edge`/`breath`; `{"fizzle": {"mastery":
 true}}` keeps `fizzle.patron`/`pitch`. Anything else is a Resolution change, which is out of a
 B-wave worker's scope: file a finding.
+
+`fizzle.tone_bonus` (SR9, owner 2026-11-08; `docs/architecture-chargen-dramgid.md` §4.2) is
+filled by `_fizzle_context()` for a party caster's spell from
+`SkillCheck.tone_bonus_for(member, elements)`: the tier bonus plus advancement of the LOWEST
+Tone across the composition's elements. Fizzle drops by `floori(tone_bonus / 4)`. An Untrained
+Tone adds 0, so off-tone casting is never penalized and the twelve ratified readings stand. A
+resource that sets `fizzle.tone_bonus` wins over the live read, the same as the other keys.
+`Resolution.resolve()` reports `fizzle_tone_relief` (what the Tone took off the applied chance;
+0 under `fizzle_percent_override`) and `fizzle_resonance` (`pitch × 8 + tone_bonus`). The
+forecast shows them as "Resonance N% → −k".
 
 ## v2 channels (seam follow-up, 2026-09-02)
 

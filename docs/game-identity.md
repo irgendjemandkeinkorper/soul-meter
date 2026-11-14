@@ -56,6 +56,10 @@ mechanism) is implementation governed by roadmap rulings R13–R15, answered 202
   > `loom_penalty` out of F4 (#284) and makes it a consumer of E6.1 (#349); the field verbs
   > themselves stay in #284 and are unblocked. `DramgidSchema.SKILLS` already carries the
   > per-skill `loom` field (5 skills FULL, 5 PARTIAL), so only the zone read is missing.
+  >
+  > *Status 2026-10-30:* `loom_penalty` is live and reads `FieldMap.zone_delta()`; locks,
+  > loot-table rows and pickpockets subtract it from their situational modifier through
+  > `FieldMap.zone_delta_for(self)`. Dialogue checks do not read a zone.
 - **Progression (ruling 9).** XP source is combat + quests; perk lists per patron class are new
   Pandora data.
   > **Owner ruling, 2026-09-08 — kill-XP is in, and this supersedes #98 D3.** Asked directly
@@ -72,6 +76,10 @@ mechanism) is implementation governed by roadmap rulings R13–R15, answered 202
   > `PartyMember.xp` is declared, serialized and migrated with **zero writers** today. The write
   > paths are `Battle._apply_victory()` (which already guards re-entry via `already_resolved`, so
   > a re-fought encounter cannot double-pay) and `QuestRegistry.resolve_side_quest()`. See #285.
+  >
+  > **SR10 (owner, 2026-11-08):** getting past a fight by talk, stealth or Soul pays the same
+  > kill XP as winning it, once. The award call is `Battle.award_bypass_xp()`; see
+  > `docs/sr10-bypass-xp-audit.md`.
 - **Hollowing (ruling 2)** is a Soul band with its own dialogue conditions and companion barks.
   Soul income (ruling 3) is the quest system's job: `acts of Agreement` become a tagged quest
   outcome that credits the gauge.

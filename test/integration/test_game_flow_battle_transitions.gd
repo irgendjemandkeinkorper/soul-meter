@@ -138,19 +138,23 @@ func test_bog_wight_is_fought_on_the_field_and_the_proof_unlocks_after_victory()
 	assert_bool(get_tree().paused).is_false()
 	assert_object(Battle._current_field_map()).is_same(_field)
 	assert_int(_field_scene.get_instance_id()).is_equal(field_id)
-	assert_int(UIManager._stack.size()).is_equal(1)
-	var hud := UIManager._stack.back() as Screen
-	var interface := hud.find_child("BattleInterface", true, false) as BattleInterface
+	# One bar, both modes (owner 2026-11-01): no full-screen HUD layer; the field HUD's bar
+	# grows its combat parts and hosts the one BattleInterface.
+	assert_int(UIManager._stack.size()).is_equal(0)
+	var hud := _field.field_hud()
+	assert_object(hud).is_not_null()
+	assert_bool(hud.visible).is_true()
+	assert_bool(hud.combat_active()).is_true()
+	var interface := hud.battle_interface
 	assert_object(interface).is_not_null()
 	assert_int(hud.find_children("BattleInterface", "", true, false).size()).is_equal(1)
 	assert_object(_field.combat_overlay()).is_not_null()
-	assert_bool((hud.get_node("Backdrop") as ColorRect).visible).is_false()
-	assert_bool(interface.tactical_data_visible()).is_false()
-	# The command dock toggles the region in the one interface, not another HUD.
-	(hud.get("_tactical_data_button") as Button).pressed.emit()
-	assert_bool(interface.tactical_data_visible()).is_true()
-	(hud.get("_tactical_data_button") as Button).pressed.emit()
-	assert_bool(interface.tactical_data_visible()).is_false()
+	assert_bool(interface.breakdown_visible()).is_false()
+	# The bar's button toggles the breakdown popover of the one interface, not another HUD.
+	(hud.combat_bar.get("_breakdown_button") as Button).pressed.emit()
+	assert_bool(interface.breakdown_visible()).is_true()
+	(hud.combat_bar.get("_breakdown_button") as Button).pressed.emit()
+	assert_bool(interface.breakdown_visible()).is_false()
 	await _capture_bog_wight_hud()
 
 	var foe := hostile.battle_actor()
@@ -179,10 +183,10 @@ func test_bog_wight_is_fought_on_the_field_and_the_proof_unlocks_after_victory()
 
 	# #473: ENCOUNTER RESOLVED waits until the field has presented the finishing beats.
 	var outcome_deadline := Time.get_ticks_msec() + 60000
-	while not bool(hud.call("outcome_shown")) and Time.get_ticks_msec() < outcome_deadline:
+	while not hud.combat_bar.outcome_shown() and Time.get_ticks_msec() < outcome_deadline:
 		await get_tree().process_frame
-	assert_bool(bool(hud.call("outcome_shown"))).is_true()
-	var outcome := hud.get("_outcome_box") as VBoxContainer
+	assert_bool(hud.combat_bar.outcome_shown()).is_true()
+	var outcome := hud.combat_bar.get("_outcome_box") as VBoxContainer
 	(outcome.get_child(outcome.get_child_count() - 1) as Button).pressed.emit()
 	await get_tree().process_frame
 	if _state_is_active(BATTLE_STATE):
@@ -473,3 +477,43 @@ func test_ambient_ally_turn_offers_reachable_cells_under_charge_time() -> void:
 		return
 	var destination := StringName((reachable[0] as Dictionary).get("destination", &""))
 	assert_bool(bool(controller.move_query(destination).get("allowed", false))).is_true()
+
+
+## SR7 (owner, 2026-11-08): dismissing a lost ambient fight wakes the party at the nearest
+## discovered hub through GameFlow.travel(), and the defeat's one checkpoint waits for the hub.
+func test_an_ambient_defeat_travels_to_the_nearest_discovered_hub() -> void:
+	GameState.discover_fast_travel_hub(&"dom")
+	var hostile := await _ambient_hostile(Vector2(96.0, 0.0))
+	assert_bool(Battle.session_active).is_true()
+	SaveGame._pending_autosave_reason = ""
+
+	# The fixture's cooldown is 0, so the wight beside the beaten party re-alerts on the next
+	# physics frame. The pending wake must refuse it rather than open a second fight.
+	Battle.controller.force_finish(CombatController.ResultState.DEFEAT, Battle.OUTCOME_DEFEAT)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await get_tree().process_frame
+	assert_object(Battle.last_result).override_failure_message(
+		"a foe left standing re-opened a fight before the party woke"
+	).is_not_null()
+	assert_bool(Battle.session_active).is_false()
+	assert_str(String(Battle.last_result.wake_hub_id)).is_equal("dom")
+	assert_bool(_state_is_active(BATTLE_STATE)).is_true()
+
+	GameFlow.send_event(&"battle_end")
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_str(GameFlow._target_scene).override_failure_message(
+		"a lost ambient fight must wake the party at the nearest discovered hub"
+	).is_equal("res://world/starting_town.tscn")
+	assert_bool(_state_is_active(LOADING_STATE)).is_true()
+	assert_bool(GameFlow._wake_checkpoint_pending).is_true()
+	assert_str(SaveGame._pending_autosave_reason).is_equal("")
+	# Still loading: the wight beside the party stays refused, so no fight opens mid-trip.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	assert_bool(Battle.session_active).is_false()
+	assert_int(hostile.state).is_not_equal(Hostile.State.DOWNED)
+	GameFlow._wake_checkpoint_pending = false
+	GameFlow._pending_defeat_wake = &""

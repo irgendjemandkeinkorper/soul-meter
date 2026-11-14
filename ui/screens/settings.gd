@@ -1,6 +1,8 @@
 extends Screen
 ## Display + Audio settings. Applies live and persists to user://settings.cfg via GameState.
 
+const FieldHUDScript := preload("res://ui/hud/field_hud.gd")
+
 func _build() -> void:
 	var vbox := _make_shell_window("Settings")
 
@@ -11,6 +13,17 @@ func _build() -> void:
 	fs.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	fs.toggled.connect(_on_fullscreen_toggled)
 	vbox.add_child(fs)
+	# Owner item 34, ruling H-c: fights always show the hex grid; this keeps a faint one while
+	# exploring. Offered only when the grid is hexes (hex slice H3). Draft strings: owner list.
+	if IsoGrid.hex_enabled():
+		var hex_grid := CheckButton.new()
+		hex_grid.name = "HexGridExploring"
+		hex_grid.text = "Show hex grid while exploring"
+		hex_grid.tooltip_text = "A faint hex grid on the ground outside fights. Fights always show it."
+		hex_grid.button_pressed = FieldGridLayer.exploring_grid_enabled()
+		hex_grid.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		hex_grid.toggled.connect(_on_hex_grid_toggled)
+		vbox.add_child(hex_grid)
 
 	vbox.add_child(_section("Accessibility"))
 	var reduced_motion := CheckButton.new()
@@ -25,6 +38,16 @@ func _build() -> void:
 	reduced_motion.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	reduced_motion.toggled.connect(_on_reduced_motion_toggled)
 	vbox.add_child(reduced_motion)
+
+	vbox.add_child(_section("Interface"))
+	var hints := CheckButton.new()
+	hints.name = "ControlHints"
+	hints.text = "Control hints"
+	hints.tooltip_text = "Shows each control in the field until you have used it once."
+	hints.button_pressed = FieldHUDScript.control_hints_showing()
+	hints.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	hints.toggled.connect(_on_control_hints_toggled)
+	vbox.add_child(hints)
 
 	vbox.add_child(_section("Audio"))
 	for bus: StringName in GameState.AUDIO_BUSES:
@@ -49,6 +72,16 @@ func _build() -> void:
 func _on_fullscreen_toggled(on: bool) -> void:
 	GameState.apply_fullscreen(on)
 	GameState.set_setting("display", "fullscreen", on)
+
+
+## U2 (owner 2026-11-02): on brings every control hint back; off hides them all.
+func _on_control_hints_toggled(enabled: bool) -> void:
+	FieldHUDScript.set_control_hints(enabled)
+	get_tree().call_group(FieldHUDScript.GROUP, &"refresh_key_hints")
+
+
+func _on_hex_grid_toggled(enabled: bool) -> void:
+	GameState.set_setting(FieldGridLayer.SETTING_SECTION, FieldGridLayer.SETTING_KEY, enabled)
 
 
 func _on_reduced_motion_toggled(enabled: bool) -> void:

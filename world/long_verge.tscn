@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3]
+[gd_scene load_steps=69 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
 [ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
@@ -11,6 +11,8 @@
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="9_hud"]
 [ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="10_townsfolk"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="26_chest"]
+[ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="27_interactable"]
 
 [ext_resource type="Texture2D" uid="uid://ct8n074851odr" path="res://assets/generated/sprites/world/dorthkor-road/dorthkor-road--straight.png" id="1_weftlumin"]
 
@@ -68,44 +70,89 @@ size = Vector2(3000, 40)
 [sub_resource type="RectangleShape2D" id="shape_v"]
 size = Vector2(40, 1800)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin1"]
-size = Vector2(60, 28)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MileCairnWest"]
+points = PackedVector2Array(-81, 95, 2, 122, 80, 90, -3, 63)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin2"]
-size = Vector2(50, 26)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MileCairnMid"]
+points = PackedVector2Array(-81, 95, 2, 122, 80, 90, -3, 63)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin3"]
-size = Vector2(150, 44)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MileCairnEast"]
+points = PackedVector2Array(-81, 95, 2, 122, 80, 90, -3, 63)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin4"]
-size = Vector2(100, 36)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_BlackBandCairn"]
+points = PackedVector2Array(-65, 104, -8, 124, 60, 105, 3, 85)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin5"]
-size = Vector2(200, 50)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_FreshBandCairn"]
+points = PackedVector2Array(-65, 104, -8, 124, 60, 105, 3, 85)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin6"]
-size = Vector2(170, 46)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_SplitStone"]
+points = PackedVector2Array(-239, 117, 15, 239, 229, 116, -25, -6)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin7"]
-size = Vector2(120, 36)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_SplitStoneHalf"]
+points = PackedVector2Array(239, 117, -15, 239, -229, 116, 25, -6)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin8"]
-size = Vector2(70, 30)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_PaymastersTent"]
+points = PackedVector2Array(-208, 60, 32, 175, 208, 40, -32, -75)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin9"]
-size = Vector2(40, 24)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_ColumnTent"]
+points = PackedVector2Array(208, 60, -32, 175, -208, 40, 32, -75)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin10"]
-size = Vector2(90, 34)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_PayCart"]
+points = PackedVector2Array(-108, 66, 28, 104, 107, 47, -29, 9)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin11"]
-size = Vector2(80, 32)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MusterDrum"]
+points = PackedVector2Array(-96, 70, -17, 110, 98, 83, 19, 43)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin12"]
-size = Vector2(120, 30)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_CampCrates"]
+points = PackedVector2Array(-41, 87, -7, 115, 35, 87, 1, 59)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin13"]
-size = Vector2(60, 30)
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_GraveMarker"]
+points = PackedVector2Array(-75, 98, -33, 118, 71, 77, 29, 57)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_UnnamedStoneWest"]
+points = PackedVector2Array(-78, 84, -11, 107, 88, 73, 21, 50)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_UnnamedStoneEast"]
+points = PackedVector2Array(78, 84, 11, 107, -88, 73, -21, 50)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_GraveStanding"]
+points = PackedVector2Array(-80, 86, 3, 117, 80, 75, -3, 44)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MoorPine01"]
+points = PackedVector2Array(-34, 230, 26, 245, 40, 236, -20, 221)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MoorPine02"]
+points = PackedVector2Array(34, 230, -26, 245, -40, 236, 20, 221)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MoorPine03"]
+points = PackedVector2Array(-34, 230, 26, 245, 40, 236, -20, 221)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MoorPine04"]
+points = PackedVector2Array(34, 230, -26, 245, -40, 236, 20, 221)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MoorPine05"]
+points = PackedVector2Array(-34, 230, 26, 245, 40, 236, -20, 221)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MoorPine06"]
+points = PackedVector2Array(34, 230, -26, 245, -40, 236, 20, 221)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MoorPine07"]
+points = PackedVector2Array(-34, 230, 26, 245, 40, 236, -20, 221)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MoorPine08"]
+points = PackedVector2Array(34, 230, -26, 245, -40, 236, 20, 221)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MoorRockNorth"]
+points = PackedVector2Array(-239, 117, 15, 239, 229, 116, -25, -6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_MoorRockSouth"]
+points = PackedVector2Array(239, 117, -15, 239, -229, 116, 25, -6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_FallenLog"]
+points = PackedVector2Array(-86, 67, -1, 111, 87, 76, 2, 32)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_LongVergeDressing_SolidProps_OldStump"]
+points = PackedVector2Array(-145, 76, -62, 125, 140, 60, 57, 11)
 
 [node name="LongVerge" type="Node2D"]
 texture_filter = 2
@@ -132,6 +179,7 @@ road_axis = 0
 [node name="Blocking" type="TileMapLayer" parent="."]
 visible = false
 position = Vector2(1500, -780)
+tile_map_data = PackedByteArray("AAABAC8AAAAAAAAAAAABADAAAAAAAAAAAAACAC4AAAAAAAAAAAACAC8AAAAAAAAAAAACADAAAAAAAAAAAAACADEAAAAAAAAAAAADAC0AAAAAAAAAAAADAC4AAAAAAAAAAAADAC8AAAAAAAAAAAADADIAAAAAAAAAAAAEACwAAAAAAAAAAAAEAC0AAAAAAAAAAAAEAC4AAAAAAAAAAAAEADMAAAAAAAAAAAAFACsAAAAAAAAAAAAFACwAAAAAAAAAAAAFAC0AAAAAAAAAAAAFADQAAAAAAAAAAAAGACoAAAAAAAAAAAAGACsAAAAAAAAAAAAGACwAAAAAAAAAAAAGADUAAAAAAAAAAAAHACkAAAAAAAAAAAAHACoAAAAAAAAAAAAHACsAAAAAAAAAAAAHADYAAAAAAAAAAAAIACgAAAAAAAAAAAAIACkAAAAAAAAAAAAIACoAAAAAAAAAAAAIADcAAAAAAAAAAAAJACcAAAAAAAAAAAAJACgAAAAAAAAAAAAJACkAAAAAAAAAAAAJADgAAAAAAAAAAAAKACYAAAAAAAAAAAAKACcAAAAAAAAAAAAKACgAAAAAAAAAAAAKADkAAAAAAAAAAAALACUAAAAAAAAAAAALACYAAAAAAAAAAAALACcAAAAAAAAAAAALADoAAAAAAAAAAAAMACQAAAAAAAAAAAAMACUAAAAAAAAAAAAMACYAAAAAAAAAAAAMADsAAAAAAAAAAAANACMAAAAAAAAAAAANACQAAAAAAAAAAAANACUAAAAAAAAAAAANADwAAAAAAAAAAAAOACIAAAAAAAAAAAAOACMAAAAAAAAAAAAOACQAAAAAAAAAAAAOAD0AAAAAAAAAAAAPACEAAAAAAAAAAAAPACIAAAAAAAAAAAAPACMAAAAAAAAAAAAPAD4AAAAAAAAAAAAQACAAAAAAAAAAAAAQACEAAAAAAAAAAAAQACIAAAAAAAAAAAAQAD8AAAAAAAAAAAARAB8AAAAAAAAAAAARACAAAAAAAAAAAAARACEAAAAAAAAAAAARAEAAAAAAAAAAAAASAB4AAAAAAAAAAAASAB8AAAAAAAAAAAASACAAAAAAAAAAAAASAEEAAAAAAAAAAAATAB0AAAAAAAAAAAATAB4AAAAAAAAAAAATAB8AAAAAAAAAAAATAEIAAAAAAAAAAAAUABwAAAAAAAAAAAAUAB0AAAAAAAAAAAAUAB4AAAAAAAAAAAAUAEMAAAAAAAAAAAAVABsAAAAAAAAAAAAVABwAAAAAAAAAAAAVAB0AAAAAAAAAAAAVAEQAAAAAAAAAAAAWABoAAAAAAAAAAAAWABsAAAAAAAAAAAAWABwAAAAAAAAAAAAWAEUAAAAAAAAAAAAXABkAAAAAAAAAAAAXABoAAAAAAAAAAAAXABsAAAAAAAAAAAAXAEYAAAAAAAAAAAAYABgAAAAAAAAAAAAYABkAAAAAAAAAAAAYABoAAAAAAAAAAAAYAD4AAAAAAAAAAAAYAEcAAAAAAAAAAAAZABcAAAAAAAAAAAAZABgAAAAAAAAAAAAZABkAAAAAAAAAAAAZAEgAAAAAAAAAAAAaABYAAAAAAAAAAAAaABcAAAAAAAAAAAAaABgAAAAAAAAAAAAaAEkAAAAAAAAAAAAbABUAAAAAAAAAAAAbABYAAAAAAAAAAAAbABcAAAAAAAAAAAAbADUAAAAAAAAAAAAbAEoAAAAAAAAAAAAcABQAAAAAAAAAAAAcABUAAAAAAAAAAAAcABYAAAAAAAAAAAAcAEsAAAAAAAAAAAAcAEwAAAAAAAAAAAAdABMAAAAAAAAAAAAdABQAAAAAAAAAAAAdABUAAAAAAAAAAAAdAEEAAAAAAAAAAAAdAEIAAAAAAAAAAAAdAEMAAAAAAAAAAAAdAEQAAAAAAAAAAAAdAEwAAAAAAAAAAAAeABIAAAAAAAAAAAAeABMAAAAAAAAAAAAeABQAAAAAAAAAAAAeAEEAAAAAAAAAAAAeAEIAAAAAAAAAAAAeAEMAAAAAAAAAAAAeAEQAAAAAAAAAAAAeAE0AAAAAAAAAAAAfABEAAAAAAAAAAAAfABIAAAAAAAAAAAAfABMAAAAAAAAAAAAfAEEAAAAAAAAAAAAfAE4AAAAAAAAAAAAgABAAAAAAAAAAAAAgABEAAAAAAAAAAAAgABIAAAAAAAAAAAAgAE8AAAAAAAAAAAAhAA8AAAAAAAAAAAAhABAAAAAAAAAAAAAhABEAAAAAAAAAAAAhAFAAAAAAAAAAAAAiAA4AAAAAAAAAAAAiAA8AAAAAAAAAAAAiABAAAAAAAAAAAAAiAFEAAAAAAAAAAAAjAA0AAAAAAAAAAAAjAA4AAAAAAAAAAAAjAA8AAAAAAAAAAAAjAFIAAAAAAAAAAAAkAAwAAAAAAAAAAAAkAA0AAAAAAAAAAAAkAA4AAAAAAAAAAAAkAFMAAAAAAAAAAAAlAAsAAAAAAAAAAAAlAAwAAAAAAAAAAAAlAA0AAAAAAAAAAAAlAC8AAAAAAAAAAAAlAFQAAAAAAAAAAAAmAAoAAAAAAAAAAAAmAAsAAAAAAAAAAAAmAAwAAAAAAAAAAAAmACUAAAAAAAAAAAAmACYAAAAAAAAAAAAmACcAAAAAAAAAAAAmACgAAAAAAAAAAAAmAFUAAAAAAAAAAAAnAAkAAAAAAAAAAAAnAAoAAAAAAAAAAAAnAAsAAAAAAAAAAAAnACUAAAAAAAAAAAAnACYAAAAAAAAAAAAnACcAAAAAAAAAAAAnACgAAAAAAAAAAAAnACkAAAAAAAAAAAAnAFYAAAAAAAAAAAAoAAgAAAAAAAAAAAAoAAkAAAAAAAAAAAAoAAoAAAAAAAAAAAAoACUAAAAAAAAAAAAoACYAAAAAAAAAAAAoACcAAAAAAAAAAAAoACgAAAAAAAAAAAAoACkAAAAAAAAAAAAoAFcAAAAAAAAAAAApAAcAAAAAAAAAAAApAAgAAAAAAAAAAAApAAkAAAAAAAAAAAApACUAAAAAAAAAAAApACYAAAAAAAAAAAApACcAAAAAAAAAAAApACgAAAAAAAAAAAApACkAAAAAAAAAAAApAEkAAAAAAAAAAAApAEoAAAAAAAAAAAApAFgAAAAAAAAAAAAqAAYAAAAAAAAAAAAqAAcAAAAAAAAAAAAqAAgAAAAAAAAAAAAqACQAAAAAAAAAAAAqACUAAAAAAAAAAAAqACYAAAAAAAAAAAAqACcAAAAAAAAAAAAqACgAAAAAAAAAAAAqACkAAAAAAAAAAAAqAEkAAAAAAAAAAAAqAEoAAAAAAAAAAAAqAFkAAAAAAAAAAAArAAUAAAAAAAAAAAArAAYAAAAAAAAAAAArAAcAAAAAAAAAAAArACQAAAAAAAAAAAArACUAAAAAAAAAAAArACYAAAAAAAAAAAArACcAAAAAAAAAAAArACgAAAAAAAAAAAArACkAAAAAAAAAAAArAFoAAAAAAAAAAAAsAAQAAAAAAAAAAAAsAAUAAAAAAAAAAAAsAAYAAAAAAAAAAAAsAB8AAAAAAAAAAAAsACAAAAAAAAAAAAAsACEAAAAAAAAAAAAsACIAAAAAAAAAAAAsACMAAAAAAAAAAAAsAFsAAAAAAAAAAAAtAAMAAAAAAAAAAAAtAAQAAAAAAAAAAAAtAAUAAAAAAAAAAAAtAB8AAAAAAAAAAAAtACAAAAAAAAAAAAAtACEAAAAAAAAAAAAtACIAAAAAAAAAAAAtACMAAAAAAAAAAAAtACQAAAAAAAAAAAAtAFwAAAAAAAAAAAAuAAIAAAAAAAAAAAAuAAMAAAAAAAAAAAAuAAQAAAAAAAAAAAAuACAAAAAAAAAAAAAuACEAAAAAAAAAAAAuACIAAAAAAAAAAAAuACMAAAAAAAAAAAAuACQAAAAAAAAAAAAuAF0AAAAAAAAAAAAvAAIAAAAAAAAAAAAvAAMAAAAAAAAAAAAvACAAAAAAAAAAAAAvACEAAAAAAAAAAAAvACIAAAAAAAAAAAAvACMAAAAAAAAAAAAvACQAAAAAAAAAAAAvAF4AAAAAAAAAAAAwAAMAAAAAAAAAAAAwACAAAAAAAAAAAAAwACEAAAAAAAAAAAAwACIAAAAAAAAAAAAwACMAAAAAAAAAAAAwACQAAAAAAAAAAAAwAEQAAAAAAAAAAAAwAF8AAAAAAAAAAAAxAAQAAAAAAAAAAAAxAGAAAAAAAAAAAAAyAAUAAAAAAAAAAAAyAB4AAAAAAAAAAAAyAB8AAAAAAAAAAAAyAGEAAAAAAAAAAAAzAAYAAAAAAAAAAAAzAB4AAAAAAAAAAAAzAB8AAAAAAAAAAAAzACAAAAAAAAAAAAAzACEAAAAAAAAAAAAzACIAAAAAAAAAAAAzACMAAAAAAAAAAAAzAGIAAAAAAAAAAAA0AAcAAAAAAAAAAAA0AB4AAAAAAAAAAAA0AB8AAAAAAAAAAAA0ACAAAAAAAAAAAAA0ACEAAAAAAAAAAAA0ACIAAAAAAAAAAAA0ACMAAAAAAAAAAAA0AGMAAAAAAAAAAAA1AAgAAAAAAAAAAAA1AB4AAAAAAAAAAAA1AB8AAAAAAAAAAAA1ACAAAAAAAAAAAAA1ACEAAAAAAAAAAAA1ACIAAAAAAAAAAAA1AFEAAAAAAAAAAAA1AFIAAAAAAAAAAAA1AFMAAAAAAAAAAAA1AFQAAAAAAAAAAAA1AFUAAAAAAAAAAAA1AGQAAAAAAAAAAAA2AAkAAAAAAAAAAAA2AB4AAAAAAAAAAAA2AB8AAAAAAAAAAAA2ACAAAAAAAAAAAAA2ACEAAAAAAAAAAAA2ACIAAAAAAAAAAAA2AFEAAAAAAAAAAAA2AFIAAAAAAAAAAAA2AFMAAAAAAAAAAAA2AFQAAAAAAAAAAAA2AFUAAAAAAAAAAAA2AGUAAAAAAAAAAAA3AAoAAAAAAAAAAAA3AB4AAAAAAAAAAAA3AB8AAAAAAAAAAAA3ACAAAAAAAAAAAAA3ACEAAAAAAAAAAAA3ACIAAAAAAAAAAAA3ACYAAAAAAAAAAAA3ACcAAAAAAAAAAAA3ADwAAAAAAAAAAAA3AD0AAAAAAAAAAAA3AD4AAAAAAAAAAAA3AD8AAAAAAAAAAAA3AEAAAAAAAAAAAAA3AEEAAAAAAAAAAAA3AEIAAAAAAAAAAAA3AFEAAAAAAAAAAAA3AFIAAAAAAAAAAAA3AFMAAAAAAAAAAAA3AFQAAAAAAAAAAAA3AFUAAAAAAAAAAAA3AGYAAAAAAAAAAAA4AAsAAAAAAAAAAAA4ACEAAAAAAAAAAAA4ACIAAAAAAAAAAAA4ACYAAAAAAAAAAAA4AC0AAAAAAAAAAAA4ADwAAAAAAAAAAAA4AD0AAAAAAAAAAAA4AD4AAAAAAAAAAAA4AD8AAAAAAAAAAAA4AEAAAAAAAAAAAAA4AEEAAAAAAAAAAAA4AEIAAAAAAAAAAAA4AEMAAAAAAAAAAAA4AEQAAAAAAAAAAAA4AFEAAAAAAAAAAAA4AFIAAAAAAAAAAAA4AFMAAAAAAAAAAAA4AFQAAAAAAAAAAAA4AFUAAAAAAAAAAAA4AGYAAAAAAAAAAAA4AGcAAAAAAAAAAAA5AAwAAAAAAAAAAAA5ACwAAAAAAAAAAAA5AC0AAAAAAAAAAAA5ADwAAAAAAAAAAAA5AD0AAAAAAAAAAAA5AD4AAAAAAAAAAAA5AD8AAAAAAAAAAAA5AEAAAAAAAAAAAAA5AEEAAAAAAAAAAAA5AEIAAAAAAAAAAAA5AEMAAAAAAAAAAAA5AEQAAAAAAAAAAAA5AGUAAAAAAAAAAAA5AGYAAAAAAAAAAAA5AGcAAAAAAAAAAAA6AA0AAAAAAAAAAAA6AB8AAAAAAAAAAAA6ADoAAAAAAAAAAAA6ADsAAAAAAAAAAAA6ADwAAAAAAAAAAAA6AD0AAAAAAAAAAAA6AD4AAAAAAAAAAAA6AD8AAAAAAAAAAAA6AEAAAAAAAAAAAAA6AEEAAAAAAAAAAAA6AEIAAAAAAAAAAAA6AEMAAAAAAAAAAAA6AEQAAAAAAAAAAAA6AGQAAAAAAAAAAAA6AGUAAAAAAAAAAAA6AGYAAAAAAAAAAAA7AA4AAAAAAAAAAAA7ABcAAAAAAAAAAAA7AB8AAAAAAAAAAAA7ACAAAAAAAAAAAAA7ADsAAAAAAAAAAAA7ADwAAAAAAAAAAAA7AD0AAAAAAAAAAAA7AD4AAAAAAAAAAAA7AD8AAAAAAAAAAAA7AEAAAAAAAAAAAAA7AEEAAAAAAAAAAAA7AEIAAAAAAAAAAAA7AEMAAAAAAAAAAAA7AEQAAAAAAAAAAAA7AGMAAAAAAAAAAAA7AGQAAAAAAAAAAAA7AGUAAAAAAAAAAAA8AA8AAAAAAAAAAAA8AB4AAAAAAAAAAAA8AB8AAAAAAAAAAAA8ACAAAAAAAAAAAAA8ADsAAAAAAAAAAAA8ADwAAAAAAAAAAAA8AD0AAAAAAAAAAAA8AD4AAAAAAAAAAAA8AD8AAAAAAAAAAAA8AEAAAAAAAAAAAAA8AEEAAAAAAAAAAAA8AEIAAAAAAAAAAAA8AEMAAAAAAAAAAAA8AEQAAAAAAAAAAAA8AGIAAAAAAAAAAAA8AGMAAAAAAAAAAAA8AGQAAAAAAAAAAAA9ABAAAAAAAAAAAAA9ACQAAAAAAAAAAAA9ADsAAAAAAAAAAAA9ADwAAAAAAAAAAAA9AD0AAAAAAAAAAAA9AD4AAAAAAAAAAAA9AD8AAAAAAAAAAAA9AEAAAAAAAAAAAAA9AEEAAAAAAAAAAAA9AEIAAAAAAAAAAAA9AEMAAAAAAAAAAAA9AEQAAAAAAAAAAAA9AGEAAAAAAAAAAAA9AGIAAAAAAAAAAAA9AGMAAAAAAAAAAAA+ABEAAAAAAAAAAAA+ADsAAAAAAAAAAAA+ADwAAAAAAAAAAAA+AD0AAAAAAAAAAAA+AD4AAAAAAAAAAAA+AD8AAAAAAAAAAAA+AEAAAAAAAAAAAAA+AEEAAAAAAAAAAAA+AEIAAAAAAAAAAAA+AEMAAAAAAAAAAAA+AEQAAAAAAAAAAAA+AGAAAAAAAAAAAAA+AGEAAAAAAAAAAAA+AGIAAAAAAAAAAAA/ABIAAAAAAAAAAAA/ADsAAAAAAAAAAAA/ADwAAAAAAAAAAAA/AD0AAAAAAAAAAAA/AD4AAAAAAAAAAAA/AD8AAAAAAAAAAAA/AEAAAAAAAAAAAAA/AEEAAAAAAAAAAAA/AEIAAAAAAAAAAAA/AEMAAAAAAAAAAAA/AEQAAAAAAAAAAAA/AF8AAAAAAAAAAAA/AGAAAAAAAAAAAAA/AGEAAAAAAAAAAABAABMAAAAAAAAAAABAADsAAAAAAAAAAABAADwAAAAAAAAAAABAAD0AAAAAAAAAAABAAD4AAAAAAAAAAABAAD8AAAAAAAAAAABAAEAAAAAAAAAAAABAAEEAAAAAAAAAAABAAEIAAAAAAAAAAABAAEMAAAAAAAAAAABAAEQAAAAAAAAAAABAAF4AAAAAAAAAAABAAF8AAAAAAAAAAABAAGAAAAAAAAAAAABBABQAAAAAAAAAAABBACUAAAAAAAAAAABBAEEAAAAAAAAAAABBAEIAAAAAAAAAAABBAEMAAAAAAAAAAABBAEQAAAAAAAAAAABBAF0AAAAAAAAAAABBAF4AAAAAAAAAAABBAF8AAAAAAAAAAABCABUAAAAAAAAAAABCACQAAAAAAAAAAABCAFwAAAAAAAAAAABCAF0AAAAAAAAAAABCAF4AAAAAAAAAAABDABYAAAAAAAAAAABDAFsAAAAAAAAAAABDAFwAAAAAAAAAAABDAF0AAAAAAAAAAABEABcAAAAAAAAAAABEAFoAAAAAAAAAAABEAFsAAAAAAAAAAABEAFwAAAAAAAAAAABFABgAAAAAAAAAAABFAEUAAAAAAAAAAABFAEYAAAAAAAAAAABFAEkAAAAAAAAAAABFAEoAAAAAAAAAAABFAFkAAAAAAAAAAABFAFoAAAAAAAAAAABFAFsAAAAAAAAAAABGABkAAAAAAAAAAABGAFgAAAAAAAAAAABGAFkAAAAAAAAAAABGAFoAAAAAAAAAAABHABoAAAAAAAAAAABHAFcAAAAAAAAAAABHAFgAAAAAAAAAAABHAFkAAAAAAAAAAABIABsAAAAAAAAAAABIAEYAAAAAAAAAAABIAFYAAAAAAAAAAABIAFcAAAAAAAAAAABIAFgAAAAAAAAAAABJABwAAAAAAAAAAABJAEYAAAAAAAAAAABJAEoAAAAAAAAAAABJAEsAAAAAAAAAAABJAFUAAAAAAAAAAABJAFYAAAAAAAAAAABJAFcAAAAAAAAAAABJAFoAAAAAAAAAAABKAB0AAAAAAAAAAABKAEkAAAAAAAAAAABKAEoAAAAAAAAAAABKAEsAAAAAAAAAAABKAFQAAAAAAAAAAABKAFUAAAAAAAAAAABKAFYAAAAAAAAAAABLAB0AAAAAAAAAAABLAB4AAAAAAAAAAABLACgAAAAAAAAAAABLAFMAAAAAAAAAAABLAFQAAAAAAAAAAABLAFUAAAAAAAAAAABMAB8AAAAAAAAAAABMAFIAAAAAAAAAAABMAFMAAAAAAAAAAABMAFQAAAAAAAAAAABNACAAAAAAAAAAAABNAFEAAAAAAAAAAABNAFIAAAAAAAAAAABNAFMAAAAAAAAAAABOACEAAAAAAAAAAABOAFAAAAAAAAAAAABOAFEAAAAAAAAAAABOAFIAAAAAAAAAAABPACIAAAAAAAAAAABPAE8AAAAAAAAAAABPAFAAAAAAAAAAAABPAFEAAAAAAAAAAABQACMAAAAAAAAAAABQACsAAAAAAAAAAABQACwAAAAAAAAAAABQAE4AAAAAAAAAAABQAE8AAAAAAAAAAABQAFAAAAAAAAAAAABRACQAAAAAAAAAAABRACsAAAAAAAAAAABRACwAAAAAAAAAAABRAC0AAAAAAAAAAABRAE0AAAAAAAAAAABRAE4AAAAAAAAAAABRAE8AAAAAAAAAAABSACUAAAAAAAAAAABSAEwAAAAAAAAAAABSAE0AAAAAAAAAAABSAE4AAAAAAAAAAABTACYAAAAAAAAAAABTAEsAAAAAAAAAAABTAEwAAAAAAAAAAABTAE0AAAAAAAAAAABUACcAAAAAAAAAAABUAEoAAAAAAAAAAABUAEsAAAAAAAAAAABUAEwAAAAAAAAAAABVACgAAAAAAAAAAABVAEkAAAAAAAAAAABVAEoAAAAAAAAAAABVAEsAAAAAAAAAAABWACkAAAAAAAAAAABWAEgAAAAAAAAAAABWAEkAAAAAAAAAAABWAEoAAAAAAAAAAABXACoAAAAAAAAAAABXAEcAAAAAAAAAAABXAEgAAAAAAAAAAABXAEkAAAAAAAAAAABYACsAAAAAAAAAAABYAEYAAAAAAAAAAABYAEcAAAAAAAAAAABYAEgAAAAAAAAAAABZACwAAAAAAAAAAABZAEUAAAAAAAAAAABZAEYAAAAAAAAAAABZAEcAAAAAAAAAAABaAC0AAAAAAAAAAABaAEQAAAAAAAAAAABaAEUAAAAAAAAAAABaAEYAAAAAAAAAAABbAC4AAAAAAAAAAABbAEMAAAAAAAAAAABbAEQAAAAAAAAAAABbAEUAAAAAAAAAAABcAC8AAAAAAAAAAABcAEIAAAAAAAAAAABcAEMAAAAAAAAAAABcAEQAAAAAAAAAAABdADAAAAAAAAAAAABdAEEAAAAAAAAAAABdAEIAAAAAAAAAAABdAEMAAAAAAAAAAABeADEAAAAAAAAAAABeAEAAAAAAAAAAAABeAEEAAAAAAAAAAABeAEIAAAAAAAAAAABfADIAAAAAAAAAAABfADYAAAAAAAAAAABfAD8AAAAAAAAAAABfAEAAAAAAAAAAAABfAEEAAAAAAAAAAABgADMAAAAAAAAAAABgADYAAAAAAAAAAABgAD4AAAAAAAAAAABgAD8AAAAAAAAAAABgAEAAAAAAAAAAAABhADQAAAAAAAAAAABhAD0AAAAAAAAAAABhAD4AAAAAAAAAAABhAD8AAAAAAAAAAABiADUAAAAAAAAAAABiADwAAAAAAAAAAABiAD0AAAAAAAAAAABiAD4AAAAAAAAAAABjADYAAAAAAAAAAABjADsAAAAAAAAAAABjADwAAAAAAAAAAABjAD0AAAAAAAAAAABkADcAAAAAAAAAAABkADoAAAAAAAAAAABkADsAAAAAAAAAAABkADwAAAAAAAAAAABlADgAAAAAAAAAAABlADkAAAAAAAAAAABlADoAAAAAAAAAAABlADsAAAAAAAAAAABmADkAAAAAAAAAAABmADoAAAAAAAAAAAA=")
 tile_set = ExtResource("4_blocking_tiles")
 script = ExtResource("5_blocking_layer")
 
@@ -170,6 +218,23 @@ position = Vector2(180, 900)
 
 [node name="OutdoorTownsfolk" type="Node" parent="."]
 script = ExtResource("10_townsfolk")
+npc_pockets = {
+"long-verge-cairn-warden": {
+"pocket_id": "long-verge-cairn-warden-purse",
+"pocket_gp": 9,
+"pocket_faction": "iron-companies"
+},
+"long-verge-old-soldier": {
+"pocket_id": "long-verge-old-soldier-purse",
+"pocket_gp": 9,
+"pocket_faction": "iron-companies"
+},
+"long-verge-recruit": {
+"pocket_id": "long-verge-recruit-purse",
+"pocket_gp": 9,
+"pocket_faction": "iron-companies"
+}
+}
 
 [node name="LongVergeDressing" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -178,47 +243,58 @@ y_sort_enabled = true
 z_index = -2
 
 [node name="MoorRoad01" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(300, 900)
+position = Vector2(314, 907)
+scale = Vector2(1.01, 1.01)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad02" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(540, 900)
+position = Vector2(537, 896)
+scale = Vector2(1.05, 1.05)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad03" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(780, 900)
+position = Vector2(791, 905)
+scale = Vector2(1.03, 1.03)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad04" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(1020, 900)
+position = Vector2(1013, 897)
+scale = Vector2(1.03, 1.03)
 texture = ExtResource("2_weftlumin")
 
 [node name="MoorRoad05" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(1260, 900)
+position = Vector2(1251, 905)
+scale = Vector2(1.03, 1.03)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad06" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(1500, 900)
+position = Vector2(1503, 894)
+scale = Vector2(0.99, 0.99)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad07" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(1740, 900)
+position = Vector2(1745, 899)
+scale = Vector2(0.98, 0.98)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad08" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(1980, 900)
+position = Vector2(1983, 889)
+scale = Vector2(1.03, 1.03)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad09" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(2220, 900)
+position = Vector2(2216, 909)
+scale = Vector2(0.96, 0.96)
 texture = ExtResource("1_weftlumin")
 
 [node name="MoorRoad10" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(2460, 900)
+position = Vector2(2460, 917)
+scale = Vector2(1.05, 1.05)
 texture = ExtResource("2_weftlumin")
 
 [node name="MoorRoad11" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
-position = Vector2(2700, 900)
+position = Vector2(2703, 909)
+scale = Vector2(1.05, 1.05)
 texture = ExtResource("1_weftlumin")
 
 [node name="ThinStreakRipple01" type="Sprite2D" parent="LongVergeDressing/GroundDetails"]
@@ -351,7 +427,7 @@ scale = Vector2(0.7, 0.7)
 texture = ExtResource("9_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MileCairnWest"]
-shape = SubResource("RectangleShape2D_weftlumin1")
+shape = SubResource("base_LongVergeDressing_SolidProps_MileCairnWest")
 
 [node name="MileCairnMid" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1900, 790)
@@ -361,7 +437,7 @@ scale = Vector2(0.7, 0.7)
 texture = ExtResource("9_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MileCairnMid"]
-shape = SubResource("RectangleShape2D_weftlumin1")
+shape = SubResource("base_LongVergeDressing_SolidProps_MileCairnMid")
 
 [node name="MileCairnEast" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(2660, 1010)
@@ -371,7 +447,7 @@ scale = Vector2(0.7, 0.7)
 texture = ExtResource("9_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MileCairnEast"]
-shape = SubResource("RectangleShape2D_weftlumin1")
+shape = SubResource("base_LongVergeDressing_SolidProps_MileCairnEast")
 
 [node name="BlackBandCairn" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(900, 1010)
@@ -381,7 +457,7 @@ scale = Vector2(0.8, 0.8)
 texture = ExtResource("10_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/BlackBandCairn"]
-shape = SubResource("RectangleShape2D_weftlumin2")
+shape = SubResource("base_LongVergeDressing_SolidProps_BlackBandCairn")
 
 [node name="FreshBandCairn" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(2460, 790)
@@ -391,7 +467,7 @@ scale = Vector2(0.75, 0.75)
 texture = ExtResource("10_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/FreshBandCairn"]
-shape = SubResource("RectangleShape2D_weftlumin2")
+shape = SubResource("base_LongVergeDressing_SolidProps_FreshBandCairn")
 
 [node name="SplitStone" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1400, 1070)
@@ -401,7 +477,7 @@ scale = Vector2(1.3, 1.3)
 texture = ExtResource("11_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/SplitStone"]
-shape = SubResource("RectangleShape2D_weftlumin3")
+shape = SubResource("base_LongVergeDressing_SolidProps_SplitStone")
 
 [node name="SplitStoneHalf" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1500, 1090)
@@ -412,7 +488,7 @@ texture = ExtResource("11_weftlumin")
 flip_h = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/SplitStoneHalf"]
-shape = SubResource("RectangleShape2D_weftlumin4")
+shape = SubResource("base_LongVergeDressing_SolidProps_SplitStoneHalf")
 
 [node name="PaymastersTent" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(2200, 560)
@@ -422,7 +498,7 @@ scale = Vector2(0.8, 0.8)
 texture = ExtResource("12_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/PaymastersTent"]
-shape = SubResource("RectangleShape2D_weftlumin5")
+shape = SubResource("base_LongVergeDressing_SolidProps_PaymastersTent")
 
 [node name="ColumnTent" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1930, 480)
@@ -433,7 +509,7 @@ texture = ExtResource("12_weftlumin")
 flip_h = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/ColumnTent"]
-shape = SubResource("RectangleShape2D_weftlumin6")
+shape = SubResource("base_LongVergeDressing_SolidProps_ColumnTent")
 
 [node name="PayCart" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(2430, 640)
@@ -443,7 +519,7 @@ scale = Vector2(0.8, 0.8)
 texture = ExtResource("13_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/PayCart"]
-shape = SubResource("RectangleShape2D_weftlumin7")
+shape = SubResource("base_LongVergeDressing_SolidProps_PayCart")
 
 [node name="MusterDrum" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(2080, 690)
@@ -453,7 +529,7 @@ scale = Vector2(0.6, 0.6)
 texture = ExtResource("14_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MusterDrum"]
-shape = SubResource("RectangleShape2D_weftlumin1")
+shape = SubResource("base_LongVergeDressing_SolidProps_MusterDrum")
 
 [node name="CampCrates" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(2330, 720)
@@ -463,7 +539,7 @@ scale = Vector2(0.7, 0.7)
 texture = ExtResource("15_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/CampCrates"]
-shape = SubResource("RectangleShape2D_weftlumin8")
+shape = SubResource("base_LongVergeDressing_SolidProps_CampCrates")
 
 [node name="GraveMarker" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1500, 1380)
@@ -473,7 +549,7 @@ scale = Vector2(0.8, 0.8)
 texture = ExtResource("16_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/GraveMarker"]
-shape = SubResource("RectangleShape2D_weftlumin8")
+shape = SubResource("base_LongVergeDressing_SolidProps_GraveMarker")
 
 [node name="UnnamedStoneWest" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1380, 1450)
@@ -483,7 +559,7 @@ scale = Vector2(0.8, 0.8)
 texture = ExtResource("17_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/UnnamedStoneWest"]
-shape = SubResource("RectangleShape2D_weftlumin1")
+shape = SubResource("base_LongVergeDressing_SolidProps_UnnamedStoneWest")
 
 [node name="UnnamedStoneEast" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1620, 1450)
@@ -494,7 +570,7 @@ texture = ExtResource("17_weftlumin")
 flip_h = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/UnnamedStoneEast"]
-shape = SubResource("RectangleShape2D_weftlumin1")
+shape = SubResource("base_LongVergeDressing_SolidProps_UnnamedStoneEast")
 
 [node name="GraveStanding" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1500, 1520)
@@ -504,7 +580,7 @@ scale = Vector2(0.9, 0.9)
 texture = ExtResource("18_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/GraveStanding"]
-shape = SubResource("RectangleShape2D_weftlumin8")
+shape = SubResource("base_LongVergeDressing_SolidProps_GraveStanding")
 
 [node name="MoorPine01" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(300, 400)
@@ -514,7 +590,7 @@ scale = Vector2(0.9, 0.9)
 texture = ExtResource("19_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine01"]
-shape = SubResource("RectangleShape2D_weftlumin9")
+shape = SubResource("base_LongVergeDressing_SolidProps_MoorPine01")
 
 [node name="MoorPine02" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(720, 300)
@@ -525,7 +601,7 @@ texture = ExtResource("19_weftlumin")
 flip_h = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine02"]
-shape = SubResource("RectangleShape2D_weftlumin9")
+shape = SubResource("base_LongVergeDressing_SolidProps_MoorPine02")
 
 [node name="MoorPine03" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1220, 360)
@@ -535,7 +611,7 @@ scale = Vector2(0.9, 0.9)
 texture = ExtResource("19_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine03"]
-shape = SubResource("RectangleShape2D_weftlumin9")
+shape = SubResource("base_LongVergeDressing_SolidProps_MoorPine03")
 
 [node name="MoorPine04" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(2700, 340)
@@ -546,7 +622,7 @@ texture = ExtResource("19_weftlumin")
 flip_h = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine04"]
-shape = SubResource("RectangleShape2D_weftlumin9")
+shape = SubResource("base_LongVergeDressing_SolidProps_MoorPine04")
 
 [node name="MoorPine05" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(2850, 1420)
@@ -556,7 +632,7 @@ scale = Vector2(0.9, 0.9)
 texture = ExtResource("19_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine05"]
-shape = SubResource("RectangleShape2D_weftlumin9")
+shape = SubResource("base_LongVergeDressing_SolidProps_MoorPine05")
 
 [node name="MoorPine06" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(240, 1560)
@@ -567,7 +643,7 @@ texture = ExtResource("19_weftlumin")
 flip_h = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine06"]
-shape = SubResource("RectangleShape2D_weftlumin9")
+shape = SubResource("base_LongVergeDressing_SolidProps_MoorPine06")
 
 [node name="MoorPine07" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1000, 1640)
@@ -577,7 +653,7 @@ scale = Vector2(0.9, 0.9)
 texture = ExtResource("19_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine07"]
-shape = SubResource("RectangleShape2D_weftlumin9")
+shape = SubResource("base_LongVergeDressing_SolidProps_MoorPine07")
 
 [node name="MoorPine08" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(2300, 1580)
@@ -588,7 +664,7 @@ texture = ExtResource("19_weftlumin")
 flip_h = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorPine08"]
-shape = SubResource("RectangleShape2D_weftlumin9")
+shape = SubResource("base_LongVergeDressing_SolidProps_MoorPine08")
 
 [node name="MoorRockNorth" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(1600, 420)
@@ -598,7 +674,7 @@ scale = Vector2(0.7, 0.7)
 texture = ExtResource("11_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorRockNorth"]
-shape = SubResource("RectangleShape2D_weftlumin10")
+shape = SubResource("base_LongVergeDressing_SolidProps_MoorRockNorth")
 
 [node name="MoorRockSouth" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(620, 1360)
@@ -609,7 +685,7 @@ texture = ExtResource("11_weftlumin")
 flip_h = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/MoorRockSouth"]
-shape = SubResource("RectangleShape2D_weftlumin11")
+shape = SubResource("base_LongVergeDressing_SolidProps_MoorRockSouth")
 
 [node name="FallenLog" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(2700, 1160)
@@ -619,7 +695,7 @@ scale = Vector2(0.9, 0.9)
 texture = ExtResource("20_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/FallenLog"]
-shape = SubResource("RectangleShape2D_weftlumin12")
+shape = SubResource("base_LongVergeDressing_SolidProps_FallenLog")
 
 [node name="OldStump" type="StaticBody2D" parent="LongVergeDressing/SolidProps"]
 position = Vector2(360, 720)
@@ -629,7 +705,7 @@ scale = Vector2(0.8, 0.8)
 texture = ExtResource("21_weftlumin")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LongVergeDressing/SolidProps/OldStump"]
-shape = SubResource("RectangleShape2D_weftlumin13")
+shape = SubResource("base_LongVergeDressing_SolidProps_OldStump")
 
 [node name="SpawnFromDom" type="Marker2D" parent="."]
 position = Vector2(2800, 900)
@@ -660,3 +736,67 @@ position = Vector2(1560, 1290)
 unit_id = &"bog-wight"
 group_id = &"bog-wight"
 
+[node name="WestCache" parent="." instance=ExtResource("26_chest")]
+position = Vector2(650, 730)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_west_cache"
+container_id = "long-verge-west-cache"
+loot_table_id = &"verge-march-kit"
+
+[node name="CampCache" parent="." instance=ExtResource("26_chest")]
+position = Vector2(2370, 1000)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_camp_cache"
+container_id = "long-verge-camp-cache"
+loot_table_id = &"verge-march-kit"
+
+[node name="ShoulderStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(1740, 520)
+; DRAFT: recognize the root growth hiding the opening; Wildlore is Nature.
+display_name = "OVERGROWN CACHE"
+interaction_flag = "loot_opened_long_verge_shoulder_store"
+lock_skill = "wildlore"
+locked_message = "Find the opening beneath the roots."
+lock_failed_message = "You cannot find the opening."
+container_id = "long-verge-shoulder-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="ColumnStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(1930, 600)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_column_store"
+lock_skill = "slip"
+container_id = "long-verge-column-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="CartStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(2620, 640)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_cart_store"
+lock_skill = "strain"
+container_id = "long-verge-cart-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="CrateStore" parent="." instance=ExtResource("26_chest")]
+position = Vector2(2510, 430)
+display_name = "SUPPLY CRATE"
+interaction_flag = "loot_opened_long_verge_crate_store"
+lock_skill = "slip"
+container_id = "long-verge-crate-store"
+owned_by_faction = "iron-companies"
+loot_table_id = &"road-cache"
+
+[node name="FormationPlan" parent="." instance=ExtResource("27_interactable")]
+position = Vector2(1800, 790)
+; DRAFT: optional tactical reading, with no combat bonus or progression gate.
+display_name = "FORMATION PLAN"
+prompt_text = "ASSESS FORMATION"
+interaction_text = "Formation assessed."
+interaction_flag = "chapter_long_verge_formation_assessed"
+lock_skill = "vantage"
+lock_id = "long-verge-formation-plan"
+locked_message = "Read the formation."
+lock_failed_message = "You cannot assess the formation."

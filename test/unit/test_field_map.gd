@@ -1,4 +1,4 @@
-extends GdUnitTestSuite
+extends "res://test/helpers/error_assert_suite.gd"
 
 const TEST_ROOM_SCENE := "res://world/test_room.tscn"
 const TEST_ROOM_BLOCKED_CELL := Vector2i(23, 23)
@@ -14,6 +14,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	super()
 	GameState.from_dict(_game_state_before)
 
 func test_every_gameplay_scene_exposes_field_layers_and_shared_iso_grid() -> void:
@@ -58,7 +59,11 @@ func test_dom_interiors_are_no_combat_zones_and_streets_and_wilds_are_not() -> v
 		var field: FieldMap = _find_field_map(scene)
 		assert_object(field).override_failure_message(scene_path).is_not_null()
 		if field != null:
-			var expected_no_combat: bool = scene_path.begins_with("res://world/interiors/")
+			# The Lower Trial Hall's side rooms hold fights (owner rulings of 2026-11-04).
+			var expected_no_combat: bool = (
+				scene_path.begins_with("res://world/interiors/")
+				and scene_path != "res://world/interiors/lower_trial_hall.tscn"
+			)
 			assert_bool(field.no_combat_zone()).override_failure_message(scene_path).is_equal(
 				expected_no_combat
 			)
@@ -76,10 +81,12 @@ func test_test_room_blocking_layer_is_authored_and_solid_in_the_shared_grid() ->
 	var painted: Array[Vector2i] = field.blocking().get_used_cells()
 	assert_array(painted).is_not_empty()
 	assert_array(painted).contains([TEST_ROOM_BLOCKED_CELL])
+	# Painted cells are ground cells; on hexes every hex whose centre lies on one is solid.
 	var grid: IsoGrid = field.iso_grid()
 	for cell: Vector2i in painted:
-		assert_bool(grid.is_point_solid(cell)).override_failure_message(str(cell)).is_true()
-	assert_bool(grid.is_point_solid(TEST_ROOM_OPEN_CELL)).is_false()
+		for grid_cell: Vector2i in grid.cells_on_square(cell):
+			assert_bool(grid.is_point_solid(grid_cell)).override_failure_message("%s (%s)" % [cell, grid_cell]).is_true()
+	assert_bool(grid.is_point_solid(grid.cell_at_square(TEST_ROOM_OPEN_CELL))).is_false()
 
 	scene.queue_free()
 	await get_tree().process_frame
@@ -214,6 +221,28 @@ func test_combat_mode_hides_field_labels_and_prompts_and_restores_them() -> void
 		assert_bool(labels[index].self_modulate.is_equal_approx(before[index])).is_true()
 	assert_bool(_shows(sign)).is_true()
 	assert_bool(_shows(prompt)).is_true()
+	scene.queue_free()
+	await get_tree().process_frame
+
+
+func test_a_world_label_freed_before_its_deferred_theming_is_skipped() -> void:
+	var scene: Node = (load(TEST_ROOM_SCENE) as PackedScene).instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	assert_object(_find_field_map(scene)).is_not_null()
+	# A label that lives for less than a frame (spawn churn on a populated field) must not
+	# reach the deferred theming call as a freed object: that prints an engine error.
+	var kept := Label.new()
+	await assert_error(func() -> void:
+		var brief := Label.new()
+		scene.add_child(brief)
+		brief.free()
+		# A label that stays gets the world face once the deferred call runs.
+		scene.add_child(kept)
+		await get_tree().process_frame
+	).is_success()
+	assert_object(kept.theme).is_not_null()
+	assert_str(String(kept.theme_type_variation)).is_equal("WorldLabel")
 	scene.queue_free()
 	await get_tree().process_frame
 

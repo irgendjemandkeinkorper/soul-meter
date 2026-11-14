@@ -11,6 +11,19 @@ extends GdUnitTestSuite
 ## placement that is merely valid is not enough — it has to be the same placement on a reload,
 ## which is what a save round trip and a replay both depend on.
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
 
 func _rules() -> CombatRules:
 	var rules := CombatRules.new()
@@ -155,3 +168,71 @@ func test_existing_occupancy_is_never_handed_to_a_companion() -> void:
 	assert_that(cells[0]).is_equal(Vector2i(2, 2))
 	# (1, 1) would have been the row-then-column winner; the foe holds it, so (2, 1) wins.
 	assert_that(cells[1]).is_equal(Vector2i(2, 1))
+
+
+# --- T1 (2026-11-07): a set-piece seat never lands across a wall from the party's anchor ---
+
+
+## A wall one cell thick along row `row`, every column, except the cells in `doors`.
+func _wall_row(model: GridBattlefieldModel, width: int, row: int, doors: Array = []) -> void:
+	for x in width:
+		if not doors.has(Vector2i(x, row)):
+			model.set_cliff(Vector2i(x, row), true)
+
+
+## The enemy's wanted cell is open but lies beyond the wall. Without the anchor the search
+## returns it as it is; with the anchor the seat is the first free cell on the party's side.
+func test_seat_wanted_across_a_wall_stays_on_the_anchor_side() -> void:
+	var model := _model(9, 9)
+	_wall_row(model, 9, 4)
+	var anchor := Vector2i(4, 6)
+	var wanted := Vector2i(4, 2)
+	assert_that(model.seat_near(wanted, {anchor: true})["cell"]).is_equal(wanted)
+	var seat := model.seat_near(wanted, {anchor: true}, anchor)
+	assert_bool(bool(seat["ok"])).is_true()
+	assert_that(seat["cell"]).is_equal(Vector2i(1, 5))
+
+
+## The wanted cell is inside the wall. The old search's first ring holds the far side first
+## (row then column); with the anchor only the party's side counts.
+func test_seat_wanted_inside_a_wall_stays_on_the_anchor_side() -> void:
+	var model := _model(9, 9)
+	_wall_row(model, 9, 4)
+	var anchor := Vector2i(4, 6)
+	var wanted := Vector2i(4, 4)
+	assert_int((model.seat_near(wanted, {anchor: true})["cell"] as Vector2i).y).is_less(4)
+	var seat := model.seat_near(wanted, {anchor: true}, anchor)
+	assert_bool(bool(seat["ok"])).is_true()
+	assert_that(seat["cell"]).is_equal(Vector2i(3, 5))
+
+
+## A door further along the wall connects the two sides, but only by a way round more than
+## `PLACEMENT_SEARCH_RADIUS` longer than the straight line: a party standing against a
+## building's wall does not get its foe seated in the street beyond. Without that bound the
+## first far-side cell in ring three, (3, 0), would win on row order.
+func test_a_door_along_the_wall_does_not_open_the_far_side() -> void:
+	var model := _model(9, 9)
+	_wall_row(model, 9, 4, [Vector2i(6, 4)])
+	var anchor := Vector2i(0, 6)
+	var seat := model.seat_near(Vector2i(0, 2), {anchor: true}, anchor)
+	assert_bool(bool(seat["ok"])).is_true()
+	assert_that(seat["cell"]).is_equal(Vector2i(0, 5))
+
+
+## Nothing free that the anchor reaches within the radius: the seat fails, so `Battle` fails
+## the set-piece fast (#582) instead of seating the foe elsewhere.
+func test_seat_with_no_reachable_free_cell_fails() -> void:
+	var model := _model(9, 9)
+	var anchor := Vector2i(4, 4)
+	_seal_around(model, anchor, [])
+	var seat := model.seat_near(Vector2i(6, 4), {anchor: true}, anchor)
+	assert_bool(bool(seat["ok"])).is_false()
+	assert_bool(seat.has("cell")).is_false()
+
+
+## Open ground: the anchor changes nothing.
+func test_seat_on_open_ground_keeps_the_wanted_cell() -> void:
+	var model := _model(9, 9)
+	var anchor := Vector2i(2, 4)
+	var seat := model.seat_near(Vector2i(6, 4), {anchor: true}, anchor)
+	assert_that(seat["cell"]).is_equal(Vector2i(6, 4))

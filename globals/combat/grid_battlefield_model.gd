@@ -21,6 +21,14 @@ extends BattlefieldModel
 ## cell index wins), and `reachable_positions()` sorts its own result by handle string, so the
 ## same query returns the same answer every time — required for the save/replay path this
 ## interface will eventually serve (doc §1.8).
+##
+## Hexes (owner item 34, slice H2; `docs/design/hex-grid-plan-2026-11-03.md`). When the shared
+## grid runs in hex mode (`soul_meter/grid/hex`), every cell below is an axial hex and the rules
+## carry over by the plan's table: distances count hex steps (`GridMetric`), authored reaches and
+## radii convert there, a move costs 1 CT per two hexes (an odd count rounds up), facing has six
+## directions (front 1, side 4, back 1), sight lines walk hex lines, and each hex takes its
+## height, cover and terrain from the square cell under its centre. Position handles keep their
+## shape; on hexes they carry `q,r`.
 
 const ALLY := &"ally"
 const ENEMY := &"enemy"
@@ -29,6 +37,11 @@ const ENEMY := &"enemy"
 ## indices increase clockwise on screen (Godot's y grows downward).
 const _ORDER: Array[StringName] = [
 	&"e", &"se", &"s", &"sw", &"w", &"nw", &"n", &"ne"
+]
+## Six hex facings in `HexMath.DIRECTIONS` order. They are screen directions, while the square
+## names above are grid directions, so they carry a prefix and never alias one another.
+const HEX_ORDER: Array[StringName] = [
+	&"hex_e", &"hex_ne", &"hex_nw", &"hex_w", &"hex_sw", &"hex_se"
 ]
 
 ## Chebyshev cells a query will scan outward from an actor while bounding reachable_positions()
@@ -91,6 +104,8 @@ var _occupancy: Dictionary = {}  ## Vector2i -> BattleActor
 var _groups: Dictionary = {ALLY: [], ENEMY: []}
 ## Actor references are local setup inputs: combat IDs are assigned by Controller.start().
 var _initial_cells: Dictionary = {}
+## Live probes: combat_id -> the real cell, restored by clear_probe().
+var _probe_saved: Dictionary = {}
 
 
 func configure_initial_cells(cells: Dictionary) -> Dictionary:
@@ -102,7 +117,7 @@ func configure_initial_cells(cells: Dictionary) -> Dictionary:
 			return _blocked(&"position", "Initial placement requires actors and cells.", {"type": &"known_position"})
 		var cell: Vector2i = cells[actor]
 		if not _grid.is_in_bounds(cell):
-			return _blocked(&"position", "That cell is outside the battlefield.", {"type": &"cell_in_bounds"})
+			return _blocked(&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"cell_in_bounds"})
 		if occupied.has(cell):
 			return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
 		if _grid.is_point_solid(cell):
@@ -133,7 +148,7 @@ func resolve_placement(desired: Array[Vector2i]) -> Dictionary:
 	if not _is_seatable(anchor):
 		return _blocked(
 			&"position",
-			"The party cannot enter combat from this cell.",
+			"The party cannot enter combat from this %s." % GridMetric.step_word(1),
 			{"type": &"anchor_placeable"},
 		)
 	var taken: Dictionary = {anchor: true}
@@ -148,7 +163,7 @@ func resolve_placement(desired: Array[Vector2i]) -> Dictionary:
 		if not bool(search.get("ok", false)):
 			return _blocked(
 				&"position",
-				"No free cell within %d of the party." % PLACEMENT_SEARCH_RADIUS,
+				"No free %s within %d of the party." % [GridMetric.step_word(1), PLACEMENT_SEARCH_RADIUS],
 				{"type": &"cell_free"},
 			)
 		var found: Vector2i = search["cell"]
@@ -161,9 +176,14 @@ func resolve_placement(desired: Array[Vector2i]) -> Dictionary:
 ## reachable cell under the same bounded search `resolve_placement()` uses for an overlapping
 ## companion. `taken` holds the cells this placement pass already handed out. Same return
 ## shape as that search: `{"ok": true, "cell": Vector2i}` or `{"ok": false}`.
-func seat_near(wanted: Vector2i, taken: Dictionary) -> Dictionary:
+##
+## With `reach_from` (a cell, the party's anchor), the seat must also stand on the anchor's
+## side of every wall: see `_nearest_cell_reached_from()`. Without it the search is unchanged.
+func seat_near(wanted: Vector2i, taken: Dictionary, reach_from: Variant = null) -> Dictionary:
 	if _grid == null:
 		return {"ok": false}
+	if reach_from is Vector2i:
+		return _nearest_cell_reached_from(reach_from, wanted, taken)
 	if not taken.has(wanted) and _is_seatable(wanted):
 		return {"ok": true, "cell": wanted}
 	return _nearest_free_cell(wanted, taken)
@@ -189,16 +209,21 @@ func _is_seatable(cell: Vector2i) -> bool:
 func _nearest_free_cell(from: Vector2i, taken: Dictionary) -> Dictionary:
 	var visited: Dictionary = {from: true}
 	var frontier: Array[Vector2i] = [from]
-	for _depth in PLACEMENT_SEARCH_RADIUS:
+	var steps: Array[Vector2i] = _grid.neighbor_offsets() if _grid.hex_mode else _PLACEMENT_STEPS
+	for _depth in GridMetric.radius(PLACEMENT_SEARCH_RADIUS):
 		var ring: Array[Vector2i] = []
 		for cell: Vector2i in frontier:
-			for step: Vector2i in _PLACEMENT_STEPS:
+			for step: Vector2i in steps:
 				var neighbour: Vector2i = cell + step
 				if visited.has(neighbour):
 					continue
-				visited[neighbour] = true
 				if not _grid.is_in_bounds(neighbour) or _grid.is_point_solid(neighbour):
+					visited[neighbour] = true
 					continue
+				if _grid.is_edge_walled(cell, neighbour):
+					# Another ring cell may still reach it without crossing the wall.
+					continue
+				visited[neighbour] = true
 				ring.append(neighbour)
 		ring.sort_custom(_row_then_column)
 		for cell: Vector2i in ring:
@@ -208,6 +233,65 @@ func _nearest_free_cell(from: Vector2i, taken: Dictionary) -> Dictionary:
 			break
 		frontier = ring
 	return {"ok": false}
+
+
+## Set-piece seats that cannot land across a wall (T1, 2026-11-07). `wanted` comes from a fixed
+## screen offset, so it may lie in the next room, or inside the wall itself; the search around
+## it then accepts only cells the anchor reaches. The candidates are the free cells within
+## `PLACEMENT_SEARCH_RADIUS` of `wanted`, nearest ring first, each ring by row then column, as in
+## `_nearest_free_cell()`. A candidate is reached when a path from the anchor gets there without
+## entering a wall or cliff, crossing a walled hex edge, or cutting a wall corner on squares, and
+## that path is at most `PLACEMENT_SEARCH_RADIUS` steps longer than the straight distance. The
+## bound keeps a door far along the wall from opening the far side: a party inside a building
+## does not get its foes seated in the street beyond the wall it stands against. Actors do not
+## close a path; they only take their own cells.
+func _nearest_cell_reached_from(anchor: Vector2i, wanted: Vector2i, taken: Dictionary) -> Dictionary:
+	var radius := GridMetric.radius(PLACEMENT_SEARCH_RADIUS)
+	var depth := _wall_free_steps(anchor, GridMetric.distance(anchor, wanted) + 2 * radius)
+	for ring_steps in radius + 1:
+		var ring := GridMetric.ring(wanted, ring_steps)
+		ring.sort_custom(_row_then_column)
+		for cell: Vector2i in ring:
+			if not depth.has(cell) or taken.has(cell) or not _is_seatable(cell):
+				continue
+			if int(depth[cell]) <= GridMetric.distance(anchor, cell) + radius:
+				return {"ok": true, "cell": cell}
+	return {"ok": false}
+
+
+## Steps from `from` to every cell a wall-free path reaches within `limit` steps (breadth-first,
+## so each count is the shortest). Hex steps may not cross a walled edge; a square diagonal may
+## not cut the corner of a blocked cell, the rule movement uses. A cell an actor stands on is
+## passable here: a body is not a wall.
+func _wall_free_steps(from: Vector2i, limit: int) -> Dictionary:
+	var depth: Dictionary = {from: 0}
+	var frontier: Array[Vector2i] = [from]
+	var steps: Array[Vector2i] = _grid.neighbor_offsets() if _grid.hex_mode else _PLACEMENT_STEPS
+	for count in range(1, limit + 1):
+		var next_frontier: Array[Vector2i] = []
+		for cell: Vector2i in frontier:
+			for step: Vector2i in steps:
+				var next := cell + step
+				if depth.has(next) or _blocks_path(next):
+					continue
+				if _grid.hex_mode:
+					if _grid.is_edge_walled(cell, next):
+						continue
+				elif step.x != 0 and step.y != 0:
+					if _blocks_path(cell + Vector2i(step.x, 0)) or _blocks_path(cell + Vector2i(0, step.y)):
+						continue
+				depth[next] = count
+				next_frontier.append(next)
+		if next_frontier.is_empty():
+			break
+		frontier = next_frontier
+	return depth
+
+
+func _blocks_path(cell: Vector2i) -> bool:
+	if not _grid.is_in_bounds(cell):
+		return true
+	return _grid.is_point_solid(cell) and not _occupancy.has(cell)
 
 
 func _row_then_column(a: Vector2i, b: Vector2i) -> bool:
@@ -251,24 +335,40 @@ func _read_authored_terrain(ground: TileMapLayer) -> void:
 	var terrain: TileMapLayer = (
 		parent.find_child("Terrain", true, false) as TileMapLayer if parent != null else null
 	)
-	if terrain == null:
+	if terrain == null or terrain.tile_set == null:
 		return
-	for cell: Vector2i in terrain.get_used_cells():
-		var tile_data: TileData = terrain.get_cell_tile_data(cell)
+	# A tile set need not carry every layer (the map terrain set has no `visibility`), and asking
+	# a tile for a layer its set lacks logs an engine error, so only present layers are read.
+	var present := {}
+	for layer: StringName in [&"cover", &"blocks_fire", &"visibility", &"elevation"]:
+		present[layer] = terrain.tile_set.get_custom_data_layer_by_name(layer) >= 0
+	for square_cell: Vector2i in terrain.get_used_cells():
+		var tile_data: TileData = terrain.get_cell_tile_data(square_cell)
 		if tile_data == null:
 			continue
-		var cover_value: Variant = tile_data.get_custom_data(&"cover")
-		if cover_value is bool and cover_value:
-			set_cover(cell)
-		var obstacle_value: Variant = tile_data.get_custom_data(&"blocks_fire")
-		if obstacle_value is bool and obstacle_value:
-			set_obstacle(cell)
-		var visibility_value: Variant = tile_data.get_custom_data(&"visibility")
-		if visibility_value is String and not (visibility_value as String).is_empty():
-			set_visibility(cell, StringName(visibility_value))
-		var elevation_value: Variant = tile_data.get_custom_data(&"elevation")
-		if elevation_value is int and elevation_value != 0:
-			set_elevation(cell, clampi(elevation_value, 0, DS.ELEVATION_MAX))
+		var cover_value: Variant = tile_data.get_custom_data(&"cover") if present[&"cover"] else null
+		var obstacle_value: Variant = tile_data.get_custom_data(&"blocks_fire") if present[&"blocks_fire"] else null
+		var visibility_value: Variant = tile_data.get_custom_data(&"visibility") if present[&"visibility"] else null
+		var elevation_value: Variant = tile_data.get_custom_data(&"elevation") if present[&"elevation"] else null
+		# On hexes, every hex whose centre lies on the authored cell takes its terrain.
+		for cell: Vector2i in _grid.cells_on_square(square_cell):
+			if cover_value is bool and cover_value:
+				set_cover(cell)
+			if obstacle_value is bool and obstacle_value:
+				set_obstacle(cell)
+			if visibility_value is String and not (visibility_value as String).is_empty():
+				set_visibility(cell, StringName(visibility_value))
+			if elevation_value is int and elevation_value != 0:
+				set_elevation(cell, clampi(elevation_value, 0, DS.ELEVATION_MAX))
+
+
+## The cells of this battlefield on one authored square cell: the cell itself, or on hexes the
+## four to six hexes whose centre lies on it. Boards authored in cells (harnesses, fixtures)
+## write their terrain through this, so a ridge stays a ridge on either grid.
+func cells_on_square(square_cell: Vector2i) -> Array[Vector2i]:
+	if _grid == null:
+		return [square_cell]
+	return _grid.cells_on_square(square_cell)
 
 
 ## Terrain height at `cell`. Scales the CT cost of entering it — never makes it impassable.
@@ -310,11 +410,15 @@ func setup(allies: Array[BattleActor], enemies: Array[BattleActor]) -> void:
 		_sides[actor.combat_id] = ENEMY
 	if _grid == null:
 		return
-	var rect := _grid.get_used_rect()
+	# The default columns are authored on the square cells; on hexes each seat is the hex under
+	# that cell's centre.
+	var rect := _grid.square_rect()
 	for i in allies.size():
-		_place(allies[i], _initial_cells.get(allies[i], Vector2i(rect.position.x, rect.position.y + i)), &"e")
+		var seat := _grid.cell_at_square(Vector2i(rect.position.x, rect.position.y + i))
+		_place(allies[i], _initial_cells.get(allies[i], seat), side_facing(ALLY))
 	for i in enemies.size():
-		_place(enemies[i], _initial_cells.get(enemies[i], Vector2i(rect.end.x - 1, rect.position.y + i)), &"w")
+		var seat := _grid.cell_at_square(Vector2i(rect.end.x - 1, rect.position.y + i))
+		_place(enemies[i], _initial_cells.get(enemies[i], seat), side_facing(ENEMY))
 	_initial_cells.clear()
 
 
@@ -370,7 +474,7 @@ func admit_combatant(actor: BattleActor, position: StringName, side: StringName)
 	var cell: Vector2i = parsed["cell"]
 	if not _grid.is_in_bounds(cell):
 		return _blocked(
-			&"position", "That cell is outside the battlefield.", {"type": &"cell_in_bounds"}
+			&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"cell_in_bounds"}
 		)
 	if _occupancy.has(cell):
 		return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
@@ -379,7 +483,7 @@ func admit_combatant(actor: BattleActor, position: StringName, side: StringName)
 	_sides[actor.combat_id] = side
 	var group: Array = _groups.get(side, [])
 	group.append(actor)
-	_place(actor, cell, &"w" if side == ENEMY else &"e")
+	_place(actor, cell, side_facing(side))
 	return _allowed({"to_side": side, "to_position": position_of(actor)})
 
 
@@ -474,7 +578,7 @@ func target_query(actor: BattleActor, target: BattleActor, profile: StringName) 
 	if profile == &"ranged":
 		return line_of_sight(actor, target)
 	if profile == &"melee":
-		if _chebyshev(_cells[actor.combat_id], _cells[target.combat_id]) > 1:
+		if GridMetric.distance(_cells[actor.combat_id], _cells[target.combat_id]) > 1:
 			return _blocked(
 				&"position", "Move adjacent to make a melee attack.", {"type": &"adjacency"}
 			)
@@ -579,15 +683,12 @@ func _cover_bonus_between(attacker_cell: Vector2i, target_cell: Vector2i) -> int
 
 ## The cover cell the target hugs against a shot from `attacker_cell`, or null.
 func _cover_cell_between(attacker_cell: Vector2i, target_cell: Vector2i) -> Variant:
-	for y_offset in range(-1, 2):
-		for x_offset in range(-1, 2):
-			if x_offset == 0 and y_offset == 0:
-				continue
-			var cover_cell := target_cell + Vector2i(x_offset, y_offset)
-			if not bool(_cover.get(cover_cell, false)):
-				continue
-			if _chebyshev(cover_cell, attacker_cell) < _chebyshev(target_cell, attacker_cell):
-				return cover_cell
+	for offset: Vector2i in GridMetric.neighbor_offsets():
+		var cover_cell := target_cell + offset
+		if not bool(_cover.get(cover_cell, false)):
+			continue
+		if GridMetric.distance(cover_cell, attacker_cell) < GridMetric.distance(target_cell, attacker_cell):
+			return cover_cell
 	return null
 
 
@@ -597,7 +698,7 @@ func flank_bonus(actor: BattleActor, target: BattleActor) -> int:
 	var target_facing := facing_of(target)
 	if target_facing == &"":
 		return 0
-	var attack_dir := _direction_of(
+	var attack_dir := facing_for_delta(
 		_cells[actor.combat_id] - _cells[target.combat_id]
 	)
 	# Front is the only safe direction; side and back both consume the flank term.
@@ -631,20 +732,15 @@ func tiles_snapshot() -> Array[Dictionary]:
 	if _grid == null:
 		return []
 	if _tiles_snapshot_cache.is_empty():
-		var rect := _grid.get_used_rect()
-		for y in range(rect.position.y, rect.end.y):
-			for x in range(rect.position.x, rect.end.x):
-				var cell := Vector2i(x, y)
-				if not _grid.is_in_bounds(cell):
-					continue
-				_tiles_snapshot_cache.append({
-					"x": x,
-					"y": y,
-					"height_delta": elevation_at(cell),
-					"cliff": bool(_cliffs.get(cell, false)),
-					"cover": bool(_cover.get(cell, false)),
-					"visibility": String(visibility_at(cell)),
-				})
+		for cell: Vector2i in _grid.region_cells():
+			_tiles_snapshot_cache.append({
+				"x": cell.x,
+				"y": cell.y,
+				"height_delta": elevation_at(cell),
+				"cliff": bool(_cliffs.get(cell, false)),
+				"cover": bool(_cover.get(cell, false)),
+				"visibility": String(visibility_at(cell)),
+			})
 	return _tiles_snapshot_cache
 
 
@@ -693,6 +789,19 @@ func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName
 	_grid.set_point_solid(origin, false)
 	var tree := _settled_paths(origin, search_cap)
 	_grid.set_point_solid(origin, was_solid)
+	if _grid.hex_mode:
+		# Every hex within the budget is in the capped search's tree.
+		for cell: Vector2i in (tree["settled"] as Dictionary):
+			if cell == origin:
+				continue
+			var hex_handle := _handle_for_cell(cell)
+			var hex_query := _path_query(actor, hex_handle, search_cap, tree)
+			if bool(hex_query.get("allowed", false)) and int(hex_query.get("ct_cost", 0)) <= ct_budget:
+				handles.append(String(hex_handle))
+		handles.sort()
+		for handle_text: String in handles:
+			result.append(StringName(handle_text))
+		return result
 	var min_y := maxi(rect.position.y, origin.y - max_radius)
 	var max_y := mini(rect.end.y - 1, origin.y + max_radius)
 	var min_x := maxi(rect.position.x, origin.x - max_radius)
@@ -772,7 +881,7 @@ func _path_query(
 	var dest_cell: Vector2i = parsed["cell"]
 	if not _grid.is_in_bounds(dest_cell):
 		return _blocked(
-			&"position", "That cell is outside the battlefield.", {"type": &"in_bounds"}
+			&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"in_bounds"}
 		)
 	if _grid.is_point_solid(dest_cell) and _occupancy.get(dest_cell) == null:
 		return _blocked(&"position", "That cell is impassable.", {"type": &"cell_passable"})
@@ -791,7 +900,7 @@ func _path_query(
 	else:
 		path = _settled_path(tree, origin_cell, dest_cell)
 	if path.is_empty():
-		return _blocked(&"position", "No path to that cell.", {"type": &"reachable"})
+		return _blocked(&"position", "No path to that %s." % GridMetric.step_word(1), {"type": &"reachable"})
 	var handles: Array[StringName] = []
 	for point in path:
 		handles.append(_handle_for_cell(Vector2i(point)))
@@ -809,9 +918,10 @@ func set_facing(actor: BattleActor, facing: StringName) -> Dictionary:
 		return _blocked(
 			&"facing", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
 		)
-	if not _ORDER.has(facing):
+	var order := facing_order()
+	if not order.has(facing):
 		return _blocked(
-			&"facing", "Unknown facing: %s." % facing, {"type": &"facing", "valid": _ORDER.duplicate()}
+			&"facing", "Unknown facing: %s." % facing, {"type": &"facing", "valid": order.duplicate()}
 		)
 	_facings[actor.combat_id] = facing
 	return _allowed({"facing": facing})
@@ -827,6 +937,24 @@ func line_of_sight(actor: BattleActor, target: BattleActor) -> Dictionary:
 			&"blocked_by_range", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
 		)
 	return _line_of_sight_cells(_cells[actor.combat_id], _cells[target.combat_id], actor, target)
+
+
+## Combat polish 2026-11-02: the actor's cell reads as `cell` for targeting, range, sight and
+## positional forecasts until clear_probe(). Only `_cells` moves: occupancy and the shared
+## IsoGrid are untouched, so nothing a probe answers leaks into pathing or the board.
+func probe_cell(actor: BattleActor, cell: Vector2i) -> void:
+	if actor == null or not _cells.has(actor.combat_id):
+		return
+	if not _probe_saved.has(actor.combat_id):
+		_probe_saved[actor.combat_id] = _cells[actor.combat_id]
+	_cells[actor.combat_id] = cell
+
+
+func clear_probe(actor: BattleActor) -> void:
+	if actor == null or not _probe_saved.has(actor.combat_id):
+		return
+	_cells[actor.combat_id] = _probe_saved[actor.combat_id]
+	_probe_saved.erase(actor.combat_id)
 
 
 func occupant_of(position: StringName) -> BattleActor:
@@ -847,7 +975,7 @@ func cell_query(cell: Vector2i) -> Dictionary:
 		return _blocked(&"position", "Grid battlefield has not been built.", {"type": &"grid_ready"})
 	if not _grid.is_in_bounds(cell):
 		return _blocked(
-			&"position", "That cell is outside the battlefield.", {"type": &"in_bounds", "cell": cell}
+			&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"in_bounds", "cell": cell}
 		)
 	var occupant: BattleActor = _occupancy.get(cell)
 	var passable := not _grid.is_point_solid(cell) or occupant != null
@@ -870,7 +998,7 @@ func displace(actor: BattleActor, cell: Vector2i) -> Dictionary:
 			&"position", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
 		)
 	if not _grid.is_in_bounds(cell):
-		return _blocked(&"position", "That cell is outside the battlefield.", {"type": &"in_bounds"})
+		return _blocked(&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"in_bounds"})
 	var occupant: BattleActor = _occupancy.get(cell)
 	if occupant != null and occupant != actor:
 		return _blocked(&"position", "That cell is occupied.", {"type": &"cell_free"})
@@ -909,18 +1037,19 @@ func _line_of_sight_cells(
 ) -> Dictionary:
 	if not _grid.is_in_bounds(to_cell):
 		return _blocked(
-			&"blocked_by_range", "That cell is outside the battlefield.", {"type": &"in_bounds"}
+			&"blocked_by_range", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"in_bounds"}
 		)
 	var range_bonus := int(viewer.defining_effects.get("range_bonus", 0)) if viewer != null else 0
-	if _chebyshev(from_cell, to_cell) > _LOS_MAX_RANGE + range_bonus:
+	var max_range := float(GridMetric.reach(int(_LOS_MAX_RANGE) + range_bonus))
+	if GridMetric.distance(from_cell, to_cell) > max_range:
 		return _blocked(
 			&"blocked_by_range",
 			"Target is beyond line-of-sight range.",
-			{"type": &"range", "max_range": _LOS_MAX_RANGE + range_bonus},
+			{"type": &"range", "max_range": max_range},
 		)
 	var from_elev := elevation_at(from_cell)
 	var to_elev := elevation_at(to_cell)
-	var line := _bresenham(from_cell, to_cell)
+	var line: Array[Vector2i] = HexMath.line(from_cell, to_cell) if _grid.hex_mode else _bresenham(from_cell, to_cell)
 	var last_index := line.size() - 1
 	for i in range(1, last_index):
 		var cell: Vector2i = line[i]
@@ -1038,6 +1167,14 @@ func release_field_grid() -> void:
 
 func _path_ct_cost(path: PackedVector2Array) -> int:
 	var move_cost := _rules.move_ct_cost if _rules != null else 1
+	if _grid.hex_mode:
+		# Two hexes cover one cell's ground: half a cell's price each, rounded up once for the
+		# whole move. The AP economy charges whole cells (`_priced_move_action`), so an odd
+		# count rounds up there: 3 hexes = 2 AP. PROVISIONAL (owner item 34).
+		var halves := 0.0
+		for i in range(1, path.size()):
+			halves += move_cost * _grid.get_point_weight_scale(Vector2i(path[i]))
+		return int(ceil(halves / 2.0 - 0.000001))
 	var total := 0
 	for i in range(1, path.size()):
 		var cell := Vector2i(path[i])
@@ -1055,6 +1192,9 @@ func _search_cost_cap(ct_budget: int) -> float:
 	var move_cost := _rules.move_ct_cost if _rules != null else 1
 	if move_cost <= 0:
 		return INF
+	if _grid != null and _grid.hex_mode:
+		# A hex step costs `w` to search and `move_ct_cost * w / 2` CT before the one rounding.
+		return float(ct_budget) * 2.0 / float(move_cost)
 	return float(ct_budget) * sqrt(2.0) / float(move_cost)
 
 
@@ -1094,77 +1234,161 @@ func _settled_path(tree: Dictionary, from_cell: Vector2i, to_cell: Vector2i) -> 
 ## Settle order, and so every tie-break, is identical either way: the walk only stops sooner.
 func _dijkstra(from_cell: Vector2i, stop_at: Variant, max_search_cost: float) -> Dictionary:
 	var rect := _grid.get_used_rect()
-	var frontier: Array[Dictionary] = [{"cell": from_cell, "cost": 0.0}]
+	var frontier := _Frontier.new()
+	frontier.push(from_cell, 0.0, _cell_index(from_cell, rect))
 	var costs: Dictionary = {from_cell: 0.0}
 	var previous: Dictionary = {from_cell: from_cell}
 	var settled: Dictionary = {}
 	while not frontier.is_empty():
-		frontier.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-			if not is_equal_approx(float(a["cost"]), float(b["cost"])):
-				return float(a["cost"]) < float(b["cost"])
-			return _cell_index(a["cell"], rect) < _cell_index(b["cell"], rect)
-		)
-		var current: Dictionary = frontier.pop_front()
-		var cell: Vector2i = current["cell"]
-		if float(current["cost"]) > float(costs.get(cell, INF)):
+		var cell := frontier.top_cell()
+		var current_cost := frontier.top_cost()
+		frontier.pop()
+		if current_cost > float(costs.get(cell, INF)):
 			continue
-		if float(current["cost"]) > max_search_cost + 0.000001:
+		if current_cost > max_search_cost + 0.000001:
 			# Everything still unsettled costs at least this much.
 			break
 		settled[cell] = previous[cell]
 		if stop_at != null and cell == stop_at:
 			break
 		var neighbors: Array[Vector2i] = []
-		for y_offset in range(-1, 2):
-			for x_offset in range(-1, 2):
-				if x_offset == 0 and y_offset == 0:
-					continue
-				var next := cell + Vector2i(x_offset, y_offset)
-				if not _grid.is_in_bounds(next) or _grid.is_point_solid(next):
-					continue
-				if x_offset != 0 and y_offset != 0:
-					if (
-						_grid.is_point_solid(cell + Vector2i(x_offset, 0))
-						or _grid.is_point_solid(cell + Vector2i(0, y_offset))
-					):
+		if _grid.hex_mode:
+			for offset: Vector2i in HexMath.DIRECTIONS:
+				var hex := cell + offset
+				if _grid.is_in_bounds(hex) and not _grid.is_point_solid(hex) and not _grid.is_edge_walled(cell, hex):
+					neighbors.append(hex)
+		else:
+			for y_offset in range(-1, 2):
+				for x_offset in range(-1, 2):
+					if x_offset == 0 and y_offset == 0:
 						continue
-				neighbors.append(next)
+					var next := cell + Vector2i(x_offset, y_offset)
+					if not _grid.is_in_bounds(next) or _grid.is_point_solid(next):
+						continue
+					if x_offset != 0 and y_offset != 0:
+						if (
+							_grid.is_point_solid(cell + Vector2i(x_offset, 0))
+							or _grid.is_point_solid(cell + Vector2i(0, y_offset))
+						):
+							continue
+					neighbors.append(next)
 		neighbors.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 			return _cell_index(a, rect) < _cell_index(b, rect)
 		)
 		for next in neighbors:
-			var diagonal := next.x != cell.x and next.y != cell.y
+			# Every hex neighbour is one step away; a square diagonal is octile.
+			var diagonal := not _grid.hex_mode and next.x != cell.x and next.y != cell.y
 			var step_cost := (sqrt(2.0) if diagonal else 1.0) * _grid.get_point_weight_scale(next)
 			var next_cost := float(costs[cell]) + step_cost
 			if next_cost + 0.000001 < float(costs.get(next, INF)):
 				costs[next] = next_cost
 				previous[next] = cell
-				frontier.append({"cell": next, "cost": next_cost})
+				frontier.push(next, next_cost, _cell_index(next, rect))
 	return {"settled": settled}
+
+
+## The walk's frontier: a binary min-heap over (cost, row-major cell index), so the cheapest cell
+## settles first and equal costs settle lowest index first, the order the walk always had. It
+## replaces a sort of the whole frontier on every step, which hexes made the largest single cost
+## of an AI turn (owner item 34; #282).
+class _Frontier:
+	var _cost: Array[float] = []
+	var _key: Array[int] = []
+	var _cell: Array[Vector2i] = []
+
+	func is_empty() -> bool:
+		return _cost.is_empty()
+
+	func top_cell() -> Vector2i:
+		return _cell[0]
+
+	func top_cost() -> float:
+		return _cost[0]
+
+	func push(cell: Vector2i, cost: float, key: int) -> void:
+		_cost.append(cost)
+		_key.append(key)
+		_cell.append(cell)
+		var i := _cost.size() - 1
+		while i > 0:
+			var parent := (i - 1) >> 1
+			if not _less(i, parent):
+				break
+			_swap(i, parent)
+			i = parent
+
+	## Drops the cheapest entry (read it first with `top_cell()` and `top_cost()`).
+	func pop() -> void:
+		var last := _cost.size() - 1
+		_swap(0, last)
+		_cost.resize(last)
+		_key.resize(last)
+		_cell.resize(last)
+		var i := 0
+		while true:
+			var left := 2 * i + 1
+			var smallest := i
+			if left < last and _less(left, smallest):
+				smallest = left
+			if left + 1 < last and _less(left + 1, smallest):
+				smallest = left + 1
+			if smallest == i:
+				return
+			_swap(i, smallest)
+			i = smallest
+
+	func _less(i: int, j: int) -> bool:
+		if not is_equal_approx(_cost[i], _cost[j]):
+			return _cost[i] < _cost[j]
+		return _key[i] < _key[j]
+
+	func _swap(i: int, j: int) -> void:
+		var cost := _cost[i]
+		_cost[i] = _cost[j]
+		_cost[j] = cost
+		var key := _key[i]
+		_key[i] = _key[j]
+		_key[j] = key
+		var cell := _cell[i]
+		_cell[i] = _cell[j]
+		_cell[j] = cell
 
 
 static func _cell_index(cell: Vector2i, rect: Rect2i) -> int:
 	return (cell.y - rect.position.y) * rect.size.x + (cell.x - rect.position.x)
 
 
-func _chebyshev(a: Vector2i, b: Vector2i) -> int:
-	return maxi(absi(a.x - b.x), absi(a.y - b.y))
+## The facings this grid uses: eight grid directions on squares, six screen directions on hexes.
+static func facing_order() -> Array[StringName]:
+	return HEX_ORDER if GridMetric.hex() else _ORDER
 
 
-func _direction_of(delta: Vector2i) -> StringName:
+## The facing that looks along `delta` (a cell difference), or empty for no difference. On
+## squares, the nearest of eight grid directions; on hexes, the first step of the hex line.
+static func facing_for_delta(delta: Vector2i) -> StringName:
 	if delta == Vector2i.ZERO:
 		return &""
+	if GridMetric.hex():
+		return HEX_ORDER[HexMath.direction_toward(Vector2i.ZERO, delta)]
 	var angle := atan2(delta.y, delta.x)
 	var index := int(round(angle / (PI / 4.0)))
 	index = ((index % 8) + 8) % 8
 	return _ORDER[index]
 
 
-func _opposite(facing: StringName) -> StringName:
-	var i := _ORDER.find(facing)
+## The facing straight behind `facing`, or empty for an unknown one.
+static func opposite_facing(facing: StringName) -> StringName:
+	var order := facing_order()
+	var i := order.find(facing)
 	if i == -1:
 		return &""
-	return _ORDER[(i + 4) % 8]
+	return order[(i + order.size() / 2) % order.size()]
+
+
+## A side's facing at seating: the party looks east and its foes west.
+static func side_facing(side: StringName) -> StringName:
+	var order := facing_order()
+	return order[order.size() / 2] if side == ENEMY else order[0]
 
 
 func _bresenham(from_cell: Vector2i, to_cell: Vector2i) -> Array[Vector2i]:
