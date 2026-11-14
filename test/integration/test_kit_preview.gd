@@ -72,6 +72,43 @@ func test_every_class_preview_matches_what_combat_allows() -> void:
 				assert_str(String(blocked_by)).override_failure_message(label).is_equal("class_resource")
 
 
+## The "In a fight" preview is the battle's own fill over the kit: eight slots, Strike then
+## Guard, one command per role within its quota, nothing outside the kit and no signature
+## whose perk is unpicked.
+func test_every_class_hotbar_preview_fills_eight_slots_by_role_from_its_kit() -> void:
+	for row: Dictionary in ClassCatalog.ALL:
+		var member := _member(str(row["id"]))
+		var groups := KitPreview.for_member(member)
+		var usable: Dictionary = {}
+		for group: StringName in KitPreview.GROUPS:
+			for entry: Dictionary in groups[group]:
+				if str(entry["lock"]).is_empty():
+					usable[(entry["action"] as CombatAction).id] = true
+		var bar := KitPreview.hotbar(member)
+		var label := str(row["name"])
+		assert_int(bar.size()).override_failure_message(label).is_equal(HotbarFill.SIZE)
+		assert_str(String(bar[0].id)).override_failure_message(label).is_equal("strike")
+		assert_str(String(bar[1].id)).override_failure_message(label).is_equal("guard")
+		var roles: Dictionary = {}
+		for action: CombatAction in bar:
+			assert_bool(usable.has(action.id)).override_failure_message("%s slots %s" % [label, action.display_name]).is_true()
+			var role := HotbarFill.slot_role(action)
+			roles[role] = int(roles.get(role, 0)) + 1
+		assert_int(int(roles.get(HotbarFill.SlotRole.SPELL, 0))).override_failure_message(label).is_less_equal(2)
+		assert_int(int(roles.get(HotbarFill.SlotRole.WEAPON_ART, 0))).override_failure_message(label).is_less_equal(2)
+		assert_int(int(roles.get(HotbarFill.SlotRole.SIGNATURE, 0))).override_failure_message(label).is_less_equal(1)
+
+
+## A signature slot holds the class command even with nothing banked yet (the battle keeps
+## it, dimmed); a signature whose perk is unpicked is not in the kit and never slots.
+func test_the_signature_slot_holds_the_banked_command_not_an_unpicked_perk() -> void:
+	var ids: Array[StringName] = []
+	for action: CombatAction in KitPreview.hotbar(_member("ironbrand")):
+		ids.append(action.id)
+	assert_array(ids).contains([&"spend-scars"])
+	assert_array(ids).not_contains([&"debt-of-arms"])
+
+
 func test_only_the_listed_gap_classes_add_no_actions_of_their_own() -> void:
 	var without: PackedStringArray = []
 	for row: Dictionary in ClassCatalog.ALL:

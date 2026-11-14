@@ -77,6 +77,62 @@ static func lock_of(action: CombatAction, resource: ClassResource) -> String:
 	return ""
 
 
+## The eight commands a fight opens with on this member's bar: the battle's own fill
+## (HotbarFill) over the same kit the tiles show. "Usable now" is read as a fresh fight would:
+## nothing banked yet (a signature still holds its slot), full Breath, the member's Var
+## Harmony, no Jam landed, no field object to hold. Resolutions and parleys join only
+## mid-fight.
+## Where foes stand never locks a command on the bar, so reach is not read here either.
+static func hotbar(member: PartyMember, actions: Array[CombatAction] = []) -> Array[CombatAction]:
+	var source: Array[CombatAction] = actions if not actions.is_empty() else CombatActionCatalog.player_actions()
+	var resource := ClassResourceRegistry.for_patron(member.patron if member != null else "")
+	if member != null:
+		resource.apply_perks(member.perk_ids)
+	var held := held_elements(member)
+	var offered: Array[CombatAction] = []
+	var ready: Array[bool] = []
+	var in_kit: Array[bool] = []
+	for action: CombatAction in source:
+		# A move is a click on the ground on every field battlefield (#473).
+		if action.kind == CombatAction.Kind.MOVE:
+			continue
+		var kit := not group_of(action, resource, held).is_empty() and lock_of(action, resource).is_empty()
+		offered.append(action)
+		in_kit.append(kit)
+		ready.append(kit and _ready_at_start(action, resource, member))
+	var picked := HotbarFill.default_fill(offered, ready, in_kit, [])
+	var bar: Array[CombatAction] = []
+	for id: StringName in picked:
+		for action: CombatAction in offered:
+			if action.id == id:
+				bar.append(action)
+				break
+	return bar
+
+
+static func _ready_at_start(action: CombatAction, resource: ClassResource, member: PartyMember) -> bool:
+	if action.kind == CombatAction.Kind.RESOLUTION:
+		return false
+	if action.effect_payload.has("requires_jam_within"):
+		return false
+	# Workings that act on a held field object (a Witness Light, a Firebreak) have nothing to
+	# hold when a fight opens.
+	if CombatController._OBJECT_ONLY_EFFECTS.has(action.effect_id):
+		return false
+	if not action.class_resource_action.is_empty():
+		var gate := resource.query_command(action.class_resource_action, &"", action.class_resource_payload)
+		return bool(gate.get("allowed", false))
+	if member != null and action.breath_cost > member.breath_max:
+		return false
+	var tier := tier_of(action)
+	if tier >= 2:
+		var harmony := member.attribute_value(&"harmony") if member != null else 0
+		var breadth: StringName = &"triad" if tier >= 3 else &"chord"
+		var context := {"breath_tier": "refrain"} if bool(action.effect_payload.get("refrain_use", false)) else {}
+		return bool(CastingGate.query_breadth(breadth, harmony, action.magnitude, context).get("allowed", false))
+	return true
+
+
 ## The working's breadth for a tier-gated spell (2 = chord, 3 = triad), 0 otherwise. Whether
 ## it can be cast depends on the party's Var Harmony in battle (CastingGate).
 static func tier_of(action: CombatAction) -> int:
