@@ -62,8 +62,24 @@ on Kesselford's `TerrainBackdrop` compresses the bright wet streaks (luminance a
 55%) and keeps 72% of the fine detail over a 2-texel low-pass. No hue shift, and the darks stay deep.
 Other maps that share the Dom backdrop get it in M6.
 
-Known and not changed here: the two brown door placeholders (`WayhouseDoor`,
-`ChandleryDoor`) come from the shared door scene.
+Known and not changed here (2026-11-02): the two brown door placeholders (`WayhouseDoor`,
+`ChandleryDoor`) came from the shared door scene. Main's walk-in buildings replaced them.
+
+## Brought up to main (2026-11-14)
+
+Main gained walk-in buildings (item 35) and the hex walking grid (H3b) while this branch
+waited. The merge regenerates the dressing with the same seed and sprites. Evidence:
+`docs/qa/lived-in-rollout-2026-11-14/`.
+
+- The dresser leaves every walk-in footprint cell undressed (`no_dress`; the buildings
+  furnish themselves), keeps a ±128×64 px apron around each doorway cell, and adds doorways
+  to the route corridor.
+- Townsfolk posts come from `data/generated/*_npc_placements.json` (anchor + offset) and keep
+  a ±80×56 px zone. The tool no longer reads the live scene for them: townsfolk only spawn
+  with a party, and spawning them under `--script` fails.
+- `DressingShadows` skips walk-in building sprites, which sit under `SolidProps`.
+- Counts: 209 ground decals, 363 standing pieces (103 solid, 28 give cover), 375 contact
+  shadows. Draw calls on the overview: 456 with the dressing off, 1008 with it on.
 
 ## Asset list for approval (~84)
 
