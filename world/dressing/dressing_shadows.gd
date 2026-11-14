@@ -5,7 +5,8 @@ extends Node2D
 ## It reads every visible Sprite2D under the dressing root's `SoftDetails`, `SolidProps` and
 ## `Props` layers (a nested lived-in scene's included), finds each sprite's contact point
 ## from its texture's opaque bounds, and draws one squashed soft disc there. Facades and other
-## art taller than MAX_HEIGHT_PX are skipped: a building is not a prop on the ground.
+## art taller than MAX_HEIGHT_PX, and every piece of a walk-in building, are skipped: a building
+## is not a prop on the ground.
 
 const STANDING_LAYERS: Array[StringName] = [&"SoftDetails", &"SolidProps", &"Props"]
 const SHADOW_ALPHA := 0.45
@@ -53,6 +54,8 @@ func refresh() -> void:
 	if root != null:
 		for layer: Node in _layers(root):
 			for sprite: Node in layer.find_children("*", "Sprite2D", true, false):
+				if _in_walk_in_building(sprite, layer):
+					continue
 				var rect := _shadow_for(sprite as Sprite2D)
 				if rect.size != Vector2.ZERO:
 					_shadows.append(rect)
@@ -82,6 +85,17 @@ func _layers(root: Node) -> Array[Node]:
 		for node: Node in root.find_children(String(layer_name), "Node2D", true, false):
 			found.append(node)
 	return found
+
+
+## A walk-in building (item 35) draws its own walls, floor and furniture; none of them is a
+## prop standing on the ground.
+static func _in_walk_in_building(node: Node, layer: Node) -> bool:
+	var current := node.get_parent()
+	while current != null and current != layer:
+		if current is WalkInBuilding:
+			return true
+		current = current.get_parent()
+	return false
 
 
 ## The shadow rect in this node's space, or an empty rect when the sprite casts none.

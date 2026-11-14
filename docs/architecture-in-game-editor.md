@@ -250,19 +250,19 @@ A location document `canon/<hub>/locations/<id>.json` carries the scene facet pl
 and door facets; roads are their own documents. The shipped shape (ruling A1 + B1 of 2026-10-22):
 
 ```json
-{ "schema": "weftlumin.location.v1", "id": "kesselford_wayhouse", "display_name": "Ferry Bell Wayhouse",
-  "definition_path": "res://world/locations/interiors/kesselford_wayhouse.tres",
-  "scene_path": "res://world/interiors/kesselford_wayhouse.tscn", "allowed_gameplay": true,
+{ "schema": "weftlumin.location.v1", "id": "ashlaren_millhouse", "display_name": "The Flat Bell",
+  "definition_path": "res://world/locations/interiors/ashlaren_millhouse.tres",
+  "scene_path": "res://world/interiors/ashlaren_millhouse.tscn", "allowed_gameplay": true,
   "default_spawn_id": "entry", "spawns": {"entry": "entry"}, "arrival_flag": "", "arrival_checkpoint": "",
-  "harmonic_accord": 85.0, "thinning_tier": 0, "weather_default": "", "no_combat_zone": true,
+  "harmonic_accord": 95.0, "thinning_tier": 0, "weather_default": "", "no_combat_zone": true,
   "respawn_policy": "limited",
-  "transition": { "building_id": "kesselford_wayhouse", "building_name": "Ferry Bell Wayhouse",
-    "source_scene": "res://world/kesselford.tscn", "source_anchor": "WayhouseDoor",
-    "source_position": [1150.0, 700.0], "prompt_text": "E — Enter", "spawn_id": "entry",
+  "transition": { "building_id": "ashlaren_millhouse", "building_name": "The Flat Bell",
+    "source_scene": "res://world/ashlaren.tscn", "source_anchor": "MillhouseDoor",
+    "source_position": [1900.0, 700.0], "prompt_text": "E — Enter", "spawn_id": "entry",
     "destination_spawn_position": [960.0, 1098.6], "required_flag": "", "reputation_faction": "",
     "minimum_reputation_band": "", "locked_message": "This door is locked.",
     "exit": { "source_anchor": "Room/ExitDoor", "source_position": [960.0, 1200.0],
-      "spawn_id": "from_kesselford_wayhouse", "destination_spawn_position": [1150.0, 790.0],
+      "spawn_id": "from_ashlaren_millhouse", "destination_spawn_position": [1900.0, 790.0],
       "prompt_text": "E — RETURN" } } }
 ```
 

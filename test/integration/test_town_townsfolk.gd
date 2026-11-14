@@ -53,7 +53,7 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 
 	var used_models := {}
 	var used_cells := {}
-	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
+	var grid := (runner.find_child("FieldMap", true, false) as FieldMap).iso_grid()
 	var used_offsets := {}
 	var used_facings := {}
 	var used_idle_phases := {}
@@ -71,8 +71,10 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 		# time (authored coordinates stay untouched in the generated data). The NPC
 		# must rest exactly ON a cell center, near its authored spot, and no two
 		# townsfolk may share a cell.
-		var npc_cell: Vector2i = ground.local_to_map(ground.to_local(npc.global_position))
-		var npc_center: Vector2 = ground.to_global(ground.map_to_local(npc_cell))
+		# The town's shared grid: hexes on hexes (hex slice H3b), where the snap reaches twice
+		# as many steps (GridPlacement), the same ground.
+		var npc_cell: Vector2i = grid.world_to_cell(npc.global_position)
+		var npc_center: Vector2 = grid.cell_to_world(npc_cell)
 		var authored_global: Vector2 = npc.get_parent().to_global(authored_position)
 		if not npc.global_position.is_equal_approx(authored_global):
 			# Snapped stand: exactly on a cell center, within the bounded snap
@@ -80,10 +82,9 @@ func test_thirty_outdoor_townsfolk_spawn_from_generated_placements() -> void:
 			# (An NPC still at its authored position means the bounded snap found no
 			# open cell within reach — the authored stand wins by design.)
 			assert_bool(npc.global_position.is_equal_approx(npc_center)).is_true()
-			var authored_cell: Vector2i = ground.local_to_map(ground.to_local(authored_global))
-			var cell_delta: Vector2i = (npc_cell - authored_cell).abs()
-			assert_int(maxi(cell_delta.x, cell_delta.y)).is_less_equal(
-				GridPlacement.MAX_SNAP_CELLS
+			var authored_cell: Vector2i = grid.world_to_cell(authored_global)
+			assert_int(GridMetric.distance(npc_cell, authored_cell)).is_less_equal(
+				GridMetric.radius(GridPlacement.MAX_SNAP_CELLS)
 			)
 			assert_bool(used_cells.has(npc_cell)).is_false()
 			used_cells[npc_cell] = true

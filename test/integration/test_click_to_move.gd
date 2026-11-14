@@ -79,7 +79,7 @@ func test_click_paths_the_player_around_a_building() -> void:
 	# and now cross open ground; this pair straddles a current painted building footprint.
 	var start_cell := Vector2i(20, 10)
 	var destination_cell := Vector2i(35, 12)
-	player.global_position = grid.cell_to_world(start_cell)
+	player.global_position = grid.cell_to_world(grid.cell_at_square(start_cell))
 	await runner.simulate_frames(2)
 	# A straight line between the two cells crosses at least one solid cell —
 	# proves this is a genuine detour, not a walk across open ground.
@@ -91,14 +91,14 @@ func test_click_paths_the_player_around_a_building() -> void:
 			roundi(lerpf(float(start_cell.x), float(destination_cell.x), t)),
 			roundi(lerpf(float(start_cell.y), float(destination_cell.y), t))
 		)
-		if grid.is_point_solid(cell):
+		if grid.is_point_solid(grid.cell_at_square(cell)):
 			crosses_solid = true
 			break
 	assert_bool(crosses_solid) \
 		.override_failure_message("test fixture regression: the straight line no longer crosses a building") \
 		.is_true()
 
-	var destination_world := grid.cell_to_world(destination_cell)
+	var destination_world := grid.cell_to_world(grid.cell_at_square(destination_cell))
 	var finished_signals: Array[int] = [0]
 	controller.path_finished.connect(func() -> void: finished_signals[0] += 1)
 	var result := controller.request_move_to(destination_world)
@@ -148,11 +148,11 @@ func test_unreachable_click_refusal_reaches_the_player_seam() -> void:
 	# The old (21,6) target predated Dom's scaled 3400x2200 Blocking transform.
 	var blocked_cell := Vector2i(-1, -1)
 	for cell in ground.get_used_cells():
-		if grid.is_point_solid(cell):
+		if grid.is_point_solid(grid.cell_at_square(cell)):
 			blocked_cell = cell
 			break
 	assert_bool(blocked_cell != Vector2i(-1, -1)).is_true()
-	var target_world := grid.cell_to_world(blocked_cell)
+	var target_world := grid.cell_to_world(grid.cell_at_square(blocked_cell))
 
 	# Dictionaries are reference types, so mutating one from inside a lambda
 	# is visible here afterward — reassigning a captured local var would not
@@ -227,10 +227,10 @@ func test_wasd_still_moves_the_player_and_cancels_an_active_click_path() -> void
 	var grid: IsoGrid = fixture["grid"]
 
 	var start_cell := Vector2i(20, 25)
-	player.global_position = grid.cell_to_world(start_cell)
+	player.global_position = grid.cell_to_world(grid.cell_at_square(start_cell))
 	await runner.simulate_frames(2)
 
-	var destination_world := grid.cell_to_world(Vector2i(24, 38))
+	var destination_world := grid.cell_to_world(grid.cell_at_square(Vector2i(24, 38)))
 	var result := controller.request_move_to(destination_world)
 	assert_bool(result.get("allowed")).is_true()
 	assert_bool(controller.has_path()).is_true()
@@ -255,11 +255,11 @@ func test_facing_direction_updates_while_following_a_click_path() -> void:
 
 	# The old (20,25) eastward target became obstructed by Dom's scaled Blocking layout.
 	var start_cell := Vector2i(0, 0)
-	player.global_position = grid.cell_to_world(start_cell)
+	player.global_position = grid.cell_to_world(grid.cell_at_square(start_cell))
 	await runner.simulate_frames(2)
 
 	# Along an open isometric row — a simple direction with a positive screen-space X.
-	var destination_world := grid.cell_to_world(Vector2i(5, 0))
+	var destination_world := grid.cell_to_world(grid.cell_at_square(Vector2i(5, 0)))
 	var result := controller.request_move_to(destination_world)
 	assert_bool(result.get("allowed")).is_true()
 
@@ -309,31 +309,31 @@ func test_click_path_routes_around_a_standing_npc_rather_than_into_it() -> void:
 	var blocked_cell := Vector2i(22, 25)
 	var destination_cell := Vector2i(26, 25)
 	for x in range(start_cell.x, destination_cell.x + 1):
-		assert_bool(grid.is_point_solid(Vector2i(x, start_cell.y))) \
+		assert_bool(grid.is_point_solid(grid.cell_at_square(Vector2i(x, start_cell.y)))) \
 			.override_failure_message(
 				"test fixture regression: cell (%d, %d) is no longer open ground" % [x, start_cell.y]
 			) \
 			.is_false()
 
-	player.global_position = grid.cell_to_world(start_cell)
+	player.global_position = grid.cell_to_world(grid.cell_at_square(start_cell))
 	var npc := (load("res://actors/npc/npc.tscn") as PackedScene).instantiate() as NPC
 	npc.name = "BlockingTownsperson"
 	root.add_child(npc)
-	npc.global_position = grid.cell_to_world(blocked_cell)
+	npc.global_position = grid.cell_to_world(grid.cell_at_square(blocked_cell))
 	await runner.simulate_frames(3)
 
 	assert_bool(npc.is_in_group(NavOccupancy.GROUP)) \
 		.override_failure_message("an NPC must register itself as a nav blocker") \
 		.is_true()
 
-	var destination_world := grid.cell_to_world(destination_cell)
+	var destination_world := grid.cell_to_world(grid.cell_at_square(destination_cell))
 	var result := controller.request_move_to(destination_world)
 	assert_bool(result.get("allowed")).is_true()
 
 	# The load-bearing assertion: not one waypoint lands on the NPC's cell.
 	var waypoints: Array = result.get("path", [])
 	assert_int(waypoints.size()).is_greater(0)
-	var npc_cell_world := grid.cell_to_world(blocked_cell)
+	var npc_cell_world := grid.cell_to_world(grid.cell_at_square(blocked_cell))
 	for point in waypoints:
 		assert_vector(Vector2(point)) \
 			.override_failure_message(
@@ -357,10 +357,10 @@ func test_the_player_is_never_an_obstacle_to_their_own_path() -> void:
 	var grid: IsoGrid = fixture["grid"]
 
 	var start_cell := Vector2i(18, 25)
-	player.global_position = grid.cell_to_world(start_cell)
+	player.global_position = grid.cell_to_world(grid.cell_at_square(start_cell))
 	await runner.simulate_frames(3)
 
-	var result := controller.request_move_to(grid.cell_to_world(Vector2i(24, 25)))
+	var result := controller.request_move_to(grid.cell_to_world(grid.cell_at_square(Vector2i(24, 25))))
 	assert_bool(result.get("allowed")) \
 		.override_failure_message("the player blocked their own path: %s" % result) \
 		.is_true()

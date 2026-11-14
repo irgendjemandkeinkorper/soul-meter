@@ -20,7 +20,7 @@ const ELEMENT_RENAMES_V8: Dictionary = {
 ## DRAMGID deletes Alchemy outright rather than renaming it, which is why it is the
 ## one skill id the rename table maps to an empty string.
 const ALCHEMY_SKILL_ID := "alchemy"
-const CURRENT_SCHEMA_VERSION := 10
+const CURRENT_SCHEMA_VERSION := 11
 const LOCATION_RENAMES_V10: Dictionary = {
 	"dorthkor-road": "dorthkor_road",
 	"wound-lip": "wound_lip",
@@ -60,11 +60,44 @@ static func prepare(payload: Variant) -> Dictionary:
 		migrated = _migrate_v8_to_v9(migrated)
 	if source_version <= 9:
 		migrated = _migrate_v9_to_v10(migrated)
+	if source_version <= 10 and migrated.get("game_state") is Dictionary:
+		migrated["game_state"] = migrate_equipment_state(migrated["game_state"])
 	migrated["skill_check"] = SkillCheckService.normalize_save_data(
 		migrated.get("skill_check", {})
 	)
 	migrated["schema_version"] = CURRENT_SCHEMA_VERSION
 	return {"ok": true, "payload": migrated, "error": ""}
+
+
+## Schema 11: the old live rail was a flat slot -> prototype record. Move ONLY
+## that shape to the protagonist. Opaque older payloads (including nested actor
+## maps) and records with no protagonist remain available for lossless re-save.
+## Also used by GameState.from_dict for direct, unwrapped state restores.
+static func migrate_equipment_state(source: Dictionary) -> Dictionary:
+	var migrated := source.duplicate(true)
+	var slots: Variant = migrated.get("equipped_slots", {})
+	if not slots is Dictionary or slots.is_empty():
+		return migrated
+	for slot: Variant in slots:
+		if slot not in ["main", "off", "head", "body", "trinket"] or not slots[slot] is String:
+			return migrated
+	var party: Variant = migrated.get("party", [])
+	if not party is Array:
+		return migrated
+	for row: Variant in party:
+		if not row is Dictionary:
+			continue
+		if row.get("id", "") != "vex" and row.get("display_name", "") != "Vex the Unbowed":
+			continue
+		var member_slots: Variant = row.get("equipped_slots", {})
+		if not member_slots is Dictionary:
+			return migrated
+		member_slots = member_slots.duplicate(true)
+		member_slots.merge(slots, false)
+		row["equipped_slots"] = member_slots
+		migrated.erase("equipped_slots")
+		break
+	return migrated
 
 
 static func _source_version(source: Dictionary) -> int:

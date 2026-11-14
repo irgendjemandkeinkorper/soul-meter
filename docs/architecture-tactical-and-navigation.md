@@ -192,6 +192,9 @@ the flag.
 
 ### 1.6 How the grid model uses `AStarGrid2D`
 
+> **Hexes since 2026-11-03:** this section describes the square mode. For what changes on hexes,
+> see §2.2a.
+
 `GridBattlefieldModel` owns one `IsoGrid` (§2.2). It adds four combat concerns:
 
 - **Movement range.** Use an `AStarGrid2D` flood fill. Bound the fill by the CT budget. Use
@@ -273,6 +276,9 @@ bodies, and the procedural blockout does not author them.
 
 ### 2.2 `IsoGrid` — one grid for two layers
 
+> **Hexes since 2026-11-03:** the code below is the square mode. Hex mode keeps the same calls;
+> see §2.2a.
+
 D4 selects this design. It is the highest-leverage item in this document. **One `AStarGrid2D`
 construction serves overworld click-to-move and tactical movement range.** One technology. Two
 consumers. One set of defects.
@@ -339,6 +345,49 @@ One system for both layers is worth more than the small gain in smoothness that 
 mesh gives on the overworld. The overworld work therefore reduces the risk of Gate T. Keep
 `NavigationServer2D` available for later. Hub NPC routines (§4, D6) may need crowd avoidance.
 
+### 2.2a Hex mode (2026-11-03, owner item 34)
+
+The game walks and fights on hexes. The project setting `soul_meter/grid/hex` selects the mode;
+`project.godot` sets it to `true`. The square mode in §1.6 and §2.2 is still supported behind
+the same setting. Plan, rulings and slices: `docs/design/hex-grid-plan-2026-11-03.md` (PRs
+#571 to #575).
+
+D1 and D4 hold without change:
+
+- **D1 (one grid on the same map):** walking and fighting share the field's `IsoGrid`. A fight
+  opens on the hexes the party walks on. Each body walks the last step onto its seat
+  (`FieldMap.walk_to_seat`); nobody jumps.
+- **D4 (`IsoGrid` hides its pathfinder):** consumers call the same `IsoGrid` methods. In hex
+  mode `IsoGrid` uses `AStar2D` with explicit edges, because `AStarGrid2D` is square only.
+
+What changes inside the seam:
+
+- **Geometry.** `HexMath` holds axial coordinates, distance, the six directions, lines, rings
+  and ranges. `HexLayout` maps hexes to the 64×32 iso view: pointy-top rows from left to right,
+  squashed 2:1. A hex step is half a cell side on the ground, so there are about four hexes per
+  cell.
+- **Authoring stays square.** The `Ground`, `Blocking` and `Terrain` layers, accord zones and
+  set-piece cells stay in ground cells. A hex is solid if its centre, or any of its corners
+  pulled halfway in, lands on a solid cell. A step is also refused when its walk line crosses a
+  solid cell. A hex reads terrain and zones from the ground cell under its centre
+  (`IsoGrid.square_cell_of`, `FieldMap.ground_cell_of`). An authored cell maps to the hex at
+  its centre (`IsoGrid.cell_at_square`).
+- **One conversion point.** `GridMetric` is the only place that counts steps. Its `distance()`
+  is Chebyshev on squares and hex steps on hexes. Authored numbers stay in cells. A reach of 1
+  stays touching; a reach of 2 or more and every radius double. Do not add a raw Chebyshev
+  distance or a ×2 anywhere else.
+- **§1.6 on hexes:**
+  - Movement range is a flood fill over hex edges. A walk of n hexes costs what ⌈n/2⌉ cells
+    cost.
+  - Line of sight follows `HexMath.line` instead of the Bresenham line.
+  - Occupancy is one body for each hex.
+  - Facing has six directions (`hex_e` … `hex_se`): one FRONT, four SIDE, one BACK.
+- **Presentation.** `FieldGridLayer` draws the hex grid under the fighters during a fight. The
+  "Show hex grid while exploring" setting adds a faint grid while exploring; it is off by
+  default. `CombatOverlay` draws hex outlines and the reach ring.
+- **Tests.** `docs/testing.md` ("Which grid a test runs on") says when a test runs on hexes
+  and when it pins the square grid.
+
 ### 2.3 Obstacle authoring — the missing layer
 
 `IsometricBlockout` generates ground only. Buildings do not exist as data today. Nothing can
@@ -358,6 +407,67 @@ Make the blocking layer the **single source of truth for passability**. Derive t
 `AStarGrid2D` bake from it. Derive the physics collision from it also. Do not author obstacles
 twice. Two authoring paths drift apart. The drift stays invisible until a player walks through
 a wall.
+
+**Painted from solids (2026-11-03).** That drift happened. Seven maps placed their buildings,
+rocks, doors and border walls as `StaticBody2D` shapes and left the blocking layer empty:
+
+- Maps: Kesselford, Ashlaren, Hollowmere, Long Verge, Dorthkor Road, Wound Lip and the Lower
+  Trial Hall.
+- Effect: the shapes stopped the walking player, but the grid did not know them, so a fight
+  walked through a facade or off the map.
+
+Those maps are now painted from their shapes:
+
+- **The rule.** `SolidFootprints` (`world/nav/solid_footprints.gd`) decides which ground
+  cells a solid covers:
+  - a solid is a `StaticBody2D` on collision layer 1;
+  - NPCs, a travel exit's `LockedBarrier` and switched-off bodies are left out;
+  - a shape covers the cells whose centres it contains, plus the cell under its own centre.
+- **The paint.** `tools/paint_blocking.gd` writes those cells into each map's `Blocking`
+  layer. The maps are listed in `SolidFootprints.PAINTED_MAPS`, and only the
+  `tile_map_data` line of each scene changes.
+- **The guard.** `test_blocking_paint` fails when a solid is moved, added or removed
+  without repainting.
+
+The shapes stay in the scenes, so walking collision is unchanged; the painted cells add the same
+footprint on the grid. Starting Town, the test room and the structure yard are still painted
+by hand.
+
+Two related fixes:
+
+- **Trial hall gates.** The Lower Trial Hall's three gates are painted shut. A gate lifts its
+  cells while it is open (`BlockingLayer.set_structure_footprint`). A cell a wall also covers
+  stays painted.
+- **Wound Lip ground.** Wound Lip's ground now covers its walled 1800×900 ledge. It was the
+  25×25 default at the origin, so the guard fight there had no floor.
+
+**Art bases (2026-11-03, owner ruling "Full bases, all maps").** The copied shapes were thin. A
+house blocked only a line along its front wall, and most of Dorthkor Road's pillars, rocks,
+tents and carts had no shape at all. Each prop now blocks the whole base it stands on in its
+art. All sizes are PROVISIONAL.
+
+- **The table.** `ArtBases` (`world/nav/art_bases.gd`) gives each prop art file its base: one
+  or more convex polygons in the file's own pixels. A tree's base is its trunk and roots, so
+  its canopy can be walked under. The crenellated wall is an L of two strips, so the ground
+  inside the L stays open.
+  - Most bases were fitted from the art's alpha: the lowest opaque edge is the front of the
+    base, and the back mirrors it. Each was then checked by eye.
+  - Six were traced by hand, where the fit caught a shaft or a leg, or the art is not drawn at
+    2:1: the high cart, the bench, the brazier, the tent, the wall and the town hall.
+- **The rule.** On a painted map, every sprite showing one of those files is solid over its
+  base, unless it is in a `GroundDetails` or `SoftDetails` layer.
+- **The tool.** `tools/paint_blocking.gd` first writes each base into the scene as a
+  `ConvexPolygonShape2D`, then paints as before. A sprite that already has a body gets the
+  polygon in that body's `CollisionShape2D`. A sprite with no body gains a `Base`
+  `StaticBody2D` child, so no node path changes.
+- **The guards.** `test_blocking_paint` adds two tests:
+  - every based prop has its art base;
+  - from where the player arrives, the walk still reaches every arrival point, door, exit,
+    chest and person on each map. The trial hall is checked with its gates open.
+
+The walking body collides with the same base: the shape and the painted cells' tiles both stop
+it. Rendered check: `docs/qa/map-bases-2026-11-03/`. Each map shows its cells and bases, and
+`art-bases` shows every file with its base.
 
 ### 2.4 Y-sorting — the depth rules
 

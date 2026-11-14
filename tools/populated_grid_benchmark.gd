@@ -226,7 +226,8 @@ func _set_other_hud_visible(value: bool) -> void:
 		var item := _battle_interface.get(property_name) as CanvasItem
 		if is_instance_valid(item):
 			item.visible = value
-	var hotbar := _battle_interface.find_child("HotbarSoulGauge", true, false) as CanvasItem
+	# The soul gauge belongs to the field HUD bar that hosts the interface.
+	var hotbar := _battle_interface.get_parent().find_child("SoulGauge", true, false) as CanvasItem
 	if is_instance_valid(hotbar):
 		hotbar.visible = value
 

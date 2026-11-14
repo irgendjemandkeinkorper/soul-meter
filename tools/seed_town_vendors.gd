@@ -46,6 +46,8 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	_ensure_property(items, "Base Price", "int")
+	_ensure_property(items, "Attack Bonus", "int")
+	_ensure_property(items, "Defense Bonus", "int")
 	_seed_items(items)
 
 	var vendors := _ensure_root("Vendors", VENDOR_PROPERTIES)
@@ -153,13 +155,13 @@ func _item_rows() -> Array[Dictionary]:
 			"Weapons", "Roadwarden Spear", 55,
 			"A practical ash-shaft spear with an Iron Company pattern head.",
 			"Long enough to make a roadside disagreement reconsider.", 1, 3.0,
-			Vector2i(1, 3), "common", "main_hand"
+			Vector2i(1, 3), "common", "main_hand", 1, 1
 		),
 		_item(
 			"Weapons", "Forge Hammer", 42,
 			"A balanced smith's hammer heavy enough for desperate field use.",
 			"A tool until the moment it is not.", 1, 2.5, Vector2i(2, 2), "common",
-			"main_hand"
+			"main_hand", 2, 0
 		),
 	]
 
@@ -174,7 +176,9 @@ func _item(
 	weight: float,
 	grid_size: Vector2i,
 	rarity: String,
-	equip_slot: String = ""
+	equip_slot: String = "",
+	attack_bonus: int = 0,
+	defense_bonus: int = 0,
 ) -> Dictionary:
 	return {
 		"category": category,
@@ -189,6 +193,9 @@ func _item(
 			"Equip Slot": equip_slot,
 			"Rarity": rarity,
 			"Flavour": flavour,
+			# PROVISIONAL weapon bonuses: owner ruling 2026-11-01, P1.4 / #533.
+			"Attack Bonus": attack_bonus,
+			"Defense Bonus": defense_bonus,
 		},
 	}
 

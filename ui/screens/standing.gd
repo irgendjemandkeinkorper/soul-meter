@@ -8,15 +8,20 @@ var _history_vbox: VBoxContainer
 var _factions: Array[String] = []
 
 
+func _uses_ledger_style() -> bool:
+	return true
+
+
 func _build() -> void:
 	# Standing opens over the journal or the live scene; cover it like every other full-page screen.
 	_add_opaque_backdrop()
 	var vbox := _make_shell_window("Standing")
 
 	var global_row := HBoxContainer.new()
+	global_row.name = "RenownRow"
 	global_row.theme_type_variation = "MirrorPairRow"
 	global_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_child(global_row)
+	vbox.add_child(_ledger_panel(global_row, "RenownLedger"))
 
 	var renown_vbox := VBoxContainer.new()
 	renown_vbox.theme_type_variation = "LedgerColumn"
@@ -32,9 +37,26 @@ func _build() -> void:
 	global_row.add_child(infamy_vbox)
 	_add_renown_readback(infamy_vbox, &"infamy", 2)
 
-	vbox.add_child(HSeparator.new())
+	var standings: Dictionary = Reputation.all_standings()
+	_factions = []
+	for faction_value: Variant in standings.keys():
+		_factions.append(str(faction_value))
+	_factions.sort()
+
+	# U3: with no faction on record there is nothing to list or select, so one line says so
+	# instead of an empty list beside an empty sheet.
+	if _factions.is_empty():
+		var none := Label.new()
+		none.name = "NoFactions"
+		none.text = "No faction has entered your name yet."
+		none.theme_type_variation = "MutedLabel"
+		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(none)
+		_add_back_button(vbox)
+		return
 
 	var row := HBoxContainer.new()
+	row.name = "FactionRow"
 	row.theme_type_variation = "MirrorPairRow"
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -43,18 +65,15 @@ func _build() -> void:
 	var list := ItemList.new()
 	list.name = "FactionList"
 	list.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.custom_minimum_size = Vector2(260, 0)
+	list.custom_minimum_size = Vector2(360, 0)
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list.size_flags_stretch_ratio = 1.0
-	row.add_child(list)
+	row.add_child(_ledger_panel(list, "FactionLedger", true))
 
 	var sheet := VBoxContainer.new()
 	sheet.theme_type_variation = "LedgerColumn"
 	sheet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sheet.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sheet.size_flags_stretch_ratio = 1.0
-	row.add_child(sheet)
+	row.add_child(_ledger_panel(sheet, "FactionSheet"))
 
 	_name_lbl = Label.new()
 	_name_lbl.theme_type_variation = "HeadingLabel"
@@ -63,9 +82,8 @@ func _build() -> void:
 	_band_lbl = Label.new()
 	sheet.add_child(_band_lbl)
 
-	sheet.add_child(HSeparator.new())
-
 	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	sheet.add_child(scroll)
 
@@ -75,26 +93,14 @@ func _build() -> void:
 	_history_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_history_vbox)
 
-	var standings: Dictionary = Reputation.all_standings()
-	_factions = []
-	for faction_value: Variant in standings.keys():
-		_factions.append(str(faction_value))
-	_factions.sort()
-
 	for faction: String in _factions:
 		var display_name := format_faction_name(faction)
 		var band_str: String = String(Reputation.band(faction)).capitalize()
 		list.add_item("%s (%s)" % [display_name, band_str])
 
 	list.item_selected.connect(_on_selected)
-	if not _factions.is_empty():
-		list.select(0)
-		_on_selected(0)
-	else:
-		_name_lbl.text = "No faction has entered your name"
-		_band_lbl.text = "Standing: Unrecorded"
-		_band_lbl.theme_type_variation = "MutedLabel"
-		_add_empty_label(_history_vbox, "No faction causes have been recorded yet.")
+	list.select(0)
+	_on_selected(0)
 
 	_add_back_button(vbox)
 

@@ -107,11 +107,9 @@ func test_wave_aa_dressing_contract() -> void:
 func test_player_moves_right_when_holding_move_right() -> void:
 	var runner := scene_runner("res://world/test_room.tscn")
 	var player: Node2D = runner.find_child("Player", true, false)
-	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
 	var followers := runner.find_child("PartyFollowers", true, false) as PartyFollowers
 	var start_x: float = player.global_position.x
-	var start_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
-	var start_center: Vector2 = ground.to_global(ground.map_to_local(start_cell))
+	var start_center: Vector2 = _grid_center(runner, player.global_position)
 
 	assert_object(followers).is_not_null()
 	assert_vector(followers.trail_target_for(0)).is_equal(start_center)
@@ -122,15 +120,12 @@ func test_player_moves_right_when_holding_move_right() -> void:
 	# Releasing input completes the in-flight step before coming to rest.
 	for frame in 120:
 		await runner.simulate_frames(1)
-		var current_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
-		var current_center: Vector2 = ground.to_global(ground.map_to_local(current_cell))
+		var current_center: Vector2 = _grid_center(runner, player.global_position)
 		if player.global_position.is_equal_approx(current_center):
 			break
 
 	assert_float(player.global_position.x).is_greater(start_x)
-	var resting_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
-	var resting_center: Vector2 = ground.to_global(ground.map_to_local(resting_cell))
-	assert_vector(player.global_position).is_equal(resting_center)
+	assert_vector(player.global_position).is_equal(_grid_center(runner, player.global_position))
 
 
 func test_holding_sprint_moves_the_player_materially_faster() -> void:
@@ -419,11 +414,9 @@ func _collect_group_members(node: Node, group: StringName, found: Array[Node]) -
 func test_wedged_keyboard_step_recovers_to_the_origin_cell_center() -> void:
 	var runner := scene_runner("res://world/test_room.tscn")
 	var player := runner.find_child("Player", true, false) as Node2D
-	var ground := runner.find_child("IsometricGround", true, false) as TileMapLayer
 	# Let the deferred rest_on_grid normalization land before sampling the origin.
 	await runner.simulate_frames(3)
-	var origin_cell: Vector2i = ground.local_to_map(ground.to_local(player.global_position))
-	var origin_center: Vector2 = ground.to_global(ground.map_to_local(origin_cell))
+	var origin_center: Vector2 = _grid_center(runner, player.global_position)
 
 	# A physics-only obstacle the nav grid knows nothing about (not painted, not a
 	# nav_blocker): resolve_step_cell will approve the step, then collision holds
@@ -504,3 +497,10 @@ func test_keyboard_steps_are_bounded_but_can_always_re_enter_bounds() -> void:
 	runner.simulate_action_release("move_left")
 	await runner.simulate_frames(30)
 	assert_float(player.global_position.x).is_less(stranded_position.x)
+
+
+## The centre of the field grid's cell under `point`: a hex on hexes (hex slice H3b), the
+## painted cell on squares.
+func _grid_center(runner: GdUnitSceneRunner, point: Vector2) -> Vector2:
+	var grid := (runner.find_child("FieldMap", true, false) as FieldMap).iso_grid()
+	return grid.cell_to_world(grid.world_to_cell(point))

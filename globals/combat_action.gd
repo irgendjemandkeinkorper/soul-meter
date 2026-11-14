@@ -131,41 +131,87 @@ static func from_context_row(row: Dictionary) -> CombatAction:
 
 
 func summary() -> String:
-	var target := "Enemy target"
-	var effect := balance_effect_summary()
-	match kind:
-		Kind.DEFINING_STRIKE:
-			target = "Named weakness"
-			effect = "Lore/Insight check applies a targeted effect"
-		Kind.GUARD:
-			target = "Self"
-			effect = "Reduces the next hit"
-		Kind.STABILIZE:
-			target = "Self"
-			effect = "Pulls Balance 30 toward Equilibrium"
-		Kind.RESOLUTION:
-			target = "Encounter"
-			effect = "Ends the encounter"
-		Kind.PASS:
-			if verb == Verb.SPEECH:
-				target = "Encounter"
-				effect = "Opens combat dialogue"
-	if not class_resource_action.is_empty():
-		target = class_resource_target.capitalize()
-	if not description.is_empty():
-		effect = description
-	if targets_cells():
-		target = "Cells"
-	elif target_side == "ally":
-		target = "Ally"
-	elif target_side == "any":
-		target = "Creature"
 	var costs: Array[String] = ["%d AP" % ap_cost]
 	if breath_cost > 0:
 		costs.append("%d Breath" % breath_cost)
 	if not is_zero_approx(soul_cost):
 		costs.append("%d Soul" % int(soul_cost))
-	return "%s · %s · %s" % [target, effect, " + ".join(costs)]
+	return "%s · %s · %s" % [target_text(), effect_text(), " + ".join(costs)]
+
+
+## Who or what the command is aimed at, in the summary's words ("Enemy target", "Self").
+func target_text() -> String:
+	var target := "Enemy target"
+	match kind:
+		Kind.DEFINING_STRIKE:
+			target = "Named weakness"
+		Kind.GUARD, Kind.STABILIZE:
+			target = "Self"
+		Kind.RESOLUTION:
+			target = "Encounter"
+		Kind.PASS:
+			if verb == Verb.SPEECH:
+				target = "Encounter"
+	if not class_resource_action.is_empty():
+		target = class_resource_target.capitalize()
+	if targets_cells():
+		target = GridMetric.step_word().capitalize()
+	elif target_side == "ally":
+		target = "Ally"
+	elif target_side == "any":
+		target = "Creature"
+	return target
+
+
+## What the command does: its authored description, else the kind's stock line.
+func effect_text() -> String:
+	if not description.is_empty():
+		return description
+	match kind:
+		Kind.DEFINING_STRIKE:
+			return "Lore/Insight check applies a targeted effect"
+		Kind.GUARD:
+			return "Reduces the next hit"
+		Kind.STABILIZE:
+			return "Pulls Balance 30 toward Equilibrium"
+		Kind.RESOLUTION:
+			return "Ends the encounter"
+		Kind.PASS:
+			if verb == Verb.SPEECH:
+				return "Opens combat dialogue"
+	return balance_effect_summary()
+
+
+## How far the command reaches, in steps of the grid: "melee", "reach 4 cells" (on hexes
+## "reach 8 hexes"), "line of sight", or ""
+## for a command with no target on the field (Guard, a class spend on the user).
+func reach_text() -> String:
+	var reach := int(effect_payload.get("range", 0))
+	if targets_cells():
+		return "reach %s" % GridMetric.steps_text(GridMetric.reach(reach)) if reach > 0 else ""
+	if target_profile == &"self" or kind == Kind.GUARD or kind == Kind.STABILIZE:
+		return ""
+	if reach > 0:
+		return "reach %s" % GridMetric.steps_text(GridMetric.reach(reach))
+	if target_profile == &"melee" and target_side == "enemy":
+		return "melee"
+	if target_profile == &"ranged":
+		return "line of sight"
+	return ""
+
+
+## Hex slice H3: the reach ring the field draws around the acting unit, in grid steps. A numeric
+## range converts through GridMetric; melee is the touching ring; line of sight and self-targeted
+## commands draw none (0).
+func reach_steps() -> int:
+	if target_profile == &"self" or kind == Kind.GUARD or kind == Kind.STABILIZE:
+		return 0
+	var reach := int(effect_payload.get("range", 0))
+	if reach > 0:
+		return GridMetric.reach(reach)
+	if not targets_cells() and target_profile == &"melee" and target_side == "enemy":
+		return 1
+	return 0
 
 
 ## Cell-targeted working: the player declares grid cells (`options.cells`), not a creature.

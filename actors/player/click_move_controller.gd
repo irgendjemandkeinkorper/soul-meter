@@ -120,6 +120,7 @@ func _rebuild_grid() -> void:
 		return
 	_iso_grid = IsoGrid.new()
 	_iso_grid.build(_ground, _blocking, STATIC_CLEARANCE_CELLS, true)
+	_iso_grid.prepare_paths()
 	_sync_occupancy()
 
 
@@ -315,6 +316,7 @@ func refresh_path() -> void:
 		return
 	if _ground != null:
 		_iso_grid.build(_ground, _blocking, STATIC_CLEARANCE_CELLS, true)
+		_iso_grid.prepare_paths()
 	var destination := _final_destination
 	var result := request_move_to(destination)
 	if not bool(result.get("allowed", false)):
@@ -330,6 +332,13 @@ func _on_repath_timer_timeout() -> void:
 
 
 func _find_nearest_open_cell(center: Vector2i) -> Variant:
+	if _iso_grid.hex_mode:
+		# A hex is half a cell (owner item 34): search the same ground, ring by ring.
+		for radius in range(1, OBSTACLE_SEARCH_RADIUS * 2 + 1):
+			for candidate: Vector2i in HexMath.ring(center, radius):
+				if not _iso_grid.is_blocked_for(candidate, _player):
+					return _iso_grid.cell_to_world(candidate)
+		return null
 	for radius in range(1, OBSTACLE_SEARCH_RADIUS + 1):
 		for dx in range(-radius, radius + 1):
 			for dy in range(-radius, radius + 1):

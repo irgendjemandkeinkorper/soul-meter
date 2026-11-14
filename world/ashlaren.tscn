@@ -1,4 +1,4 @@
-[gd_scene load_steps=42 format=3]
+[gd_scene load_steps=52 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="0_location"]
 [ext_resource type="Script" path="res://world/field_map.gd" id="1_field_map"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="8_followers"]
 [ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="9_hud"]
 [ext_resource type="Script" path="res://world/town_npc_spawner.gd" id="10_townsfolk"]
+[ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="20_interactable"]
 
 [ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="1_weftlumin"]
 
@@ -56,35 +57,59 @@ size = Vector2(3000, 40)
 [sub_resource type="RectangleShape2D" id="shape_v"]
 size = Vector2(40, 1800)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin1"]
-size = Vector2(470, 30)
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_WeighingHallFacade"]
+points = PackedVector2Array(-208, -111, 128, -38, 216, -82, -120, -155)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin2"]
-size = Vector2(380, 30)
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_MillhouseFacade"]
+points = PackedVector2Array(-201, -117, 13, -32, 196, -127, -18, -212)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin3"]
-size = Vector2(90, 24)
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_ShrineBell"]
+points = PackedVector2Array(-120, 5, 11, 50, 122, 2, -9, -43)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin4"]
-size = Vector2(130, 36)
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_WeighingBoard"]
+points = PackedVector2Array(-90, -61, 44, -23, 88, -36, -46, -74)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin5"]
-size = Vector2(160, 50)
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_MarketStallWest"]
+points = PackedVector2Array(-104, -59, -39, -18, 96, -72, 31, -113)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin6"]
-size = Vector2(200, 40)
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_MarketStallEast"]
+points = PackedVector2Array(-104, -59, -39, -18, 96, -72, 31, -113)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin7"]
-size = Vector2(60, 30)
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_GrainCart"]
+points = PackedVector2Array(-111.5, -77, 72.5, -2, 112.5, -50, -71.5, -125)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin8"]
-size = Vector2(110, 40)
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_WarehouseWallWest"]
+points = PackedVector2Array(-120, -118, 0, -37, 0, -5, -120, -86)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin9"]
-size = Vector2(90, 34)
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_WarehouseWallWest_2"]
+points = PackedVector2Array(0, -37, 120, -118, 120, -86, 0, -5)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_weftlumin10"]
-size = Vector2(70, 30)
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_WarehouseWallEast"]
+points = PackedVector2Array(-120, -118, 0, -37, 0, -5, -120, -86)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_WarehouseWallEast_2"]
+points = PackedVector2Array(0, -37, 120, -118, 120, -86, 0, -5)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_YardBrazier"]
+points = PackedVector2Array(-104, -17, 0, 51, 104, 4, 0, -64)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_SealedSackCrates"]
+points = PackedVector2Array(-41, 10, -7, 38, 35, 10, 1, -18)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_YardCrates"]
+points = PackedVector2Array(-41, 23, -7, 51, 35, 23, 1, -5)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_OakNorthWest"]
+points = PackedVector2Array(-71, 14, -13, 39, 130, -2, 72, -27)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_OakSouthWest"]
+points = PackedVector2Array(-97, 18, -52, 40, 53, 24, 8, 2)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_OakNorthEast"]
+points = PackedVector2Array(-97, 18, -52, 40, 53, 24, 8, 2)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_AshlarenDressing_SolidProps_OakSouthEast"]
+points = PackedVector2Array(-71, 14, -13, 39, 130, -2, 72, -27)
 
 [node name="Ashlaren" type="Node2D"]
 texture_filter = 2
@@ -111,6 +136,7 @@ road_axis = 0
 [node name="Blocking" type="TileMapLayer" parent="."]
 visible = false
 position = Vector2(1500, -780)
+tile_map_data = PackedByteArray("AAABAC8AAAAAAAAAAAABADAAAAAAAAAAAAACAC4AAAAAAAAAAAACAC8AAAAAAAAAAAACADAAAAAAAAAAAAACADEAAAAAAAAAAAADAC0AAAAAAAAAAAADAC4AAAAAAAAAAAADAC8AAAAAAAAAAAADADIAAAAAAAAAAAAEACwAAAAAAAAAAAAEAC0AAAAAAAAAAAAEAC4AAAAAAAAAAAAEADMAAAAAAAAAAAAFACsAAAAAAAAAAAAFACwAAAAAAAAAAAAFAC0AAAAAAAAAAAAFADQAAAAAAAAAAAAGACoAAAAAAAAAAAAGACsAAAAAAAAAAAAGACwAAAAAAAAAAAAGADUAAAAAAAAAAAAHACkAAAAAAAAAAAAHACoAAAAAAAAAAAAHACsAAAAAAAAAAAAHADYAAAAAAAAAAAAIACgAAAAAAAAAAAAIACkAAAAAAAAAAAAIACoAAAAAAAAAAAAIADcAAAAAAAAAAAAJACcAAAAAAAAAAAAJACgAAAAAAAAAAAAJACkAAAAAAAAAAAAJADgAAAAAAAAAAAAKACYAAAAAAAAAAAAKACcAAAAAAAAAAAAKACgAAAAAAAAAAAAKADkAAAAAAAAAAAALACUAAAAAAAAAAAALACYAAAAAAAAAAAALACcAAAAAAAAAAAALADoAAAAAAAAAAAAMACQAAAAAAAAAAAAMACUAAAAAAAAAAAAMACYAAAAAAAAAAAAMADsAAAAAAAAAAAANACMAAAAAAAAAAAANACQAAAAAAAAAAAANACUAAAAAAAAAAAANADwAAAAAAAAAAAAOACIAAAAAAAAAAAAOACMAAAAAAAAAAAAOACQAAAAAAAAAAAAOAD0AAAAAAAAAAAAPACEAAAAAAAAAAAAPACIAAAAAAAAAAAAPACMAAAAAAAAAAAAPAD4AAAAAAAAAAAAQACAAAAAAAAAAAAAQACEAAAAAAAAAAAAQACIAAAAAAAAAAAAQAD8AAAAAAAAAAAARAB8AAAAAAAAAAAARACAAAAAAAAAAAAARACEAAAAAAAAAAAARADMAAAAAAAAAAAARADQAAAAAAAAAAAARAEAAAAAAAAAAAAASAB4AAAAAAAAAAAASAB8AAAAAAAAAAAASACAAAAAAAAAAAAASADIAAAAAAAAAAAASADMAAAAAAAAAAAASAEEAAAAAAAAAAAATAB0AAAAAAAAAAAATAB4AAAAAAAAAAAATAB8AAAAAAAAAAAATAEIAAAAAAAAAAAAUABwAAAAAAAAAAAAUAB0AAAAAAAAAAAAUAB4AAAAAAAAAAAAUAEMAAAAAAAAAAAAVABsAAAAAAAAAAAAVABwAAAAAAAAAAAAVAB0AAAAAAAAAAAAVAEQAAAAAAAAAAAAWABoAAAAAAAAAAAAWABsAAAAAAAAAAAAWABwAAAAAAAAAAAAWAEUAAAAAAAAAAAAXABkAAAAAAAAAAAAXABoAAAAAAAAAAAAXABsAAAAAAAAAAAAXAEYAAAAAAAAAAAAYABgAAAAAAAAAAAAYABkAAAAAAAAAAAAYABoAAAAAAAAAAAAYAEcAAAAAAAAAAAAZABcAAAAAAAAAAAAZABgAAAAAAAAAAAAZABkAAAAAAAAAAAAZAEgAAAAAAAAAAAAaABYAAAAAAAAAAAAaABcAAAAAAAAAAAAaABgAAAAAAAAAAAAaAEkAAAAAAAAAAAAbABUAAAAAAAAAAAAbABYAAAAAAAAAAAAbABcAAAAAAAAAAAAbAEoAAAAAAAAAAAAcABQAAAAAAAAAAAAcABUAAAAAAAAAAAAcABYAAAAAAAAAAAAcAEsAAAAAAAAAAAAcAEwAAAAAAAAAAAAdABMAAAAAAAAAAAAdABQAAAAAAAAAAAAdABUAAAAAAAAAAAAdAEwAAAAAAAAAAAAeABIAAAAAAAAAAAAeABMAAAAAAAAAAAAeABQAAAAAAAAAAAAeAE0AAAAAAAAAAAAfABEAAAAAAAAAAAAfABIAAAAAAAAAAAAfABMAAAAAAAAAAAAfAE4AAAAAAAAAAAAgABAAAAAAAAAAAAAgABEAAAAAAAAAAAAgABIAAAAAAAAAAAAgAE8AAAAAAAAAAAAhAA8AAAAAAAAAAAAhABAAAAAAAAAAAAAhABEAAAAAAAAAAAAhAFAAAAAAAAAAAAAiAA4AAAAAAAAAAAAiAA8AAAAAAAAAAAAiABAAAAAAAAAAAAAiADEAAAAAAAAAAAAiADIAAAAAAAAAAAAiADMAAAAAAAAAAAAiAFEAAAAAAAAAAAAjAA0AAAAAAAAAAAAjAA4AAAAAAAAAAAAjAA8AAAAAAAAAAAAjADAAAAAAAAAAAAAjADEAAAAAAAAAAAAjADIAAAAAAAAAAAAjAFIAAAAAAAAAAAAkAAwAAAAAAAAAAAAkAA0AAAAAAAAAAAAkAA4AAAAAAAAAAAAkADAAAAAAAAAAAAAkADEAAAAAAAAAAAAkADIAAAAAAAAAAAAkAFMAAAAAAAAAAAAlAAsAAAAAAAAAAAAlAAwAAAAAAAAAAAAlAA0AAAAAAAAAAAAlADAAAAAAAAAAAAAlADEAAAAAAAAAAAAlAFQAAAAAAAAAAAAmAAoAAAAAAAAAAAAmAAsAAAAAAAAAAAAmAAwAAAAAAAAAAAAmAC8AAAAAAAAAAAAmADAAAAAAAAAAAAAmADEAAAAAAAAAAAAmAFUAAAAAAAAAAAAnAAkAAAAAAAAAAAAnAAoAAAAAAAAAAAAnAAsAAAAAAAAAAAAnAC8AAAAAAAAAAAAnADAAAAAAAAAAAAAnADEAAAAAAAAAAAAnADMAAAAAAAAAAAAnADQAAAAAAAAAAAAnAFYAAAAAAAAAAAAoAAgAAAAAAAAAAAAoAAkAAAAAAAAAAAAoAAoAAAAAAAAAAAAoAC8AAAAAAAAAAAAoADAAAAAAAAAAAAAoADMAAAAAAAAAAAAoAFcAAAAAAAAAAAApAAcAAAAAAAAAAAApAAgAAAAAAAAAAAApAAkAAAAAAAAAAAApAFgAAAAAAAAAAAAqAAYAAAAAAAAAAAAqAAcAAAAAAAAAAAAqAAgAAAAAAAAAAAAqAFkAAAAAAAAAAAArAAUAAAAAAAAAAAArAAYAAAAAAAAAAAArAAcAAAAAAAAAAAArAFoAAAAAAAAAAAAsAAQAAAAAAAAAAAAsAAUAAAAAAAAAAAAsAAYAAAAAAAAAAAAsAFsAAAAAAAAAAAAtAAMAAAAAAAAAAAAtAAQAAAAAAAAAAAAtAAUAAAAAAAAAAAAtACIAAAAAAAAAAAAtACMAAAAAAAAAAAAtACQAAAAAAAAAAAAtACUAAAAAAAAAAAAtACYAAAAAAAAAAAAtACcAAAAAAAAAAAAtAFwAAAAAAAAAAAAuAAIAAAAAAAAAAAAuAAMAAAAAAAAAAAAuAAQAAAAAAAAAAAAuACIAAAAAAAAAAAAuACMAAAAAAAAAAAAuACQAAAAAAAAAAAAuACUAAAAAAAAAAAAuACYAAAAAAAAAAAAuACcAAAAAAAAAAAAuAC8AAAAAAAAAAAAuAF0AAAAAAAAAAAAvAAIAAAAAAAAAAAAvAAMAAAAAAAAAAAAvACIAAAAAAAAAAAAvACMAAAAAAAAAAAAvACQAAAAAAAAAAAAvACUAAAAAAAAAAAAvACYAAAAAAAAAAAAvACcAAAAAAAAAAAAvAC8AAAAAAAAAAAAvAF4AAAAAAAAAAAAwAAMAAAAAAAAAAAAwACIAAAAAAAAAAAAwACMAAAAAAAAAAAAwACQAAAAAAAAAAAAwACUAAAAAAAAAAAAwACYAAAAAAAAAAAAwACcAAAAAAAAAAAAwAC4AAAAAAAAAAAAwAF8AAAAAAAAAAAAxAAQAAAAAAAAAAAAxACIAAAAAAAAAAAAxACMAAAAAAAAAAAAxACQAAAAAAAAAAAAxACUAAAAAAAAAAAAxACYAAAAAAAAAAAAxAGAAAAAAAAAAAAAyAAUAAAAAAAAAAAAyACIAAAAAAAAAAAAyACMAAAAAAAAAAAAyACQAAAAAAAAAAAAyACUAAAAAAAAAAAAyACYAAAAAAAAAAAAyAGEAAAAAAAAAAAAzAAYAAAAAAAAAAAAzACcAAAAAAAAAAAAzACgAAAAAAAAAAAAzAGIAAAAAAAAAAAA0AAcAAAAAAAAAAAA0AA0AAAAAAAAAAAA0AGMAAAAAAAAAAAA1AAgAAAAAAAAAAAA1AAwAAAAAAAAAAAA1AGQAAAAAAAAAAAA2AAkAAAAAAAAAAAA2ADsAAAAAAAAAAAA2ADwAAAAAAAAAAAA2AD0AAAAAAAAAAAA2AD4AAAAAAAAAAAA2AGUAAAAAAAAAAAA3AAoAAAAAAAAAAAA3ADsAAAAAAAAAAAA3ADwAAAAAAAAAAAA3AD0AAAAAAAAAAAA3AD4AAAAAAAAAAAA3AGYAAAAAAAAAAAA4AAsAAAAAAAAAAAA4ADsAAAAAAAAAAAA4ADwAAAAAAAAAAAA4AFoAAAAAAAAAAAA4AFsAAAAAAAAAAAA4AGYAAAAAAAAAAAA4AGcAAAAAAAAAAAA5AAwAAAAAAAAAAAA5ABsAAAAAAAAAAAA5ABwAAAAAAAAAAAA5AB0AAAAAAAAAAAA5AGUAAAAAAAAAAAA5AGYAAAAAAAAAAAA5AGcAAAAAAAAAAAA6AA0AAAAAAAAAAAA6ABsAAAAAAAAAAAA6ABwAAAAAAAAAAAA6AGQAAAAAAAAAAAA6AGUAAAAAAAAAAAA6AGYAAAAAAAAAAAA7AA4AAAAAAAAAAAA7ABsAAAAAAAAAAAA7ABwAAAAAAAAAAAA7ADYAAAAAAAAAAAA7ADcAAAAAAAAAAAA7ADgAAAAAAAAAAAA7ADkAAAAAAAAAAAA7AGMAAAAAAAAAAAA7AGQAAAAAAAAAAAA7AGUAAAAAAAAAAAA8AA8AAAAAAAAAAAA8ADcAAAAAAAAAAAA8ADgAAAAAAAAAAAA8ADkAAAAAAAAAAAA8AGIAAAAAAAAAAAA8AGMAAAAAAAAAAAA8AGQAAAAAAAAAAAA9ABAAAAAAAAAAAAA9AGEAAAAAAAAAAAA9AGIAAAAAAAAAAAA9AGMAAAAAAAAAAAA+ABEAAAAAAAAAAAA+AGAAAAAAAAAAAAA+AGEAAAAAAAAAAAA+AGIAAAAAAAAAAAA/ABIAAAAAAAAAAAA/AF8AAAAAAAAAAAA/AGAAAAAAAAAAAAA/AGEAAAAAAAAAAABAABMAAAAAAAAAAABAACsAAAAAAAAAAABAAF4AAAAAAAAAAABAAF8AAAAAAAAAAABAAGAAAAAAAAAAAABBABQAAAAAAAAAAABBACsAAAAAAAAAAABBAF0AAAAAAAAAAABBAF4AAAAAAAAAAABBAF8AAAAAAAAAAABCABUAAAAAAAAAAABCACoAAAAAAAAAAABCACsAAAAAAAAAAABCAFwAAAAAAAAAAABCAF0AAAAAAAAAAABCAF4AAAAAAAAAAABDABYAAAAAAAAAAABDAFsAAAAAAAAAAABDAFwAAAAAAAAAAABDAF0AAAAAAAAAAABEABcAAAAAAAAAAABEAFoAAAAAAAAAAABEAFsAAAAAAAAAAABEAFwAAAAAAAAAAABFABgAAAAAAAAAAABFAFkAAAAAAAAAAABFAFoAAAAAAAAAAABFAFsAAAAAAAAAAABGABkAAAAAAAAAAABGAFgAAAAAAAAAAABGAFkAAAAAAAAAAABGAFoAAAAAAAAAAABHABoAAAAAAAAAAABHAC0AAAAAAAAAAABHAFcAAAAAAAAAAABHAFgAAAAAAAAAAABHAFkAAAAAAAAAAABIABsAAAAAAAAAAABIAC0AAAAAAAAAAABIAFYAAAAAAAAAAABIAFcAAAAAAAAAAABIAFgAAAAAAAAAAABJABwAAAAAAAAAAABJAC0AAAAAAAAAAABJAFUAAAAAAAAAAABJAFYAAAAAAAAAAABJAFcAAAAAAAAAAABKAB0AAAAAAAAAAABKACkAAAAAAAAAAABKACoAAAAAAAAAAABKAC0AAAAAAAAAAABKAFQAAAAAAAAAAABKAFUAAAAAAAAAAABKAFYAAAAAAAAAAABLAB0AAAAAAAAAAABLAB4AAAAAAAAAAABLACkAAAAAAAAAAABLACsAAAAAAAAAAABLACwAAAAAAAAAAABLAC0AAAAAAAAAAABLAFMAAAAAAAAAAABLAFQAAAAAAAAAAABLAFUAAAAAAAAAAABMAB8AAAAAAAAAAABMACkAAAAAAAAAAABMADQAAAAAAAAAAABMADUAAAAAAAAAAABMAFIAAAAAAAAAAABMAFMAAAAAAAAAAABMAFQAAAAAAAAAAABNACAAAAAAAAAAAABNACkAAAAAAAAAAABNADQAAAAAAAAAAABNADUAAAAAAAAAAABNAFEAAAAAAAAAAABNAFIAAAAAAAAAAABNAFMAAAAAAAAAAABOACEAAAAAAAAAAABOACUAAAAAAAAAAABOACYAAAAAAAAAAABOACkAAAAAAAAAAABOAFAAAAAAAAAAAABOAFEAAAAAAAAAAABOAFIAAAAAAAAAAABPACIAAAAAAAAAAABPACcAAAAAAAAAAABPACgAAAAAAAAAAABPACkAAAAAAAAAAABPADIAAAAAAAAAAABPAE8AAAAAAAAAAABPAFAAAAAAAAAAAABPAFEAAAAAAAAAAABQACMAAAAAAAAAAABQAE4AAAAAAAAAAABQAE8AAAAAAAAAAABQAFAAAAAAAAAAAABRACQAAAAAAAAAAABRAE0AAAAAAAAAAABRAE4AAAAAAAAAAABRAE8AAAAAAAAAAABSACUAAAAAAAAAAABSADEAAAAAAAAAAABSAEwAAAAAAAAAAABSAE0AAAAAAAAAAABSAE4AAAAAAAAAAABTACYAAAAAAAAAAABTAEsAAAAAAAAAAABTAEwAAAAAAAAAAABTAE0AAAAAAAAAAABUACcAAAAAAAAAAABUAEoAAAAAAAAAAABUAEsAAAAAAAAAAABUAEwAAAAAAAAAAABVACgAAAAAAAAAAABVAEkAAAAAAAAAAABVAEoAAAAAAAAAAABVAEsAAAAAAAAAAABWACkAAAAAAAAAAABWAEgAAAAAAAAAAABWAEkAAAAAAAAAAABWAEoAAAAAAAAAAABXACoAAAAAAAAAAABXAEcAAAAAAAAAAABXAEgAAAAAAAAAAABXAEkAAAAAAAAAAABYACsAAAAAAAAAAABYAEYAAAAAAAAAAABYAEcAAAAAAAAAAABYAEgAAAAAAAAAAABZACwAAAAAAAAAAABZAEUAAAAAAAAAAABZAEYAAAAAAAAAAABZAEcAAAAAAAAAAABaAC0AAAAAAAAAAABaAEQAAAAAAAAAAABaAEUAAAAAAAAAAABaAEYAAAAAAAAAAABbAC4AAAAAAAAAAABbAEMAAAAAAAAAAABbAEQAAAAAAAAAAABbAEUAAAAAAAAAAABcAC8AAAAAAAAAAABcAEIAAAAAAAAAAABcAEMAAAAAAAAAAABcAEQAAAAAAAAAAABdADAAAAAAAAAAAABdAEEAAAAAAAAAAABdAEIAAAAAAAAAAABdAEMAAAAAAAAAAABeADEAAAAAAAAAAABeAEAAAAAAAAAAAABeAEEAAAAAAAAAAABeAEIAAAAAAAAAAABfADIAAAAAAAAAAABfAD8AAAAAAAAAAABfAEAAAAAAAAAAAABfAEEAAAAAAAAAAABgADMAAAAAAAAAAABgAD4AAAAAAAAAAABgAD8AAAAAAAAAAABgAEAAAAAAAAAAAABhADQAAAAAAAAAAABhAD0AAAAAAAAAAABhAD4AAAAAAAAAAABhAD8AAAAAAAAAAABiADUAAAAAAAAAAABiADcAAAAAAAAAAABiADgAAAAAAAAAAABiADkAAAAAAAAAAABiADwAAAAAAAAAAABiAD0AAAAAAAAAAABiAD4AAAAAAAAAAABjADYAAAAAAAAAAABjADcAAAAAAAAAAABjADsAAAAAAAAAAABjADwAAAAAAAAAAABjAD0AAAAAAAAAAABkADcAAAAAAAAAAABkADoAAAAAAAAAAABkADsAAAAAAAAAAABkADwAAAAAAAAAAABlADgAAAAAAAAAAABlADkAAAAAAAAAAABlADoAAAAAAAAAAABlADsAAAAAAAAAAABmADkAAAAAAAAAAABmADoAAAAAAAAAAAA=")
 tile_set = ExtResource("4_blocking_tiles")
 script = ExtResource("5_blocking_layer")
 
@@ -149,6 +175,23 @@ position = Vector2(180, 900)
 
 [node name="OutdoorTownsfolk" type="Node" parent="."]
 script = ExtResource("10_townsfolk")
+npc_pockets = {
+"ashlaren-bell-warden": {
+"pocket_id": "ashlaren-bell-warden-purse",
+"pocket_gp": 9,
+"pocket_faction": "grain-factors-table"
+},
+"ashlaren-ghorr-steward": {
+"pocket_id": "ashlaren-ghorr-steward-purse",
+"pocket_gp": 9,
+"pocket_faction": "grain-factors-table"
+},
+"ashlaren-warehouse-watch": {
+"pocket_id": "ashlaren-warehouse-watch-purse",
+"pocket_gp": 9,
+"pocket_faction": "grain-factors-table"
+}
+}
 
 [node name="AshlarenDressing" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -157,53 +200,59 @@ y_sort_enabled = true
 z_index = -2
 
 [node name="PavingGrainRoad01" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(420, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(429, 880)
+scale = Vector2(1.13, 0.79)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad02" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(676, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(698, 927)
+scale = Vector2(1.07, 0.75)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad03" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(932, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(956, 900)
+scale = Vector2(1.01, 0.71)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad04" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(1188, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1175, 883)
+scale = Vector2(0.9, 0.63)
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad05" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(1444, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1445, 928)
+scale = Vector2(0.98, 0.69)
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad06" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(1700, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1679, 880)
+scale = Vector2(1.08, 0.76)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad07" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(1956, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(1941, 883)
+scale = Vector2(0.95, 0.66)
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad08" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(2212, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(2223, 882)
+scale = Vector2(1.05, 0.73)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad09" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(2468, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(2484, 895)
+scale = Vector2(0.94, 0.66)
+flip_h = true
 texture = ExtResource("16_weftlumin")
 
 [node name="PavingGrainRoad10" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
-position = Vector2(2724, 900)
-scale = Vector2(1, 0.7)
+position = Vector2(2707, 908)
+scale = Vector2(0.97, 0.68)
 texture = ExtResource("16_weftlumin")
 
 [node name="CobbleMarket01" type="Sprite2D" parent="AshlarenDressing/GroundDetails"]
@@ -305,7 +354,7 @@ texture = ExtResource("3_weftlumin")
 offset = Vector2(0, -384)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/WeighingHallFacade"]
-shape = SubResource("RectangleShape2D_weftlumin1")
+shape = SubResource("base_AshlarenDressing_SolidProps_WeighingHallFacade")
 
 [node name="MillhouseFacade" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(1900, 700)
@@ -315,7 +364,7 @@ texture = ExtResource("4_weftlumin")
 offset = Vector2(0, -384)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/MillhouseFacade"]
-shape = SubResource("RectangleShape2D_weftlumin1")
+shape = SubResource("base_AshlarenDressing_SolidProps_MillhouseFacade")
 
 [node name="ShrineBell" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(2500, 600)
@@ -326,7 +375,7 @@ texture = ExtResource("5_weftlumin")
 offset = Vector2(0, -307)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/ShrineBell"]
-shape = SubResource("RectangleShape2D_weftlumin2")
+shape = SubResource("base_AshlarenDressing_SolidProps_ShrineBell")
 
 [node name="WeighingBoard" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(1525, 780)
@@ -336,7 +385,7 @@ texture = ExtResource("6_weftlumin")
 offset = Vector2(0, -128)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/WeighingBoard"]
-shape = SubResource("RectangleShape2D_weftlumin3")
+shape = SubResource("base_AshlarenDressing_SolidProps_WeighingBoard")
 
 [node name="MarketStallWest" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(1350, 1150)
@@ -346,7 +395,7 @@ texture = ExtResource("7_weftlumin")
 offset = Vector2(0, -128)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/MarketStallWest"]
-shape = SubResource("RectangleShape2D_weftlumin4")
+shape = SubResource("base_AshlarenDressing_SolidProps_MarketStallWest")
 
 [node name="MarketStallEast" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(1650, 1150)
@@ -356,7 +405,7 @@ texture = ExtResource("7_weftlumin")
 offset = Vector2(0, -128)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/MarketStallEast"]
-shape = SubResource("RectangleShape2D_weftlumin4")
+shape = SubResource("base_AshlarenDressing_SolidProps_MarketStallEast")
 
 [node name="GrainCart" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(2250, 1000)
@@ -367,7 +416,7 @@ texture = ExtResource("8_weftlumin")
 offset = Vector2(0.5, -124)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/GrainCart"]
-shape = SubResource("RectangleShape2D_weftlumin5")
+shape = SubResource("base_AshlarenDressing_SolidProps_GrainCart")
 
 [node name="WarehouseWallWest" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(2480, 1180)
@@ -377,7 +426,10 @@ texture = ExtResource("9_weftlumin")
 offset = Vector2(0, -128)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/WarehouseWallWest"]
-shape = SubResource("RectangleShape2D_weftlumin6")
+shape = SubResource("base_AshlarenDressing_SolidProps_WarehouseWallWest")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/WarehouseWallWest"]
+shape = SubResource("base_AshlarenDressing_SolidProps_WarehouseWallWest_2")
 
 [node name="WarehouseWallEast" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(2736, 1180)
@@ -387,7 +439,10 @@ texture = ExtResource("9_weftlumin")
 offset = Vector2(0, -128)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/WarehouseWallEast"]
-shape = SubResource("RectangleShape2D_weftlumin6")
+shape = SubResource("base_AshlarenDressing_SolidProps_WarehouseWallEast")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/WarehouseWallEast"]
+shape = SubResource("base_AshlarenDressing_SolidProps_WarehouseWallEast_2")
 
 [node name="YardBrazier" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(2300, 1300)
@@ -398,7 +453,7 @@ texture = ExtResource("10_weftlumin")
 offset = Vector2(0, -64)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/YardBrazier"]
-shape = SubResource("RectangleShape2D_weftlumin7")
+shape = SubResource("base_AshlarenDressing_SolidProps_YardBrazier")
 
 [node name="SealedSackCrates" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(2600, 1330)
@@ -409,7 +464,7 @@ texture = ExtResource("11_weftlumin")
 offset = Vector2(0, -77)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/SealedSackCrates"]
-shape = SubResource("RectangleShape2D_weftlumin8")
+shape = SubResource("base_AshlarenDressing_SolidProps_SealedSackCrates")
 
 [node name="YardCrates" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(2440, 1290)
@@ -420,7 +475,7 @@ texture = ExtResource("11_weftlumin")
 offset = Vector2(0, -64)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/YardCrates"]
-shape = SubResource("RectangleShape2D_weftlumin9")
+shape = SubResource("base_AshlarenDressing_SolidProps_YardCrates")
 
 [node name="OakNorthWest" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(420, 330)
@@ -431,7 +486,7 @@ texture = ExtResource("12_weftlumin")
 offset = Vector2(0, -205)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/OakNorthWest"]
-shape = SubResource("RectangleShape2D_weftlumin10")
+shape = SubResource("base_AshlarenDressing_SolidProps_OakNorthWest")
 
 [node name="OakSouthWest" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(460, 1560)
@@ -442,7 +497,7 @@ texture = ExtResource("13_weftlumin")
 offset = Vector2(0, -205)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/OakSouthWest"]
-shape = SubResource("RectangleShape2D_weftlumin10")
+shape = SubResource("base_AshlarenDressing_SolidProps_OakSouthWest")
 
 [node name="OakNorthEast" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(2840, 260)
@@ -453,7 +508,7 @@ texture = ExtResource("13_weftlumin")
 offset = Vector2(0, -205)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/OakNorthEast"]
-shape = SubResource("RectangleShape2D_weftlumin10")
+shape = SubResource("base_AshlarenDressing_SolidProps_OakNorthEast")
 
 [node name="OakSouthEast" type="StaticBody2D" parent="AshlarenDressing/SolidProps"]
 position = Vector2(2860, 1700)
@@ -464,7 +519,7 @@ texture = ExtResource("12_weftlumin")
 offset = Vector2(0, -205)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AshlarenDressing/SolidProps/OakSouthEast"]
-shape = SubResource("RectangleShape2D_weftlumin10")
+shape = SubResource("base_AshlarenDressing_SolidProps_OakSouthEast")
 
 [node name="SpawnFromKesselford" type="Marker2D" parent="."]
 position = Vector2(260, 900)
@@ -492,3 +547,16 @@ transition_id = &"ashlaren_weighing_hall_enter"
 position = Vector2(1900, 700)
 transition_id = &"ashlaren_millhouse_enter"
 
+[node name="WarehouseChallenge" parent="." instance=ExtResource("20_interactable")]
+position = Vector2(2300, 1380)
+; DRAFT: Bellow is intimidation (docs/briefs/dramgid-brief.md, SKILL.BELLOW).
+; Challenge the existing warehouse watch from beside the yard brazier; no access gate.
+display_name = "WAREHOUSE WATCH"
+prompt_text = "CHALLENGE THE WATCH"
+interaction_text = "The watch breaks eye contact."
+interaction_flag = "chapter_ashlaren_watch_challenged"
+lock_skill = "bellow"
+lock_modifier = 0.0
+lock_id = "ashlaren-warehouse-challenge"
+locked_message = "Make the warehouse watch flinch."
+lock_failed_message = "The watch holds your gaze."

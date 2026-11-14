@@ -310,7 +310,11 @@ func attempt_pickpocket(forced_rolls: Array[int] = []) -> Dictionary:
 		return {"attempted": false, "success": false, "reason": "unknown_skill"}
 
 	var check: Dictionary = SkillCheck.resolve(
-		pocket_skill, null, pocket_modifier, "pocket-%s" % pocket_id, forced_rolls
+		pocket_skill,
+		null,
+		pocket_modifier - SkillCheck.loom_penalty(pocket_skill, FieldMap.zone_delta_for(self)),
+		"pocket-%s" % pocket_id,
+		forced_rolls
 	)
 	var succeeded := bool(check.get("success", false))
 	GameState.set_flag(pocket_lifted_flag() if succeeded else pocket_failed_flag(), true)

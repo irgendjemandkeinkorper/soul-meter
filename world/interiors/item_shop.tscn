@@ -151,3 +151,15 @@ interaction_flag = "loot_opened_item_shop_backroom_crate"
 loot = Array[Dictionary]([{"item_id": "tools/surveyors_chalk", "quantity": 1}, {"item_id": "materials/lamp_oil", "quantity": 2}])
 container_id = "item-shop-backroom-crate"
 owned_by_faction = "iron-companies"
+
+; Perception check: listen for the latch. Numeric tuning matches the road's skill lock.
+[node name="LatchCrate" parent="." instance=ExtResource("3_chest")]
+position = Vector2(1450, 1000)
+display_name = "Supply Crate"
+prompt_text = "Open"
+interaction_flag = "loot_opened_item_shop_latch_crate"
+lock_skill = "ear"
+lock_modifier = 0.0
+container_id = "item-shop-latch-crate"
+owned_by_faction = "iron-companies"
+loot_table_id = &"dom-workshop-stores"

@@ -204,6 +204,17 @@ func elevation_delta(_actor: BattleActor, _target: BattleActor) -> int:
 	return 0
 
 
+## What-if geometry for "walk there, then act" (combat polish 2026-11-02). While a probe is
+## set, rules that read the actor's cell read `cell` instead. Models without cells ignore it.
+## Every probe_cell() is paired with clear_probe() before anything else reads the board.
+func probe_cell(_actor: BattleActor, _cell: Vector2i) -> void:
+	pass
+
+
+func clear_probe(_actor: BattleActor) -> void:
+	pass
+
+
 ## The cell an actor stands on, or null when this model has no cells or the actor is absent.
 ## Consumers still branch on `capabilities().cells`; this is a convenience over
 ## `describe_position(position_of(actor))`, never a second handle format.

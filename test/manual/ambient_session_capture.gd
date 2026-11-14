@@ -73,24 +73,22 @@ func test_ambient_bog_wight_fight_reads_with_the_log_hidden() -> void:
 	if boot_scene != null:
 		boot_scene.hide()
 
-	# Production mounts the battle screen from the chart's Battle state; the runner's chart is
-	# not in Active, so mount the same screen by hand over the field's own camera.
+	# One bar, both modes (owner 2026-11-01): on entering the chart's Battle state the field's
+	# own HUD grows its combat parts (GameFlow._on_battle_entered). The runner's chart is not
+	# in Active, so enter combat on the field HUD by hand, over the field's own camera.
+	var field_hud := field.field_hud()
 	for layer: Node in root.find_children("*", "CanvasLayer", true, false):
-		(layer as CanvasLayer).hide()
-	var hud := CanvasLayer.new()
-	hud.layer = 10
-	root.add_child(hud)
-	var screen := load("res://ui/screens/battle.tscn").instantiate() as Screen
-	screen.theme = ThemeBuilder.build()
-	hud.add_child(screen)
+		if layer != field_hud:
+			(layer as CanvasLayer).hide()
+	field.set_combat_mode(true)
+	field_hud.enter_combat(field)
 	var camera := player.get_node("Camera2D") as Camera2D
 	camera.enabled = true
 	camera.make_current()
 	camera.reset_smoothing()
 	await runner.simulate_frames(5)
-	var log_label := screen.get("_log_lbl") as Control
-	if log_label != null:
-		log_label.get_parent().hide()
+	# Log hidden: the combat bar's message window is the combat log.
+	field_hud.combat_bar.log_scroll.hide()
 	await runner.simulate_frames(2)
 	await _capture("ambient-open")
 
@@ -101,7 +99,8 @@ func test_ambient_bog_wight_fight_reads_with_the_log_hidden() -> void:
 	await _capture("ambient-after-strike")
 	print("WIGHT HP ", hp_before, " -> ", wight.battle_actor().hp)
 
-	screen.free()
+	field_hud.exit_combat()
+	field.set_combat_mode(false)
 	Battle._end_session(null)
 
 

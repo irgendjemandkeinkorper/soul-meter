@@ -5,15 +5,6 @@ extends Screen
 const ITEM_SLOT_SCENE := preload("res://ui/components/item_slot.tscn")
 const BAG_SLOT_SCENE := preload("res://ui/components/item_slot_small.tscn")
 const EQUIPMENT_SLOTS: Array[StringName] = [&"main", &"off", &"head", &"body", &"trinket"]
-## Pandora items carry `equip_slot` values like "main_hand"; the rail's slot names are
-## the short forms above. Both spellings are accepted wherever a slot is matched.
-const EQUIP_SLOT_ALIASES := {
-	"main_hand": &"main",
-	"off_hand": &"off",
-	"head": &"head",
-	"body": &"body",
-	"trinket": &"trinket",
-}
 const WEIGHT_CAPACITY := 60.0
 
 var _bag_grid: CtrlInventoryGrid
@@ -27,10 +18,14 @@ var _flavour_label: Label
 var _requirement_label: Label
 var _value_label: Label
 var _selected_item: InventoryItem
+var _actions: HBoxContainer
 var _detail_column: Control
 var _equip_button: Button
 var _drop_button: Button
 var _closing := false
+var _selected_member: PartyMember
+var _member_picker: OptionButton
+var _bag_drop_target: Control
 
 
 func _uses_ledger_style() -> bool:
@@ -42,35 +37,74 @@ func _build() -> void:
 	_build_shell()
 	_ensure_bag_constraints()
 	_build_columns()
-	_restore_equipment()
+	_configure_equipment_drops()
+	_refresh_members()
 	_refresh_detail()
 	_refresh_weight()
 	GameState.inventory_changed.connect(_refresh_weight)
+	GameState.party_changed.connect(_refresh_members)
 
 
 func _exit_tree() -> void:
 	_closing = true
-	# The per-slot inventories are children of this screen and die with it, so the
-	# equipped state is snapshotted into GameState.equipped_slots here (the single
-	# write point — every in-screen drag/equip path is captured by this final pass)
-	# and the items themselves return to the persistent bag.
-	GameState.equipped_slots.clear()
-	for slot_name: StringName in _equipment:
-		var inventory: Inventory = _equipment[slot_name]
-		for item: InventoryItem in inventory.get_items().duplicate():
-			GameState.equipped_slots[String(slot_name)] = item.get_prototype().get_prototype_id()
-			if not transfer_from_equipment(item, GameState.inventory):
-				push_error("InventoryScreen: could not return %s to the bag on close." % item.get_title())
+	# Rail inventories contain display references only. GameState owns all edits
+	# immediately, so closing/saving/switching members never transfers physical items.
+
+
+func _refresh_members() -> void:
+	if _closing:
+		return
+	var selected_id := _selected_member.id if _selected_member != null else ""
+	_member_picker.clear()
+	var selected_index := 0
+	for index: int in GameState.party.size():
+		var member: PartyMember = GameState.party[index]
+		_member_picker.add_item(member.display_name)
+		if member.id == selected_id:
+			selected_index = index
+	_member_picker.disabled = GameState.party.is_empty()
+	_selected_member = null
+	if not GameState.party.is_empty():
+		_member_picker.select(selected_index)
+		_selected_member = GameState.party[selected_index]
+	_restore_equipment()
+	_refresh_detail()
+
+
+func _on_member_selected(index: int) -> void:
+	if index < 0 or index >= GameState.party.size():
+		return
+	_selected_member = GameState.party[index]
+	_restore_equipment()
+	_refresh_detail()
 
 
 func _restore_equipment() -> void:
 	for slot_name: StringName in EQUIPMENT_SLOTS:
-		var proto_id := str(GameState.equipped_slots.get(String(slot_name), ""))
+		var slot_inventory: Inventory = _equipment[slot_name]
+		slot_inventory.clear()
+		if _selected_member == null:
+			continue
+		var proto_id := str(_selected_member.equipped_slots.get(String(slot_name), ""))
 		if proto_id.is_empty():
 			continue
-		for item: InventoryItem in GameState.inventory.get_items_with_prototype_id(proto_id):
-			if transfer_to_equipment(item, _equipment[slot_name], slot_name):
-				break
+		if GameState.equipped_item(_selected_member, slot_name) != null:
+			var display_item := InventoryItem.new(GameState.inventory.protoset, proto_id)
+			transfer_to_equipment(display_item, slot_inventory, slot_name)
+
+
+func _configure_equipment_drops() -> void:
+	# GLoot normally transfers items after emitting item_dropped. Forward each
+	# rail control's drop to the system-owned equip request; the rail is a view.
+	for slot_name: StringName in EQUIPMENT_SLOTS:
+		var grid := find_child("Equipment_%s" % slot_name, true, false) as CtrlInventoryGrid
+		var target := grid.get_node("_CtrlInventoryGridBasic") as Control
+		target.set_drag_forwarding(
+			Callable(), _can_drop_equipment.bind(slot_name),
+			func(at: Vector2, data: Variant) -> void: grid.item_dropped.emit(data, at)
+		)
+	_bag_drop_target = _bag_grid.get_node("_CtrlInventoryGridBasic") as Control
+	_bag_drop_target.set_drag_forwarding(Callable(), _can_drop_bag, _drop_on_bag)
 
 
 func _build_shell() -> void:
@@ -188,6 +222,12 @@ func _build_equipment_column() -> Control:
 	column.custom_minimum_size.x = 260.0
 	column.theme_type_variation = "ScreenContentColumn"
 	column.add_child(_section("EQUIPMENT"))
+	_member_picker = OptionButton.new()
+	_member_picker.name = "EquipmentMemberPicker"
+	_member_picker.tooltip_text = tr("PARTY MEMBER") # DRAFT: owner review.
+	_member_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_member_picker.item_selected.connect(_on_member_selected)
+	column.add_child(_member_picker)
 	for slot_name: StringName in EQUIPMENT_SLOTS:
 		column.add_child(_build_equipment_row(slot_name))
 	return column
@@ -210,6 +250,7 @@ func _build_equipment_row(slot_name: StringName) -> Control:
 	grid.custom_minimum_size = Vector2.ONE * DS.SLOT_SIZE_SM
 	grid.item_dropped.connect(_on_equipment_drop.bind(slot_name))
 	grid.inventory_item_selected.connect(_on_item_selected)
+	grid.selection_style = _selection_style()
 	row.add_child(grid)
 	var labels := VBoxContainer.new()
 	labels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -257,6 +298,7 @@ func _build_bag_column() -> Control:
 	_bag_grid.item_spacing = DS.ITEM_GRID_GAP
 	_bag_grid.custom_item_control_scene = BAG_SLOT_SCENE
 	_bag_grid.inventory_item_selected.connect(_on_item_selected)
+	_bag_grid.selection_style = _selection_style()
 	scroll.add_child(_bag_grid)
 	scroll.resized.connect(func() -> void:
 		var cell := clampf(floorf((scroll.size.x - DS.SPACE_6) / 8.0) - DS.ITEM_GRID_GAP, DS.SLOT_SIZE_SM, DS.SLOT_SIZE)
@@ -279,7 +321,11 @@ func _build_detail_column() -> Control:
 	_value_label = _detail_label("ItemValue", "", "StatLabel")
 	for child: Control in [_name_label, _type_label, _stats, _flavour_label, _requirement_label, _value_label]:
 		column.add_child(child)
+	# U3: EQUIP and DROP belong to a selected item; with nothing selected they are hidden.
 	var actions := HBoxContainer.new()
+	actions.name = "ItemActions"
+	actions.visible = false
+	_actions = actions
 	var equip := Button.new()
 	_equip_button = equip
 	equip.name = "EquipButton"
@@ -298,6 +344,12 @@ func _build_detail_column() -> Control:
 	return column
 
 
+## GLoot draws its own selection frame over the grid; the screen hands it the theme's
+## `ItemSelection` box (DS: selected = violet edge) instead of the vendor's white outline.
+func _selection_style() -> StyleBox:
+	return get_theme_stylebox("panel", "ItemSelection")
+
+
 func _detail_label(node_name: String, text: String, variation: String) -> Label:
 	var label := Label.new()
 	label.name = node_name
@@ -308,6 +360,12 @@ func _detail_label(node_name: String, text: String, variation: String) -> Label:
 
 
 func _on_item_selected(item: InventoryItem) -> void:
+	# Selecting a rail reference selects its real bag item for all actions.
+	if is_instance_valid(item) and item.get_inventory() != GameState.inventory:
+		for slot: StringName in _equipment:
+			if item.get_inventory() == _equipment[slot]:
+				item = GameState.equipped_item(_selected_member, slot)
+				break
 	_selected_item = item
 	_refresh_detail()
 
@@ -317,8 +375,14 @@ func _refresh_detail() -> void:
 		_stats.remove_child(child)
 		child.queue_free()
 	var selected := is_instance_valid(_selected_item)
-	_equip_button.disabled = not selected or not _equipment.has(slot_of(_selected_item)) or _selected_item.get_inventory() != GameState.inventory
-	_drop_button.disabled = not selected or _selected_item.get_inventory() != GameState.inventory
+	_actions.visible = selected
+	var owner: PartyMember = null
+	if selected:
+		owner = GameState.equipment_owner(_selected_item)
+	var worn_here := owner != null and owner == _selected_member
+	_equip_button.text = tr("UNEQUIP") if worn_here else tr("EQUIP") # DRAFT: UNEQUIP.
+	_equip_button.disabled = not selected or not (worn_here or GameState.can_equip_item(_selected_member, _selected_item, slot_of(_selected_item)))
+	_drop_button.disabled = not selected or owner != null or _selected_item.get_inventory() != GameState.inventory
 	if not selected:
 		_name_label.text = tr("SELECT AN ITEM")
 		for label: Label in [_type_label, _flavour_label, _requirement_label, _value_label]:
@@ -336,31 +400,62 @@ func _refresh_detail() -> void:
 			_stats.add_child(row)
 	_flavour_label.text = str(_selected_item.get_property("flavour", ""))
 	_requirement_label.text = str(_selected_item.get_property("requirement", ""))
+	if owner != null and owner != _selected_member:
+		# DRAFT: owner review.
+		_requirement_label.text = tr("EQUIPPED BY %s — UNEQUIP THERE FIRST") % owner.display_name
+	for property: String in ["attack_bonus", "defense_bonus"]:
+		if _selected_item.has_property(property):
+			var row := Label.new()
+			# DRAFT: owner review. Equipment stats do not imply any other weapon effect.
+			var format := tr("ATTACK BONUS  %+d") if property == "attack_bonus" else tr("DEFENSE BONUS  %+d")
+			row.text = format % int(_selected_item.get_property(property))
+			row.theme_type_variation = "StatLabel"
+			_stats.add_child(row)
 	_value_label.text = "%s SILVER" % _selected_item.get_property("value", _selected_item.get_property("base_price", 0))
 	_settle_content(_detail_column)
 
 
 func _on_equipment_drop(item: InventoryItem, _offset: Vector2, slot_name: StringName) -> void:
-	var target: Inventory = _equipment[slot_name]
-	if slot_of(item) != slot_name:
-		transfer_from_equipment(item, GameState.inventory)
+	if GameState.equip_item(_selected_member, item, slot_name):
+		_flash(find_child("Equipment_%s" % slot_name, true, false) as Control)
+
+
+func _can_drop_equipment(_at: Vector2, data: Variant, slot: StringName) -> bool:
+	return data is InventoryItem and GameState.can_equip_item(_selected_member, data, slot)
+
+
+func _can_drop_bag(_at: Vector2, data: Variant) -> bool:
+	return data is InventoryItem
+
+
+func _drop_on_bag(at: Vector2, data: Variant) -> void:
+	if not data is InventoryItem:
 		return
-	_flash(find_child("Equipment_%s" % slot_name, true, false) as Control)
+	var item: InventoryItem = data
+	for slot: StringName in _equipment:
+		if item.get_inventory() == _equipment[slot]:
+			GameState.unequip_item(_selected_member, slot)
+			return
+	# Ordinary bag movement keeps GLoot's existing grid/stack behavior.
+	_bag_drop_target.call("_drop_data", at, data)
 
 
 func _equip_selected() -> void:
 	if not is_instance_valid(_selected_item):
 		return
 	var slot_name := slot_of(_selected_item)
+	if _selected_member != null and GameState.equipment_owner(_selected_item) == _selected_member:
+		GameState.unequip_item(_selected_member, slot_name)
+		return
 	if not _equipment.has(slot_name):
 		_requirement_label.text = "THIS ITEM HAS NO COMPATIBLE SLOT"
 		return
-	if transfer_to_equipment(_selected_item, _equipment[slot_name], slot_name):
+	if GameState.equip_item(_selected_member, _selected_item, slot_name):
 		_flash(find_child("Equipment_%s" % slot_name, true, false) as Control)
 
 
 func _drop_selected() -> void:
-	if is_instance_valid(_selected_item) and _selected_item.get_inventory() == GameState.inventory:
+	if is_instance_valid(_selected_item) and _selected_item.get_inventory() == GameState.inventory and GameState.equipment_owner(_selected_item) == null:
 		GameState.inventory.remove_item(_selected_item)
 		_selected_item = null
 		_refresh_detail()
@@ -394,8 +489,7 @@ static func make_equipment_inventory(protoset: JSON) -> Inventory:
 
 
 static func slot_of(item: InventoryItem) -> StringName:
-	var raw := str(item.get_property("slot", item.get_property("equip_slot", "")))
-	return EQUIP_SLOT_ALIASES.get(raw, StringName(raw))
+	return GameState.equipment_slot_of(item)
 
 
 static func transfer_to_equipment(

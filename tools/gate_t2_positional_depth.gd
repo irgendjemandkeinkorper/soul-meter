@@ -45,9 +45,6 @@ const GRID_HEIGHT := 5
 const MAX_ALLY_DECISIONS := 300
 const MOVE_ACTION_ID := &"__gate_t2_ally_move__"
 const RIDGE_ELEVATION := 2
-const FACING_ORDER: Array[StringName] = [
-	&"e", &"se", &"s", &"sw", &"w", &"nw", &"n", &"ne"
-]
 
 
 func _initialize() -> void:
@@ -120,8 +117,10 @@ static func _run_arm(use_positioning: bool, encounter_id: StringName = ENCOUNTER
 	var battlefield := GridBattlefieldModel.new()
 	battlefield.configure(rules)
 	battlefield.build_grid(ground)
+	# The ridge is authored on cells; on hexes it covers the hexes on those cells (item 34).
 	for x in range(1, GRID_WIDTH - 1):
-		battlefield.set_elevation(Vector2i(x, 2), RIDGE_ELEVATION)
+		for cell: Vector2i in battlefield.cells_on_square(Vector2i(x, 2)):
+			battlefield.set_elevation(cell, RIDGE_ELEVATION)
 
 	var allies: Array[BattleActor] = _party()
 	var enemies: Array[BattleActor] = EncounterCatalog.make_actors(encounter_id)
@@ -228,7 +227,7 @@ static func _choose_action(
 		var candidate_cell: Vector2i = described.get("cell", Vector2i.ZERO)
 		var target_cell: Vector2i = target_position.get("cell", Vector2i.ZERO)
 		var delta := candidate_cell - target_cell
-		var distance := maxi(absi(delta.x), absi(delta.y))
+		var distance := GridMetric.distance(candidate_cell, target_cell)
 		var score := -distance * 100
 		if distance <= 1:
 			score += 1000
@@ -263,16 +262,11 @@ static func _face_toward(
 
 
 static func _facing_for_delta(delta: Vector2i) -> StringName:
-	if delta == Vector2i.ZERO:
-		return &""
-	var index := int(round(atan2(delta.y, delta.x) / (PI / 4.0)))
-	index = ((index % FACING_ORDER.size()) + FACING_ORDER.size()) % FACING_ORDER.size()
-	return FACING_ORDER[index]
+	return GridBattlefieldModel.facing_for_delta(delta)
 
 
 static func _opposite_facing(facing: StringName) -> StringName:
-	var index := FACING_ORDER.find(facing)
-	return &"" if index == -1 else FACING_ORDER[(index + 4) % FACING_ORDER.size()]
+	return GridBattlefieldModel.opposite_facing(facing)
 
 
 static func _party() -> Array[BattleActor]:

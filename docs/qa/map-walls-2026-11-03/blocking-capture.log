@@ -1,0 +1,8 @@
+BLOCKING-CAPTURE: ok kesselford cells=440 solids=16 -> walls-kesselford.png
+BLOCKING-CAPTURE: ok ashlaren cells=464 solids=22 -> walls-ashlaren.png
+BLOCKING-CAPTURE: ok hollowmere cells=474 solids=35 -> walls-hollowmere.png
+BLOCKING-CAPTURE: ok long_verge cells=445 solids=32 -> walls-long_verge.png
+BLOCKING-CAPTURE: ok dorthkor_road cells=277 solids=8 -> walls-dorthkor_road.png
+BLOCKING-CAPTURE: ok wound_lip cells=286 solids=11 -> walls-wound_lip.png
+BLOCKING-CAPTURE: ok lower_trial_hall cells=897 solids=14 -> walls-lower_trial_hall.png
+BLOCKING-CAPTURE: ok

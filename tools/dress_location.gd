@@ -18,6 +18,13 @@ const STANDING_OFFSET := Vector2(0.0, -112.0)
 ## Structures: a static body at least this wide is a building, and its front gets wall bases.
 const STRUCTURE_MIN_WIDTH := 100.0
 const CLEAR_MARGIN := Vector2(64.0, 36.0)
+## A townsfolk post: the talk circle (48 px, `TownNpcSpawner`) plus room to stand beside it.
+const NPC_POST_CLEAR := Vector2(80.0, 56.0)
+const PLACEMENTS_DIR := "res://data/generated"
+const PLACEMENTS_SUFFIX := "_npc_placements.json"
+## A walk-in doorway's clear apron: two ground cells (64x32) every way from the doorway cell.
+const DOORWAY_APRON := Vector2(128.0, 64.0)
+const DOORWAY := "D"
 
 
 func _initialize() -> void:
@@ -110,6 +117,25 @@ static func read_layout(scene: Node) -> Dictionary:
 	for node: Node in scene.find_children("*Door*", "Node2D", true, false):
 		var at := (node as Node2D).global_position
 		keep_clear.append(Rect2(at - CLEAR_MARGIN * 1.5, CLEAR_MARGIN * 3.0))
+	# Townsfolk spawn at run time (only with a party), so their posts are read from the generated
+	# placements rather than the live scene: each post keeps its talk circle clear.
+	for at: Vector2 in npc_posts(scene):
+		keep_clear.append(Rect2(at - NPC_POST_CLEAR, NPC_POST_CLEAR * 2.0))
+		route_points.append(at)
+	# Walk-in buildings (item 35): nothing is dressed on their floor (they furnish themselves),
+	# and their doorways keep a clear apron, inside and out.
+	var no_dress := {}
+	for building: WalkInBuilding in walk_in_buildings(scene):
+		var building_plan := building.plan()
+		for cell: Vector2i in building.footprint_cells():
+			cells.erase(cell)
+			no_dress[cell] = true
+		for cell: Vector2i in building_plan.footprint_cells():
+			if building_plan.at(cell) != DOORWAY:
+				continue
+			var at := DresserScript.cell_center(origin, building.origin_cell + cell)
+			keep_clear.append(Rect2(at - DOORWAY_APRON, DOORWAY_APRON * 2.0))
+			route_points.append(at)
 	if hub == Vector2.INF and not route_points.is_empty():
 		hub = route_points[0]
 	var corridor := _corridor(cells, occupied, origin, hub, route_points)
@@ -129,8 +155,40 @@ static func read_layout(scene: Node) -> Dictionary:
 	return {
 		"origin": origin, "cells": cells, "occupied": occupied, "structures": structures,
 		"keep_clear": keep_clear, "corridor": corridor, "playable": playable, "roads": roads,
-		"fords": fords,
+		"fords": fords, "no_dress": no_dress,
 	}
+
+
+## Where this scene's generated townsfolk stand: every `*_npc_placements.json` row whose scene
+## is this one, at its anchor node plus offset (as `TownNpcSpawner` places them).
+static func npc_posts(scene: Node) -> Array[Vector2]:
+	var posts: Array[Vector2] = []
+	var scene_path := scene.scene_file_path
+	for file: String in DirAccess.get_files_at(PLACEMENTS_DIR):
+		if not file.ends_with(PLACEMENTS_SUFFIX):
+			continue
+		var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(PLACEMENTS_DIR.path_join(file)))
+		if not data is Dictionary or not (data as Dictionary).get("placements") is Dictionary:
+			continue
+		var placements: Dictionary = (data as Dictionary)["placements"]
+		for npc_id: String in placements:
+			var row: Dictionary = placements[npc_id]
+			if str(row.get("scene", "")) != scene_path:
+				continue
+			var anchor := scene.find_child(str(row.get("anchor", "")), true, false) as Node2D
+			var offset: Variant = row.get("offset", [])
+			if anchor == null or not offset is Array or (offset as Array).size() != 2:
+				continue
+			posts.append(anchor.global_position + Vector2(float(offset[0]), float(offset[1])))
+	return posts
+
+
+static func walk_in_buildings(scene: Node) -> Array[WalkInBuilding]:
+	var found: Array[WalkInBuilding] = []
+	for node: Node in scene.find_children("*", "Node2D", true, false):
+		if node is WalkInBuilding and (node as WalkInBuilding).layout != null:
+			found.append(node as WalkInBuilding)
+	return found
 
 
 static func read_catalog(batch_path: String) -> Array[Dictionary]:

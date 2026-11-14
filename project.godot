@@ -118,6 +118,56 @@ open_journal={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":81,"key_label":0,"unicode":113,"location":0,"echo":false,"script":null)
 ]
 }
+combat_breakdown={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":66,"key_label":0,"unicode":98,"location":0,"echo":false,"script":null)
+]
+}
+combat_end_turn={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":32,"key_label":0,"unicode":32,"location":0,"echo":false,"script":null)
+]
+}
+combat_slot_1={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":49,"key_label":0,"unicode":49,"location":0,"echo":false,"script":null)
+]
+}
+combat_slot_2={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":50,"key_label":0,"unicode":50,"location":0,"echo":false,"script":null)
+]
+}
+combat_slot_3={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":51,"key_label":0,"unicode":51,"location":0,"echo":false,"script":null)
+]
+}
+combat_slot_4={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":52,"key_label":0,"unicode":52,"location":0,"echo":false,"script":null)
+]
+}
+combat_slot_5={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":53,"key_label":0,"unicode":53,"location":0,"echo":false,"script":null)
+]
+}
+combat_slot_6={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":54,"key_label":0,"unicode":54,"location":0,"echo":false,"script":null)
+]
+}
+combat_slot_7={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":55,"key_label":0,"unicode":55,"location":0,"echo":false,"script":null)
+]
+}
+combat_slot_8={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":56,"key_label":0,"unicode":56,"location":0,"echo":false,"script":null)
+]
+}
 interact={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":69,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
@@ -132,7 +182,7 @@ steal={
 [internationalization]
 
 locale/translations=PackedStringArray("res://addons/maaacks_game_template/base/translations/menus_translations.en.translation", "res://addons/maaacks_game_template/base/translations/menus_translations.fr.translation", "res://locale/es.po")
-locale/translations_pot_files=PackedStringArray("res://dialogue/iris_illepah.dialogue", "res://dialogue/marshal_coiljaw.dialogue", "res://quests/loamroot_sprigs.tres", "res://quests/dorthkor_road.tres", "res://quests/deep_trial.tres", "res://quests/field_debt.tres", "res://dialogue/sella_varn.dialogue", "res://dialogue/toma_reedhand.dialogue", "res://dialogue/hadrik_vale.dialogue", "res://test/integration/skill_check_condition.dialogue", "res://test/integration/harem_stet_combat.dialogue", "res://dialogue/dom_townsfolk.dialogue", "res://dialogue/dom_side_quests.dialogue", "res://test/fixtures/quest_audit/flags.dialogue", "res://dialogue/companions/serai_lun.dialogue", "res://dialogue/companions/wyneth_hallow_tide.dialogue", "res://dialogue/companions/old_grumbrand.dialogue", "res://dialogue/companions/maura_greyfen.dialogue", "res://dialogue/companions/ressa_quickfingers.dialogue", "res://dialogue/companions/korrath_ninefold.dialogue", "res://dialogue/lower_trial_hall.dialogue", "res://dialogue/council_elder.dialogue", "res://dialogue/dom_band_reactions.dialogue", "res://dialogue/dom_zhavar_rumors.dialogue", "res://dialogue/dom_side_quest_stubs.dialogue", "res://dialogue/main/unanswered_roar.dialogue", "res://quests/main/the_unanswered_roar.tres", "res://ui/hud/regions/forecast_panel/forecast_panel_region.gd", "res://ui/hud/regions/forecast_panel/forecast_panel_region.tscn", "res://ui/hud/injury_notice.gd", "res://ui/hud/injury_notice.tscn", "res://ui/hud/regions/unit_plate/unit_plate_region.gd", "res://ui/hud/hit_pulse.gd", "res://ui/hud/battle_interface.gd", "res://ui/components/treatment_notice.gd", "res://ui/components/treatment_notice.tscn", "res://dialogue/kesselford_townsfolk.dialogue", "res://dialogue/ashlaren_townsfolk.dialogue", "res://dialogue/long_verge_townsfolk.dialogue", "res://dialogue/hollowmere_townsfolk.dialogue", "res://dialogue/locations/hollowmere.dialogue", "res://dialogue/locations/kesselford.dialogue", "res://dialogue/locations/ashlaren.dialogue", "res://dialogue/locations/long_verge.dialogue", "res://dialogue/dom_fame_reactions.dialogue", "res://dialogue/hollowmere_side_quests.dialogue")
+locale/translations_pot_files=PackedStringArray("res://dialogue/iris_illepah.dialogue", "res://dialogue/marshal_coiljaw.dialogue", "res://quests/loamroot_sprigs.tres", "res://quests/dorthkor_road.tres", "res://quests/deep_trial.tres", "res://quests/field_debt.tres", "res://dialogue/sella_varn.dialogue", "res://dialogue/toma_reedhand.dialogue", "res://dialogue/hadrik_vale.dialogue", "res://test/integration/skill_check_condition.dialogue", "res://test/integration/harem_stet_combat.dialogue", "res://dialogue/dom_townsfolk.dialogue", "res://dialogue/dom_side_quests.dialogue", "res://test/fixtures/quest_audit/flags.dialogue", "res://dialogue/companions/serai_lun.dialogue", "res://dialogue/companions/wyneth_hallow_tide.dialogue", "res://dialogue/companions/old_grumbrand.dialogue", "res://dialogue/companions/maura_greyfen.dialogue", "res://dialogue/companions/ressa_quickfingers.dialogue", "res://dialogue/companions/korrath_ninefold.dialogue", "res://dialogue/lower_trial_hall.dialogue", "res://dialogue/council_elder.dialogue", "res://dialogue/dom_band_reactions.dialogue", "res://dialogue/dom_zhavar_rumors.dialogue", "res://dialogue/dom_side_quest_stubs.dialogue", "res://dialogue/main/unanswered_roar.dialogue", "res://quests/main/the_unanswered_roar.tres", "res://ui/hud/regions/forecast_panel/forecast_panel_region.gd", "res://ui/hud/regions/forecast_panel/forecast_panel_region.tscn", "res://ui/hud/injury_notice.gd", "res://ui/hud/injury_notice.tscn", "res://ui/hud/regions/unit_plate/unit_plate_region.gd", "res://ui/hud/hit_pulse.gd", "res://ui/hud/battle_interface.gd", "res://ui/components/treatment_notice.gd", "res://ui/components/treatment_notice.tscn", "res://dialogue/kesselford_townsfolk.dialogue", "res://dialogue/ashlaren_townsfolk.dialogue", "res://dialogue/long_verge_townsfolk.dialogue", "res://dialogue/hollowmere_townsfolk.dialogue", "res://dialogue/locations/hollowmere.dialogue", "res://dialogue/locations/kesselford.dialogue", "res://dialogue/locations/ashlaren.dialogue", "res://dialogue/locations/long_verge.dialogue", "res://dialogue/dom_fame_reactions.dialogue", "res://dialogue/hollowmere_side_quests.dialogue", "res://ui/screens/shop.gd", "res://dialogue/lower_trial_hall_rooms.dialogue")
 
 [maaacks_game_template]
 
@@ -149,3 +199,7 @@ disable_install_wizard=true
 textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+
+[soul_meter]
+
+grid/hex=true

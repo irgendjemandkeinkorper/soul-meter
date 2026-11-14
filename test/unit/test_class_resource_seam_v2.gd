@@ -4,6 +4,19 @@ extends GdUnitTestSuite
 ## merge of `on_cast_forecast` overrides. One unit test per channel plus one controller-level
 ## integration test per channel.
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
 
 class V2Spy:
 	extends ClassResource

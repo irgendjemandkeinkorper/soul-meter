@@ -131,7 +131,6 @@ func test_menus_and_screens() -> void:
 	await _shoot("res://ui/screens/character_creation.tscn", "02_chargen")
 	await _shoot("res://ui/screens/tavern.tscn", "03_tavern_picker")
 	await _shoot("res://ui/screens/inventory.tscn", "04_inventory")
-	await _shoot("res://ui/screens/party.tscn", "05_party")
 	await _shoot("res://ui/screens/journal.tscn", "06_journal")
 	await _shoot("res://ui/screens/standing.tscn", "07_standing")
 	await _shoot("res://ui/screens/character_sheet.tscn", "08_character_sheet")

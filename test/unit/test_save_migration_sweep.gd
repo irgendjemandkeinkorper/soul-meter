@@ -8,9 +8,9 @@ extends GdUnitTestSuite
 ##
 ## The three sections #300 names — `equipped_slots`, `class_resources.__deferred__`
 ## and the three manual slots — are the ones with no coverage today, and they
-## share a failure mode: they are *additive* keys no migration function mentions,
-## so nothing would notice if a future `duplicate()`/rebuild dropped them. Each is
-## asserted by value here, not by presence.
+## share a failure mode: a future `duplicate()`/rebuild could drop them. Each is
+## asserted by value here, not by presence. Schema 11 migrates the live flat rail;
+## this suite's unrelated nested equipment fixture must remain opaque and intact.
 ##
 ## Version note: #300 was written when DRAMGID was expected to be the 6→7 hop. It
 ## is not — 6→7 is breath and 7→8 is the element rename (#371), both shipped, and
@@ -171,13 +171,12 @@ func _migrated() -> Dictionary:
 	return result["payload"]
 
 
-# --- the additive keys nothing migrates ------------------------------------
+# --- legacy payloads preserved by value ------------------------------------
 
 
 func test_equipped_slots_survive_the_whole_chain_by_value() -> void:
-	# `equipped_slots` rides schema 6 as an additive key with no migration of its
-	# own (the loader just defaults it to {}), so nothing would catch it being
-	# dropped except a test that reads it back.
+	# This nested actor map is NOT the old live flat slot -> prototype rail.
+	# Schema 11 must preserve it rather than inventing equipment semantics for it.
 	var slots: Dictionary = _migrated()["game_state"]["equipped_slots"]
 	assert_int(slots.size()).is_equal(2)
 	assert_str(str(slots["vex"]["weapon"])).is_equal("taubstummer-axe")

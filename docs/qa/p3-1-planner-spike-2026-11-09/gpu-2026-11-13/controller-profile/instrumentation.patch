@@ -1,0 +1,490 @@
+diff --git a/globals/combat/combat_controller.gd b/globals/combat/combat_controller.gd
+index 6ccdffe1..63c62242 100644
+--- a/globals/combat/combat_controller.gd
++++ b/globals/combat/combat_controller.gd
+@@ -34,6 +34,18 @@ extends RefCounted
+ signal event_emitted(event: CombatEvent)
+ signal battle_finished(state: ResultState, outcome_id: StringName)
+ 
++static func _pf(label: String, t0: int) -> int:
++	var now := Time.get_ticks_usec()
++	if not Engine.has_meta(&"prof"):
++		Engine.set_meta(&"prof", {})
++	var prof: Dictionary = Engine.get_meta(&"prof")
++	var row: Array = prof.get(label, [0, 0, 0])
++	row[0] += 1
++	row[1] += now - t0
++	row[2] = maxi(int(row[2]), now - t0)
++	prof[label] = row
++	return now
++
+ enum State { IDLE, ROUND_START, ALLY_TURN, ENEMY_TURN, FINISHED }
+ enum ResultState { VICTORY, DEFEAT, FLED }
+ 
+@@ -948,6 +960,13 @@ func submit_speech(
+ 
+ 
+ func end_turn() -> bool:
++	var t_end := Time.get_ticks_usec()
++	var r := _end_turn_impl()
++	_pf("end_turn", t_end)
++	return r
++
++
++func _end_turn_impl() -> bool:
+ 	if state != State.ALLY_TURN or active_actor() == null:
+ 		return false
+ 	var actor := active_actor()
+@@ -1031,32 +1050,59 @@ func apply_balance_effect(parameters: Dictionary, actor: BattleActor = null) ->
+ 
+ 
+ func snapshot() -> Dictionary:
+-	return {
+-		"state": state,
+-		"encounter_id": _encounter_id,
+-		"fight_seed": fight_seed,
+-		"round": round_number,
+-		"balance": balance,
+-		"revealed_until_round": revealed_until_round,
+-		"concealed_until_round": concealed_until_round,
+-		"zone_boundaries_open_until_round": zone_boundaries_open_until_round,
+-		"balance_band_id": balance_band_id,
+-		"balance_lock_until_round": balance_lock_until_round,
+-		"threshold_effects_suppressed": threshold_effects_suppressed,
+-		"active_actor_id": active_actor().combat_id if active_actor() else &"",
+-		"allies": _frozen(_actor_snapshots(allies)),
+-		"enemies": _frozen(_actor_snapshots(enemies)),
+-		"tiles": _tile_snapshots(),
+-		"weather": _weather_snapshot(),
+-		"scheduler_mode": str(scheduler.to_dict().get("scheduler", "")) if scheduler != null else "",
+-		"turn_order": _frozen(_turn_order_snapshot()),
+-		"movement": _movement_snapshot(),
+-		"deferred": deferred_entries(),
+-		"fire": {"lines": fire.snapshot(), "marks": _marks_snapshot()},
+-		"materials": material.snapshot(),
+-		"holds": _holds.duplicate(true),
+-		"light": {"fields": _light_snapshot(), "shrouds": _shroud_snapshot()},
+-	}
++	var t_all := Time.get_ticks_usec()
++	var d := {}
++	var t := Time.get_ticks_usec()
++	d["state"] = state
++	t = _pf("snap.state", t)
++	d["encounter_id"] = _encounter_id
++	t = _pf("snap.encounter_id", t)
++	d["fight_seed"] = fight_seed
++	t = _pf("snap.fight_seed", t)
++	d["round"] = round_number
++	t = _pf("snap.round", t)
++	d["balance"] = balance
++	t = _pf("snap.balance", t)
++	d["revealed_until_round"] = revealed_until_round
++	t = _pf("snap.revealed_until_round", t)
++	d["concealed_until_round"] = concealed_until_round
++	t = _pf("snap.concealed_until_round", t)
++	d["zone_boundaries_open_until_round"] = zone_boundaries_open_until_round
++	t = _pf("snap.zone_boundaries_open_until_round", t)
++	d["balance_band_id"] = balance_band_id
++	t = _pf("snap.balance_band_id", t)
++	d["balance_lock_until_round"] = balance_lock_until_round
++	t = _pf("snap.balance_lock_until_round", t)
++	d["threshold_effects_suppressed"] = threshold_effects_suppressed
++	t = _pf("snap.threshold_effects_suppressed", t)
++	d["active_actor_id"] = active_actor().combat_id if active_actor() else &""
++	t = _pf("snap.active_actor_id", t)
++	d["allies"] = _frozen(_actor_snapshots(allies))
++	t = _pf("snap.allies", t)
++	d["enemies"] = _frozen(_actor_snapshots(enemies))
++	t = _pf("snap.enemies", t)
++	d["tiles"] = _tile_snapshots()
++	t = _pf("snap.tiles", t)
++	d["weather"] = _weather_snapshot()
++	t = _pf("snap.weather", t)
++	d["scheduler_mode"] = str(scheduler.to_dict().get("scheduler", "")) if scheduler != null else ""
++	t = _pf("snap.scheduler_mode", t)
++	d["turn_order"] = _frozen(_turn_order_snapshot())
++	t = _pf("snap.turn_order", t)
++	d["movement"] = _movement_snapshot()
++	t = _pf("snap.movement", t)
++	d["deferred"] = deferred_entries()
++	t = _pf("snap.deferred", t)
++	d["fire"] = {"lines": fire.snapshot(), "marks": _marks_snapshot()}
++	t = _pf("snap.fire", t)
++	d["materials"] = material.snapshot()
++	t = _pf("snap.materials", t)
++	d["holds"] = _holds.duplicate(true)
++	t = _pf("snap.holds", t)
++	d["light"] = {"fields": _light_snapshot(), "shrouds": _shroud_snapshot()}
++	t = _pf("snap.light", t)
++	_pf("snapshot", t_all)
++	return d
+ 
+ 
+ ## Additive UI query surface for a selected destination. The result uses the battlefield's
+@@ -1533,7 +1579,9 @@ static func calculate_damage(
+ ## gets a clean, ordered event stream with a bounded call stack.
+ func _drive_scheduler() -> void:
+ 	while state != State.FINISHED:
++		var tch := Time.get_ticks_usec()
+ 		_check_holds()
++		_pf("drive.check_holds", tch)
+ 		if not _has_living(allies):
+ 			_finish(ResultState.DEFEAT, &"defeat")
+ 			return
+@@ -1541,7 +1589,9 @@ func _drive_scheduler() -> void:
+ 			_finish(ResultState.VICTORY, &"slain")
+ 			return
+ 		state = State.ROUND_START
++		var ta := Time.get_ticks_usec()
+ 		var result := scheduler.advance()
++		ta = _pf("drive.advance", ta)
+ 		if not bool(result.get("allowed", false)):
+ 			# The only way advance() refuses here is &"no_participants" — everyone alive was
+ 			# already excluded above — or an internal scheduler defect. Either way the battle
+@@ -1549,6 +1599,7 @@ func _drive_scheduler() -> void:
+ 			_finish(ResultState.DEFEAT, &"defeat")
+ 			return
+ 		_translate_scheduler_extras(result)
++		ta = _pf("drive.extras", ta)
+ 		# A round-end fire checkpoint can empty a side before anyone's turn begins.
+ 		if not _has_living(allies):
+ 			_finish(ResultState.DEFEAT, &"defeat")
+@@ -1560,7 +1611,9 @@ func _drive_scheduler() -> void:
+ 		var is_continuation := upcoming == _last_turn_actor and int(result.get("ticks_elapsed", 0)) == 0
+ 		# Entries due at "the start of X's next scheduled turn" fire only when X's turn truly
+ 		# begins — an AP continuation of the turn that queued them is not a new turn.
++		ta = Time.get_ticks_usec()
+ 		_fire_due_deferred(null if is_continuation else upcoming)
++		ta = _pf("drive.deferred", ta)
+ 		if state == State.FINISHED:
+ 			return
+ 		var actor: BattleActor = result.get("actor")
+@@ -1581,9 +1634,15 @@ func _drive_scheduler() -> void:
+ 			"measures_crossed": result.get("measures_crossed", 0),
+ 		}
+ 		if not is_continuation:
++			ta = Time.get_ticks_usec()
+ 			release_accord_context(actor)
++			ta = _pf("drive.release_accord", ta)
+ 			_pay_hold_upkeep(actor)
+-			if not bool(scheduler.can_act(actor).get("allowed", false)):
++			ta = _pf("drive.hold_upkeep", ta)
++			var can := bool(scheduler.can_act(actor).get("allowed", false))
++			ta = _pf("drive.can_act", ta)
++			if not can:
++				_pf("drive.cannot_act_count", ta)
+ 				_last_turn_actor = actor
+ 				continue
+ 
+@@ -1593,19 +1652,24 @@ func _drive_scheduler() -> void:
+ 				# Autoplay counts a turn's KitAI steps and commands like a kit enemy's.
+ 				_kit_steps.erase(actor.combat_id)
+ 				_kit_used.erase(actor.combat_id)
++				ta = Time.get_ticks_usec()
+ 				_emit_event(&"turn_started", actor, null, turn_payload)
++				ta = _pf("drive.ally_turn_started_event", ta)
+ 				_class_resource_of(actor).on_turn_start()
+ 				for other: BattleActor in allies:
+ 					if other != actor and other.is_alive():
+ 						_class_resource_of(other).on_ally_turn_start(actor.combat_id)
++				ta = _pf("drive.ally_turn_start_hooks", ta)
+ 			_last_turn_actor = actor
+ 			_last_side = &"ally"
+ 			active_ally_index = allies.find(actor)
+ 			return
+ 
+ 		state = State.ENEMY_TURN
++		ta = Time.get_ticks_usec()
+ 		if _last_side != &"enemy":
+ 			_emit_event(&"enemy_turn_started", actor, null, turn_payload)
++		ta = _pf("drive.enemy_turn_started_event", ta)
+ 		if actor != _last_turn_actor or int(result.get("ticks_elapsed", 0)) != 0:
+ 			_class_resource_of(actor).on_turn_start()
+ 			_kit_steps.erase(actor.combat_id)
+@@ -1615,7 +1679,9 @@ func _drive_scheduler() -> void:
+ 					_class_resource_of(other).on_ally_turn_start(actor.combat_id)
+ 		_last_turn_actor = actor
+ 		_last_side = &"enemy"
++		ta = _pf("drive.enemy_turn_start_hooks", ta)
+ 		_resolve_enemy_actor(actor)
++		_pf("drive.resolve_enemy_actor", ta)
+ 		# Loop continues: the next scheduler.advance() picks whoever is ready next, ally or
+ 		# enemy, without this function recursing into itself.
+ 
+@@ -1680,23 +1746,29 @@ func _translate_scheduler_extras(result: Dictionary) -> void:
+ ## which enemy this is and when. Grid-capable battlefields plan a legal move before committing;
+ ## attack affordability is checked only after a target is in range.
+ func _resolve_enemy_actor(actor: BattleActor) -> void:
++	var tr := Time.get_ticks_usec()
+ 	if KitAI.runs(actor):
+ 		_resolve_kit_enemy(actor)
++		_pf("enemy.kit_path", tr)
+ 		return
+ 	var enemy_action := action_by_id(&"enemy-strike")
+ 	# #285 slice 5: the turn executes the enemy's plan, so a locked (read) intent and an unread
+ 	# enemy run the same path. The lock is spent by this turn whatever it does.
+ 	var plan := plan_enemy_turn(actor)
++	tr = _pf("enemy.plan_enemy_turn", tr)
+ 	_locked_intents.erase(actor.combat_id)
+ 	var target := actor_by_id(StringName(str(plan.get("target_id", ""))))
+ 	if target == null:
+ 		return
+ 	var targeting := battlefield.target_query(actor, target, enemy_action.target_profile)
++	tr = _pf("enemy.target_query", tr)
+ 	var has_cells := bool(battlefield.capabilities().get("cells", false))
+ 	if not bool(targeting.get("allowed", false)) and has_cells:
+ 		var destination := _best_enemy_position(actor, target)
++		tr = _pf("enemy.best_position", tr)
+ 		if destination != &"":
+ 			_resolve_enemy_move(actor, target, destination)
++			_pf("enemy.resolve_move", tr)
+ 			return
+ 		_emit_event(
+ 			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": targeting}
+@@ -1710,7 +1782,9 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
+ 	else:
+ 		# Planned as an advance, but the target came into reach: aim as an unread enemy would.
+ 		aim_options = choose_enemy_aim(actor, target, enemy_action)
++	tr = _pf("enemy.aim", tr)
+ 	var resolution_gate := _query_attack_resolution(actor, target, enemy_action, aim_options)
++	tr = _pf("enemy.query_resolution", tr)
+ 	if not bool(resolution_gate.get("allowed", false)):
+ 		_emit_event(
+ 			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": resolution_gate}
+@@ -1731,7 +1805,9 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
+ 	var apply_options := aim_options.duplicate(true)
+ 	apply_options["_resolution"] = resolution_gate["resolution"]
+ 	apply_options["_resolution_context"] = resolution_gate["context"]
++	tr = _pf("enemy.commit", tr)
+ 	var outcome := _apply_action(actor, target, committed_action, apply_options)
++	tr = _pf("enemy.apply_action", tr)
+ 	_finish_hold_turn(actor)
+ 	outcome["action_id"] = enemy_action.id
+ 	outcome["verb"] = enemy_action.verb
+@@ -1741,9 +1817,12 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
+ 	outcome["ct_spent"] = int(commit_result.get("ct_spent", 0))
+ 	outcome["ap_remaining"] = actor.action_points
+ 	outcome["charge_remaining"] = int(commit_result.get("charge", 0))
++	tr = Time.get_ticks_usec()
+ 	_emit_event(&"action_resolved", actor, target, outcome)
++	tr = _pf("enemy.emit_resolved", tr)
+ 	scheduler.release(actor)
+ 	_change_balance(actor.balance_affinity * actor.balance_pressure, actor)
++	_pf("enemy.release_balance", tr)
+ 
+ 
+ ## Steps a class-kit enemy may take in one turn before it must pass: a guard against any
+@@ -2137,7 +2216,9 @@ func _enemy_position_score(
+ 
+ 
+ func _resolve_enemy_move(actor: BattleActor, target: BattleActor, destination: StringName) -> void:
++	var tm := Time.get_ticks_usec()
+ 	var path: Dictionary = battlefield.path_query(actor, destination)
++	tm = _pf("move.path_query", tm)
+ 	if not bool(path.get("allowed", false)):
+ 		_force_pass(actor)
+ 		return
+@@ -2156,9 +2237,12 @@ func _resolve_enemy_move(actor: BattleActor, target: BattleActor, destination: S
+ 	if not bool(commit_result.get("allowed", false)):
+ 		_force_pass(actor)
+ 		return
++	tm = _pf("move.commit", tm)
+ 	var outcome := _apply_action(actor, target, move_action)
++	tm = _pf("move.apply_action", tm)
+ 	_finish_hold_turn(actor)
+ 	_check_holds()
++	tm = _pf("move.holds", tm)
+ 	outcome["action_id"] = move_action.id
+ 	outcome["verb"] = move_action.verb
+ 	outcome["ap_cost"] = move_action.ap_cost
+@@ -2166,6 +2250,7 @@ func _resolve_enemy_move(actor: BattleActor, target: BattleActor, destination: S
+ 	outcome["ap_remaining"] = actor.action_points
+ 	outcome["charge_remaining"] = int(commit_result.get("charge", 0))
+ 	_emit_event(&"action_resolved", actor, target, outcome)
++	tm = _pf("move.emit_resolved", tm)
+ 	_face_toward(actor, target)
+ 	scheduler.release(actor)
+ 
+@@ -3481,13 +3566,16 @@ func _emit_event(
+ 	event.actor_id = actor.combat_id if actor else &""
+ 	event.target_id = target.combat_id if target else &""
+ 	event.data = payload.duplicate(true)
++	var te := Time.get_ticks_usec()
+ 	event.data["snapshot"] = snapshot()
++	te = Time.get_ticks_usec()
+ 	# The parent event goes out BEFORE any hook runs: a hook that enqueues or cancels emits a
+ 	# child event with a higher sequence, and replay must see parent then child, monotonic.
+ 	var resolving_window := type == &"action_resolved"
+ 	if resolving_window:
+ 		_resolving = true
+ 	event_emitted.emit(event)
++	te = _pf("emit.listeners." + String(type), te)
+ 	if type == &"action_resolved" and actor != null:
+ 		_class_resource_of(actor).on_action(event)
+ 		# Seam v2 broadcast: every actor's resource sees every resolved action (Threads).
+@@ -3504,6 +3592,7 @@ func _emit_event(
+ 			if observer_payload.is_empty():
+ 				observer_payload = _observer_payload(event.data)
+ 			observer_resource.on_any_action(event.actor_id, action_id, event.target_id, observer_payload)
++	_pf("emit.after_listeners." + String(type), te)
+ 	if resolving_window:
+ 		_resolving = false
+ 
+diff --git a/tools/populated_field_benchmark.gd b/tools/populated_field_benchmark.gd
+index adab9c7d..7282279a 100644
+--- a/tools/populated_field_benchmark.gd
++++ b/tools/populated_field_benchmark.gd
+@@ -176,6 +176,8 @@ func _run() -> void:
+ 	for _frame: int in WARMUP_FRAMES:
+ 		await process_frame
+ 	var session_samples := await _sample_window(SAMPLE_COUNT)
++	if OS.get_cmdline_user_args().has("--ablate"):
++		await _ablate2()
+ 
+ 	# Window 3: enemy AI decisions.
+ 	var attribute := OS.get_cmdline_user_args().has("--attribute-listeners")
+@@ -317,6 +319,7 @@ func _run_decision_window() -> Array[Dictionary]:
+ 		_add_error("The session has no CombatController to drive.")
+ 		return turns
+ 	controller.event_emitted.connect(_on_controller_event)
++	Engine.set_meta(&"prof", {})
+ 	var decisions_timed := 0
+ 	var target := _requested_decision_target()
+ 	for turn_index: int in ALLY_TURN_CAP:
+@@ -356,6 +359,8 @@ func _run_decision_window() -> Array[Dictionary]:
+ 		await process_frame
+ 	if controller.event_emitted.is_connected(_on_controller_event):
+ 		controller.event_emitted.disconnect(_on_controller_event)
++	printerr("PROF_JSON " + JSON.stringify(Engine.get_meta(&"prof", {})))
++	printerr("PROF_TURNS " + JSON.stringify(turns))
+ 	if decisions_timed < target:
+ 		_add_error(
+ 			"Timed %d enemy decisions in %d ally turns; the target was %d."
+@@ -1151,3 +1156,127 @@ func _run_planner_spike() -> void:
+ 		file.store_string(JSON.stringify(report, "\t") + "\n")
+ 	print(JSON.stringify(report))
+ 	quit(0 if _errors.is_empty() else 1)
++
++
++func _interval_p50(count: int) -> float:
++	for _i: int in 20:
++		await process_frame
++	var xs: Array[float] = []
++	for _i: int in count:
++		var t0 := Time.get_ticks_usec()
++		await process_frame
++		xs.append((Time.get_ticks_usec() - t0) / 1000.0)
++	xs.sort()
++	return xs[xs.size() / 2]
++
++
++func _ablate() -> void:
++	var groups: Dictionary = {}
++	var visual: Dictionary = {}
++	var stack: Array[Node] = [root]
++	while not stack.is_empty():
++		var n: Node = stack.pop_back()
++		for c: Node in n.get_children():
++			stack.append(c)
++		var s: Script = n.get_script()
++		var key: String = s.resource_path if s != null else n.get_class()
++		if n.is_processing() or n.is_physics_processing():
++			if not groups.has(key):
++				groups[key] = []
++			(groups[key] as Array).append(n)
++		if n is CanvasItem and s != null and (key.ends_with("combat_overlay.gd") or key.ends_with("hostile.gd") or key.ends_with("battle_interface.gd") or key.ends_with("field_grid_layer.gd") or key.ends_with("field_hud.gd")):
++			if not visual.has(key):
++				visual[key] = []
++			(visual[key] as Array).append(n)
++	var base := await _interval_p50(150)
++	var out := {"baseline_p50_ms": base, "process": {}, "hidden": {}}
++	for key: String in groups:
++		var nodes: Array = groups[key]
++		var saved: Array = []
++		for n: Node in nodes:
++			saved.append([n.is_processing(), n.is_physics_processing()])
++			n.set_process(false)
++			n.set_physics_process(false)
++		var p := await _interval_p50(150)
++		for i: int in nodes.size():
++			if is_instance_valid(nodes[i]):
++				(nodes[i] as Node).set_process(bool(saved[i][0]))
++				(nodes[i] as Node).set_physics_process(bool(saved[i][1]))
++		out["process"][key] = {"count": nodes.size(), "p50_ms": p, "saved_ms": base - p}
++	for key: String in visual:
++		var nodes: Array = visual[key]
++		for n: CanvasItem in nodes:
++			n.set_meta(&"was_visible", n.visible)
++			n.visible = false
++		var p := await _interval_p50(150)
++		for n: CanvasItem in nodes:
++			if is_instance_valid(n):
++				n.visible = bool(n.get_meta(&"was_visible"))
++		out["hidden"][key] = {"count": nodes.size(), "p50_ms": p, "saved_ms": base - p}
++	out["baseline_after_p50_ms"] = await _interval_p50(150)
++	printerr("ABLATE " + JSON.stringify(out))
++
++
++func _phys_p50(count: int) -> Array:
++	for _i: int in 20:
++		await process_frame
++	var xs: Array[float] = []
++	var ph: Array[float] = []
++	for _i: int in count:
++		var t0 := Time.get_ticks_usec()
++		await process_frame
++		xs.append((Time.get_ticks_usec() - t0) / 1000.0)
++		ph.append(float(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)) * 1000.0)
++	xs.sort()
++	ph.sort()
++	return [xs[xs.size() / 2], ph[ph.size() / 2]]
++
++
++func _ablate2() -> void:
++	var sets: Dictionary = {}
++	var stack: Array[Node] = [root]
++	while not stack.is_empty():
++		var n: Node = stack.pop_back()
++		for c: Node in n.get_children():
++			stack.append(c)
++		var s: Script = n.get_script()
++		var key: String = s.resource_path if s != null else ""
++		var label := ""
++		if key.ends_with("hostile.gd"):
++			label = "hostiles"
++		elif key.ends_with("battle_interface.gd"):
++			label = "battle_interface"
++		elif key.ends_with("combat_overlay.gd"):
++			label = "combat_overlay"
++		elif key.ends_with("field_hud.gd"):
++			label = "field_hud"
++		elif key.ends_with("party_follower.gd") or key.ends_with("player.gd"):
++			label = "party"
++		if label != "":
++			if not sets.has(label):
++				sets[label] = []
++			(sets[label] as Array).append(n)
++	var out := {}
++	for label: String in sets:
++		var nodes: Array = sets[label]
++		var before := await _phys_p50(120)
++		for n: Node in nodes:
++			n.set_meta(&"pm", n.process_mode)
++			n.process_mode = Node.PROCESS_MODE_DISABLED
++		var during := await _phys_p50(120)
++		for n: Node in nodes:
++			if is_instance_valid(n):
++				n.process_mode = int(n.get_meta(&"pm")) as Node.ProcessMode
++		var after := await _phys_p50(120)
++		out[label] = {"count": nodes.size(), "before": before, "disabled": during, "after": after}
++	# Pause-equivalent: everything under the current scene disabled.
++	var scene := current_scene
++	if scene != null:
++		var before := await _phys_p50(120)
++		var pm := scene.process_mode
++		scene.process_mode = Node.PROCESS_MODE_DISABLED
++		var during := await _phys_p50(120)
++		scene.process_mode = pm
++		var after := await _phys_p50(120)
++		out["whole_scene"] = {"count": 1, "before": before, "disabled": during, "after": after}
++	printerr("ABLATE2 " + JSON.stringify(out))

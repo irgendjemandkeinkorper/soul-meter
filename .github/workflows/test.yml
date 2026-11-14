@@ -11,7 +11,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # The whole tree (327 suites, ~2,930 tests) needs ~45 minutes; 15 cut it off at 87 suites
+    # with no failures (2026-11-04, PR #552 carrying the #556-#582 stack).
+    timeout-minutes: 60
     env:
       GODOT_VERSION: 4.7.1-stable
       GODOT_BIN: /tmp/godot/Godot_v4.7.1-stable_linux.x86_64

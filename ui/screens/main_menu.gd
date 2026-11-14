@@ -70,6 +70,24 @@ func _build() -> void:
 	)
 	load_button.name = "LoadGameButton"
 	load_button.disabled = not (SaveGame.has_save() or any_manual_save)
+	if OS.is_debug_build():
+		# Debug builds only (owner 2026-11-02): one of each class, five a side, on a sandbox.
+		var demo_button := _main_menu_button(
+			button_column, "Class Demo (5v5)", func() -> void: GameFlow.start_class_demo()
+		)
+		demo_button.name = "ClassDemoButton"
+		# Debug builds only (owner 2026-11-02): walk the lived-in Kesselford on the same sandbox.
+		var walk_button := _main_menu_button(
+			button_column, "Walk Kesselford", func() -> void: GameFlow.start_kesselford_walk()
+		)
+		walk_button.name = "WalkKesselfordButton"
+	# Debug builds only: the developer room (PR #551) on its own sandbox. Its own block, which
+	# test_dev_room_inert pins as the only shipped wiring for it.
+	if OS.is_debug_build():
+		var dev_button := _main_menu_button(
+			button_column, "DEV ROOM", func() -> void: GameFlow.send_event("dev_room")
+		)
+		dev_button.name = "DevRoomButton"
 	_main_menu_button(
 		button_column, "Settings", func() -> void: UIManager.open(UIManager.SETTINGS)
 	)

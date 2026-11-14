@@ -129,13 +129,13 @@
         "faction_id": "grain-factors-table"
       },
       "placement": {
-        "scene": "res://world/interiors/kesselford_wayhouse.tscn",
-        "anchor": "NpcSpot",
+        "scene": "res://world/kesselford.tscn",
+        "anchor": "WayhouseKeeperSpot",
         "offset": [
-          240.0,
-          24.0
+          -128.0,
+          32.0
         ],
-        "facing": "west",
+        "facing": "east",
         "idle_phase": 0.15,
         "model_index": 1
       }
@@ -267,8 +267,8 @@
         "faction_id": "wayfare-menders"
       },
       "placement": {
-        "scene": "res://world/interiors/kesselford_wayhouse.tscn",
-        "anchor": "NpcSpot",
+        "scene": "res://world/kesselford.tscn",
+        "anchor": "WayhouseKeeperSpot",
         "offset": [
           0.0,
           0.0

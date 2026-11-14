@@ -1,4 +1,4 @@
-[gd_scene load_steps=43 format=3]
+[gd_scene load_steps=78 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
@@ -42,17 +42,122 @@ size = Vector2(1800, 40)
 [sub_resource type="RectangleShape2D" id="shape_v"]
 size = Vector2(40, 900)
 
-[sub_resource type="RectangleShape2D" id="shape_memorial_foot"]
-size = Vector2(22, 12)
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_MemorialRankA_Base"]
+points = PackedVector2Array(-81, 5, 2, 32, 80, 0, -3, -27)
 
-[sub_resource type="RectangleShape2D" id="shape_warning_foot"]
-size = Vector2(18, 10)
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_MemorialRankB_Base"]
+points = PackedVector2Array(-81, 5, 2, 32, 80, 0, -3, -27)
 
-[sub_resource type="RectangleShape2D" id="shape_drum_foot"]
-size = Vector2(30, 14)
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_MemorialRankC_Base"]
+points = PackedVector2Array(-81, 5, 2, 32, 80, 0, -3, -27)
 
-[sub_resource type="RectangleShape2D" id="shape_cart_foot"]
-size = Vector2(54, 18)
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_MemorialRankD_Base"]
+points = PackedVector2Array(-81, 5, 2, 32, 80, 0, -3, -27)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_MemorialPlate_Base"]
+points = PackedVector2Array(-75, 8, -33, 28, 71, -13, 29, -33)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_MemorialStone_Base"]
+points = PackedVector2Array(-239, 66.4, 15, 188.4, 229, 65.4, -25, -56.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_WarnPostA_Base"]
+points = PackedVector2Array(-65, 14, -8, 34, 60, 15, 3, -5)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_WarnPostB_Base"]
+points = PackedVector2Array(-65, 14, -8, 34, 60, 15, 3, -5)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_WarnChain_Base"]
+points = PackedVector2Array(-81, -5, -6, 31, 77, -2, 2, -38)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_WarnRock_Base"]
+points = PackedVector2Array(-239, 66.4, 15, 188.4, 229, 65.4, -25, -56.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_CampTentA_Base"]
+points = PackedVector2Array(-208, 9.4, 32, 124.4, 208, -10.6, -32, -125.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_CampTentB_Base"]
+points = PackedVector2Array(-208, 9.4, 32, 124.4, 208, -10.6, -32, -125.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_CampFire_Base"]
+points = PackedVector2Array(-127, -35.6, 0, 24.4, 122, -42.6, -5, -102.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_CampCart_Base"]
+points = PackedVector2Array(-108, -24, 28, 14, 107, -43, -29, -81)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_CampDrumA_Base"]
+points = PackedVector2Array(-96, -41, -17, -1, 98, -28, 19, -68)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_CampDrumB_Base"]
+points = PackedVector2Array(-96, -41, -17, -1, 98, -28, 19, -68)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_CampLogs_Base"]
+points = PackedVector2Array(-86, 16.4, -1, 60.4, 87, 25.4, 2, -18.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_ShoulderMarkerA_Base"]
+points = PackedVector2Array(-81, 5, 2, 32, 80, 0, -3, -27)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_ShoulderMarkerB_Base"]
+points = PackedVector2Array(-81, 5, 2, 32, 80, 0, -3, -27)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_ShoulderDrum_Base"]
+points = PackedVector2Array(-96, -41, -17, -1, 98, -28, 19, -68)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_ShoulderCart_Base"]
+points = PackedVector2Array(-108, -24, 28, 14, 107, -43, -29, -81)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_DeadTreeA_Base"]
+points = PackedVector2Array(-34, 179.4, 26, 194.4, 40, 185.4, -20, 170.4)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_DeadTreeB_Base"]
+points = PackedVector2Array(-71, 168.4, -13, 193.4, 130, 152.4, 72, 127.4)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_DeadTreeC_Base"]
+points = PackedVector2Array(-34, 179.4, 26, 194.4, 40, 185.4, -20, 170.4)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_DeadTreeD_Base"]
+points = PackedVector2Array(-71, 168.4, -13, 193.4, 130, 152.4, 72, 127.4)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_DeadTreeE_Base"]
+points = PackedVector2Array(-34, 179.4, 26, 194.4, 40, 185.4, -20, 170.4)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_DeadTreeF_Base"]
+points = PackedVector2Array(-71, 168.4, -13, 193.4, 130, 152.4, 72, 127.4)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_SouthStoneA_Base"]
+points = PackedVector2Array(-239, 66.4, 15, 188.4, 229, 65.4, -25, -56.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_SouthStoneB_Base"]
+points = PackedVector2Array(-239, 66.4, 15, 188.4, 229, 65.4, -25, -56.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_SouthRock_Base"]
+points = PackedVector2Array(-239, 66.4, 15, 188.4, 229, 65.4, -25, -56.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_SouthStoneC_Base"]
+points = PackedVector2Array(-239, 66.4, 15, 188.4, 229, 65.4, -25, -56.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_SouthTree_Base"]
+points = PackedVector2Array(-34, 179.4, 26, 194.4, 40, 185.4, -20, 170.4)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_EastStone_Base"]
+points = PackedVector2Array(-239, 66.4, 15, 188.4, 229, 65.4, -25, -56.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_EastPost_Base"]
+points = PackedVector2Array(-65, 14, -8, 34, 60, 15, 3, -5)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_SetDressing_NorthRock_Base"]
+points = PackedVector2Array(-239, 66.4, 15, 188.4, 229, 65.4, -25, -56.6)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_DorthkorRoadDressing_SolidProps_MemorialNorthWest"]
+points = PackedVector2Array(-46.98, -1.74, 1.16, 13.92, 46.4, -4.64, -1.74, -20.3)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_DorthkorRoadDressing_SolidProps_BreachWarningSouthWest"]
+points = PackedVector2Array(-36.4, 3.36, -4.48, 14.56, 33.6, 3.92, 1.68, -7.28)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_DorthkorRoadDressing_SolidProps_HangingRoadDrumNorth"]
+points = PackedVector2Array(-53.76, -15.68, -9.52, 6.72, 54.88, -8.4, 10.64, -30.8)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_DorthkorRoadDressing_SolidProps_MendersCartSouth"]
+points = PackedVector2Array(-59.4, -17.6, 15.4, 3.3, 58.85, -28.05, -15.95, -48.95)
 
 [node name="DorthkorRoad" type="Node2D"]
 texture_filter = 2
@@ -89,6 +194,7 @@ road_half_width = 2
 [node name="Blocking" type="TileMapLayer" parent="."]
 visible = false
 position = Vector2(900, -752)
+tile_map_data = PackedByteArray("AAAJACUAAAAAAAAAAAAJACYAAAAAAAAAAAAKACQAAAAAAAAAAAAKACUAAAAAAAAAAAAKACYAAAAAAAAAAAAKACcAAAAAAAAAAAALACMAAAAAAAAAAAALACQAAAAAAAAAAAALACUAAAAAAAAAAAALACcAAAAAAAAAAAALACgAAAAAAAAAAAAMACIAAAAAAAAAAAAMACMAAAAAAAAAAAAMACQAAAAAAAAAAAAMACgAAAAAAAAAAAAMACkAAAAAAAAAAAANACEAAAAAAAAAAAANACIAAAAAAAAAAAANACMAAAAAAAAAAAANACkAAAAAAAAAAAANACoAAAAAAAAAAAAOACAAAAAAAAAAAAAOACEAAAAAAAAAAAAOACIAAAAAAAAAAAAOACoAAAAAAAAAAAAOACsAAAAAAAAAAAAPAB8AAAAAAAAAAAAPACAAAAAAAAAAAAAPACEAAAAAAAAAAAAPACsAAAAAAAAAAAAPACwAAAAAAAAAAAAQAB4AAAAAAAAAAAAQAB8AAAAAAAAAAAAQACAAAAAAAAAAAAAQACwAAAAAAAAAAAAQAC0AAAAAAAAAAAARAB0AAAAAAAAAAAARAB4AAAAAAAAAAAARAB8AAAAAAAAAAAARAC0AAAAAAAAAAAARAC4AAAAAAAAAAAASABwAAAAAAAAAAAASAB0AAAAAAAAAAAASAB4AAAAAAAAAAAASAC4AAAAAAAAAAAASAC8AAAAAAAAAAAATABsAAAAAAAAAAAATABwAAAAAAAAAAAATAB0AAAAAAAAAAAATACUAAAAAAAAAAAATACYAAAAAAAAAAAATAC8AAAAAAAAAAAATADAAAAAAAAAAAAAUABoAAAAAAAAAAAAUABsAAAAAAAAAAAAUABwAAAAAAAAAAAAUACQAAAAAAAAAAAAUACUAAAAAAAAAAAAUACYAAAAAAAAAAAAUACcAAAAAAAAAAAAUACgAAAAAAAAAAAAUACkAAAAAAAAAAAAUACoAAAAAAAAAAAAUACsAAAAAAAAAAAAUACwAAAAAAAAAAAAUADAAAAAAAAAAAAAUADEAAAAAAAAAAAAVABkAAAAAAAAAAAAVABoAAAAAAAAAAAAVABsAAAAAAAAAAAAVACcAAAAAAAAAAAAVACgAAAAAAAAAAAAVACkAAAAAAAAAAAAVACoAAAAAAAAAAAAVACsAAAAAAAAAAAAVACwAAAAAAAAAAAAVADEAAAAAAAAAAAAVADIAAAAAAAAAAAAWABgAAAAAAAAAAAAWABkAAAAAAAAAAAAWABoAAAAAAAAAAAAWACcAAAAAAAAAAAAWACgAAAAAAAAAAAAWACkAAAAAAAAAAAAWACoAAAAAAAAAAAAWACsAAAAAAAAAAAAWACwAAAAAAAAAAAAWADIAAAAAAAAAAAAWADMAAAAAAAAAAAAXABcAAAAAAAAAAAAXABgAAAAAAAAAAAAXABkAAAAAAAAAAAAXACYAAAAAAAAAAAAXACcAAAAAAAAAAAAXACgAAAAAAAAAAAAXACkAAAAAAAAAAAAXACoAAAAAAAAAAAAXACsAAAAAAAAAAAAXACwAAAAAAAAAAAAXADMAAAAAAAAAAAAXADQAAAAAAAAAAAAYABYAAAAAAAAAAAAYABcAAAAAAAAAAAAYABgAAAAAAAAAAAAYACQAAAAAAAAAAAAYACUAAAAAAAAAAAAYACYAAAAAAAAAAAAYACcAAAAAAAAAAAAYACgAAAAAAAAAAAAYACkAAAAAAAAAAAAYACoAAAAAAAAAAAAYACsAAAAAAAAAAAAYACwAAAAAAAAAAAAYADQAAAAAAAAAAAAYADUAAAAAAAAAAAAZABUAAAAAAAAAAAAZABYAAAAAAAAAAAAZABcAAAAAAAAAAAAZACQAAAAAAAAAAAAZACUAAAAAAAAAAAAZACYAAAAAAAAAAAAZACcAAAAAAAAAAAAZACgAAAAAAAAAAAAZACkAAAAAAAAAAAAZACoAAAAAAAAAAAAZACsAAAAAAAAAAAAZADUAAAAAAAAAAAAZADYAAAAAAAAAAAAaABQAAAAAAAAAAAAaABUAAAAAAAAAAAAaABYAAAAAAAAAAAAaACUAAAAAAAAAAAAaACcAAAAAAAAAAAAaACgAAAAAAAAAAAAaACkAAAAAAAAAAAAaADYAAAAAAAAAAAAaADcAAAAAAAAAAAAbABMAAAAAAAAAAAAbABQAAAAAAAAAAAAbABUAAAAAAAAAAAAbADcAAAAAAAAAAAAbADgAAAAAAAAAAAAcABIAAAAAAAAAAAAcABMAAAAAAAAAAAAcABQAAAAAAAAAAAAcACUAAAAAAAAAAAAcACYAAAAAAAAAAAAcADgAAAAAAAAAAAAcADkAAAAAAAAAAAAdABEAAAAAAAAAAAAdABIAAAAAAAAAAAAdABMAAAAAAAAAAAAdAB0AAAAAAAAAAAAdAB4AAAAAAAAAAAAdAB8AAAAAAAAAAAAdACQAAAAAAAAAAAAdACUAAAAAAAAAAAAdACYAAAAAAAAAAAAdADkAAAAAAAAAAAAdADoAAAAAAAAAAAAeABAAAAAAAAAAAAAeABEAAAAAAAAAAAAeABIAAAAAAAAAAAAeAB0AAAAAAAAAAAAeAB4AAAAAAAAAAAAeADoAAAAAAAAAAAAeADsAAAAAAAAAAAAfAA8AAAAAAAAAAAAfABAAAAAAAAAAAAAfABEAAAAAAAAAAAAfAB0AAAAAAAAAAAAfAB4AAAAAAAAAAAAfADsAAAAAAAAAAAAfADwAAAAAAAAAAAAgAA4AAAAAAAAAAAAgAA8AAAAAAAAAAAAgABAAAAAAAAAAAAAgACUAAAAAAAAAAAAgACYAAAAAAAAAAAAgADwAAAAAAAAAAAAgAD0AAAAAAAAAAAAhAA0AAAAAAAAAAAAhAA4AAAAAAAAAAAAhAA8AAAAAAAAAAAAhABwAAAAAAAAAAAAhAB0AAAAAAAAAAAAhAB4AAAAAAAAAAAAhACQAAAAAAAAAAAAhACUAAAAAAAAAAAAhACYAAAAAAAAAAAAhAD0AAAAAAAAAAAAhAD4AAAAAAAAAAAAiAAwAAAAAAAAAAAAiAA0AAAAAAAAAAAAiAA4AAAAAAAAAAAAiABsAAAAAAAAAAAAiABwAAAAAAAAAAAAiAB0AAAAAAAAAAAAiAB4AAAAAAAAAAAAiACQAAAAAAAAAAAAiAD4AAAAAAAAAAAAiAD8AAAAAAAAAAAAjAAsAAAAAAAAAAAAjAAwAAAAAAAAAAAAjAA0AAAAAAAAAAAAjABsAAAAAAAAAAAAjABwAAAAAAAAAAAAjAB0AAAAAAAAAAAAjADIAAAAAAAAAAAAjAD8AAAAAAAAAAAAjAEAAAAAAAAAAAAAkAAoAAAAAAAAAAAAkAAsAAAAAAAAAAAAkAAwAAAAAAAAAAAAkABgAAAAAAAAAAAAkABkAAAAAAAAAAAAkABsAAAAAAAAAAAAkAB0AAAAAAAAAAAAkADAAAAAAAAAAAAAkADEAAAAAAAAAAAAkADIAAAAAAAAAAAAkADMAAAAAAAAAAAAkADQAAAAAAAAAAAAkADUAAAAAAAAAAAAkADYAAAAAAAAAAAAkADcAAAAAAAAAAAAkAEAAAAAAAAAAAAAkAEEAAAAAAAAAAAAlAAoAAAAAAAAAAAAlAAsAAAAAAAAAAAAlABgAAAAAAAAAAAAlABkAAAAAAAAAAAAlABoAAAAAAAAAAAAlABsAAAAAAAAAAAAlADIAAAAAAAAAAAAlADMAAAAAAAAAAAAlADQAAAAAAAAAAAAlADUAAAAAAAAAAAAlADYAAAAAAAAAAAAlADcAAAAAAAAAAAAlADkAAAAAAAAAAAAlADoAAAAAAAAAAAAlADsAAAAAAAAAAAAlADwAAAAAAAAAAAAlAD0AAAAAAAAAAAAlAD4AAAAAAAAAAAAlAD8AAAAAAAAAAAAlAEAAAAAAAAAAAAAlAEEAAAAAAAAAAAAmAAsAAAAAAAAAAAAmAAwAAAAAAAAAAAAmADIAAAAAAAAAAAAmADMAAAAAAAAAAAAmADQAAAAAAAAAAAAmADUAAAAAAAAAAAAmADYAAAAAAAAAAAAmADkAAAAAAAAAAAAmADoAAAAAAAAAAAAmADsAAAAAAAAAAAAmADwAAAAAAAAAAAAmAD0AAAAAAAAAAAAmAD4AAAAAAAAAAAAmAD8AAAAAAAAAAAAmAEAAAAAAAAAAAAAnAAwAAAAAAAAAAAAnAA0AAAAAAAAAAAAnACkAAAAAAAAAAAAnADAAAAAAAAAAAAAnADEAAAAAAAAAAAAnADIAAAAAAAAAAAAnADMAAAAAAAAAAAAnADQAAAAAAAAAAAAnADUAAAAAAAAAAAAnADYAAAAAAAAAAAAnADkAAAAAAAAAAAAnADoAAAAAAAAAAAAnADsAAAAAAAAAAAAnADwAAAAAAAAAAAAnAD0AAAAAAAAAAAAnAD4AAAAAAAAAAAAnAD8AAAAAAAAAAAAoAA0AAAAAAAAAAAAoAA4AAAAAAAAAAAAoADAAAAAAAAAAAAAoADEAAAAAAAAAAAAoADIAAAAAAAAAAAAoADMAAAAAAAAAAAAoADQAAAAAAAAAAAAoADUAAAAAAAAAAAAoADYAAAAAAAAAAAAoADkAAAAAAAAAAAAoADoAAAAAAAAAAAAoADsAAAAAAAAAAAAoADwAAAAAAAAAAAAoAD0AAAAAAAAAAAAoAD4AAAAAAAAAAAApAA4AAAAAAAAAAAApAA8AAAAAAAAAAAApABkAAAAAAAAAAAApADMAAAAAAAAAAAApADUAAAAAAAAAAAApADYAAAAAAAAAAAApADkAAAAAAAAAAAApADoAAAAAAAAAAAApADsAAAAAAAAAAAApADwAAAAAAAAAAAApAD0AAAAAAAAAAAApAD4AAAAAAAAAAAAqAA8AAAAAAAAAAAAqABAAAAAAAAAAAAAqABQAAAAAAAAAAAAqABUAAAAAAAAAAAAqADkAAAAAAAAAAAAqADoAAAAAAAAAAAAqADsAAAAAAAAAAAAqADwAAAAAAAAAAAAqAD0AAAAAAAAAAAAqAD4AAAAAAAAAAAArABAAAAAAAAAAAAArABEAAAAAAAAAAAArABIAAAAAAAAAAAArABMAAAAAAAAAAAArABQAAAAAAAAAAAArABUAAAAAAAAAAAArACkAAAAAAAAAAAArACoAAAAAAAAAAAArADkAAAAAAAAAAAArADoAAAAAAAAAAAArADsAAAAAAAAAAAAsABEAAAAAAAAAAAAsABIAAAAAAAAAAAAsABMAAAAAAAAAAAAsACkAAAAAAAAAAAAsACoAAAAAAAAAAAAsADQAAAAAAAAAAAAsADUAAAAAAAAAAAAsADYAAAAAAAAAAAAsADcAAAAAAAAAAAAsADgAAAAAAAAAAAAsADkAAAAAAAAAAAAsADoAAAAAAAAAAAAtABIAAAAAAAAAAAAtABMAAAAAAAAAAAAtADQAAAAAAAAAAAAtADUAAAAAAAAAAAAtADYAAAAAAAAAAAAtADcAAAAAAAAAAAAtADgAAAAAAAAAAAAtADkAAAAAAAAAAAAuABMAAAAAAAAAAAAuABQAAAAAAAAAAAAuACsAAAAAAAAAAAAuADQAAAAAAAAAAAAuADUAAAAAAAAAAAAuADYAAAAAAAAAAAAuADcAAAAAAAAAAAAuADgAAAAAAAAAAAAvABQAAAAAAAAAAAAvABUAAAAAAAAAAAAvABYAAAAAAAAAAAAvABcAAAAAAAAAAAAvABgAAAAAAAAAAAAvABkAAAAAAAAAAAAvABoAAAAAAAAAAAAvABsAAAAAAAAAAAAvACsAAAAAAAAAAAAvACwAAAAAAAAAAAAvADAAAAAAAAAAAAAvADEAAAAAAAAAAAAvADIAAAAAAAAAAAAvADQAAAAAAAAAAAAvADUAAAAAAAAAAAAvADYAAAAAAAAAAAAvADcAAAAAAAAAAAAvADgAAAAAAAAAAAAwABUAAAAAAAAAAAAwABYAAAAAAAAAAAAwABcAAAAAAAAAAAAwABgAAAAAAAAAAAAwABkAAAAAAAAAAAAwABoAAAAAAAAAAAAwABsAAAAAAAAAAAAwACAAAAAAAAAAAAAwACEAAAAAAAAAAAAwACIAAAAAAAAAAAAwACoAAAAAAAAAAAAwADAAAAAAAAAAAAAwADEAAAAAAAAAAAAwADIAAAAAAAAAAAAwADQAAAAAAAAAAAAwADUAAAAAAAAAAAAwADYAAAAAAAAAAAAwADcAAAAAAAAAAAAwADgAAAAAAAAAAAAxABYAAAAAAAAAAAAxABcAAAAAAAAAAAAxABgAAAAAAAAAAAAxABkAAAAAAAAAAAAxABoAAAAAAAAAAAAxABsAAAAAAAAAAAAxACAAAAAAAAAAAAAxACEAAAAAAAAAAAAxACIAAAAAAAAAAAAxACMAAAAAAAAAAAAxACQAAAAAAAAAAAAxACUAAAAAAAAAAAAxACYAAAAAAAAAAAAxACgAAAAAAAAAAAAxACkAAAAAAAAAAAAxADAAAAAAAAAAAAAxADEAAAAAAAAAAAAxADIAAAAAAAAAAAAxADMAAAAAAAAAAAAxADQAAAAAAAAAAAAxADUAAAAAAAAAAAAxADYAAAAAAAAAAAAxADcAAAAAAAAAAAAxADgAAAAAAAAAAAAyABYAAAAAAAAAAAAyABcAAAAAAAAAAAAyABgAAAAAAAAAAAAyABkAAAAAAAAAAAAyABoAAAAAAAAAAAAyABsAAAAAAAAAAAAyACAAAAAAAAAAAAAyACEAAAAAAAAAAAAyACIAAAAAAAAAAAAyACMAAAAAAAAAAAAyACQAAAAAAAAAAAAyACUAAAAAAAAAAAAyACYAAAAAAAAAAAAyACgAAAAAAAAAAAAyACkAAAAAAAAAAAAyADIAAAAAAAAAAAAyADMAAAAAAAAAAAAyADQAAAAAAAAAAAAzABYAAAAAAAAAAAAzABcAAAAAAAAAAAAzABgAAAAAAAAAAAAzABkAAAAAAAAAAAAzABoAAAAAAAAAAAAzABsAAAAAAAAAAAAzACAAAAAAAAAAAAAzACEAAAAAAAAAAAAzACIAAAAAAAAAAAAzACMAAAAAAAAAAAAzACQAAAAAAAAAAAAzACUAAAAAAAAAAAAzACYAAAAAAAAAAAAzAC4AAAAAAAAAAAAzAC8AAAAAAAAAAAAzADAAAAAAAAAAAAAzADEAAAAAAAAAAAAzADIAAAAAAAAAAAAzADMAAAAAAAAAAAA0ABYAAAAAAAAAAAA0ABcAAAAAAAAAAAA0ABgAAAAAAAAAAAA0ABkAAAAAAAAAAAA0ABoAAAAAAAAAAAA0ABsAAAAAAAAAAAA0AB8AAAAAAAAAAAA0ACAAAAAAAAAAAAA0ACEAAAAAAAAAAAA0ACIAAAAAAAAAAAA0ACMAAAAAAAAAAAA0ACQAAAAAAAAAAAA0ACUAAAAAAAAAAAA0ACYAAAAAAAAAAAA0ACcAAAAAAAAAAAA0AC4AAAAAAAAAAAA0AC8AAAAAAAAAAAA0ADAAAAAAAAAAAAA0ADEAAAAAAAAAAAA0ADIAAAAAAAAAAAA1ABoAAAAAAAAAAAA1ABsAAAAAAAAAAAA1AB8AAAAAAAAAAAA1ACAAAAAAAAAAAAA1ACEAAAAAAAAAAAA1ACIAAAAAAAAAAAA1ACMAAAAAAAAAAAA1ACQAAAAAAAAAAAA1ACUAAAAAAAAAAAA1ACYAAAAAAAAAAAA1ACcAAAAAAAAAAAA1ACgAAAAAAAAAAAA1AC4AAAAAAAAAAAA1AC8AAAAAAAAAAAA1ADAAAAAAAAAAAAA1ADEAAAAAAAAAAAA1ADIAAAAAAAAAAAA2ABsAAAAAAAAAAAA2ABwAAAAAAAAAAAA2AB8AAAAAAAAAAAA2ACAAAAAAAAAAAAA2ACEAAAAAAAAAAAA2ACIAAAAAAAAAAAA2ACMAAAAAAAAAAAA2ACQAAAAAAAAAAAA2ACUAAAAAAAAAAAA2ACYAAAAAAAAAAAA2ACcAAAAAAAAAAAA2ACgAAAAAAAAAAAA2AC4AAAAAAAAAAAA2AC8AAAAAAAAAAAA2ADAAAAAAAAAAAAA2ADEAAAAAAAAAAAA2ADIAAAAAAAAAAAA3ABwAAAAAAAAAAAA3AB0AAAAAAAAAAAA3AB8AAAAAAAAAAAA3ACAAAAAAAAAAAAA3ACEAAAAAAAAAAAA3ACIAAAAAAAAAAAA3ACMAAAAAAAAAAAA3ACQAAAAAAAAAAAA3ACUAAAAAAAAAAAA3ACYAAAAAAAAAAAA3ACcAAAAAAAAAAAA3ACgAAAAAAAAAAAA3AC0AAAAAAAAAAAA3AC4AAAAAAAAAAAA3AC8AAAAAAAAAAAA3ADAAAAAAAAAAAAA3ADEAAAAAAAAAAAA3ADIAAAAAAAAAAAA4AB0AAAAAAAAAAAA4AB4AAAAAAAAAAAA4AB8AAAAAAAAAAAA4ACAAAAAAAAAAAAA4ACEAAAAAAAAAAAA4ACIAAAAAAAAAAAA4ACMAAAAAAAAAAAA4ACQAAAAAAAAAAAA4ACUAAAAAAAAAAAA4ACYAAAAAAAAAAAA4ACcAAAAAAAAAAAA4ACwAAAAAAAAAAAA4AC0AAAAAAAAAAAA4AC4AAAAAAAAAAAA4AC8AAAAAAAAAAAA4ADAAAAAAAAAAAAA4ADEAAAAAAAAAAAA4ADIAAAAAAAAAAAA5AB4AAAAAAAAAAAA5AB8AAAAAAAAAAAA5ACAAAAAAAAAAAAA5ACEAAAAAAAAAAAA5ACIAAAAAAAAAAAA5ACMAAAAAAAAAAAA5ACQAAAAAAAAAAAA5ACUAAAAAAAAAAAA5ACYAAAAAAAAAAAA5ACsAAAAAAAAAAAA5ACwAAAAAAAAAAAA5AC0AAAAAAAAAAAA6AB8AAAAAAAAAAAA6ACAAAAAAAAAAAAA6ACEAAAAAAAAAAAA6ACIAAAAAAAAAAAA6ACMAAAAAAAAAAAA6ACQAAAAAAAAAAAA6ACUAAAAAAAAAAAA6ACYAAAAAAAAAAAA6ACoAAAAAAAAAAAA6ACsAAAAAAAAAAAA6ACwAAAAAAAAAAAA7AB8AAAAAAAAAAAA7ACAAAAAAAAAAAAA7ACEAAAAAAAAAAAA7ACIAAAAAAAAAAAA7ACMAAAAAAAAAAAA7ACQAAAAAAAAAAAA7ACUAAAAAAAAAAAA7ACYAAAAAAAAAAAA7ACkAAAAAAAAAAAA7ACoAAAAAAAAAAAA7ACsAAAAAAAAAAAA8ACEAAAAAAAAAAAA8ACIAAAAAAAAAAAA8ACMAAAAAAAAAAAA8ACQAAAAAAAAAAAA8ACUAAAAAAAAAAAA8ACYAAAAAAAAAAAA8ACgAAAAAAAAAAAA8ACkAAAAAAAAAAAA8ACoAAAAAAAAAAAA9ACIAAAAAAAAAAAA9ACMAAAAAAAAAAAA9ACYAAAAAAAAAAAA9ACcAAAAAAAAAAAA9ACgAAAAAAAAAAAA9ACkAAAAAAAAAAAA+ACMAAAAAAAAAAAA+ACQAAAAAAAAAAAA+ACYAAAAAAAAAAAA+ACcAAAAAAAAAAAA+ACgAAAAAAAAAAAA/ACQAAAAAAAAAAAA/ACUAAAAAAAAAAAA/ACYAAAAAAAAAAAA/ACcAAAAAAAAAAABAACUAAAAAAAAAAABAACYAAAAAAAAAAAA=")
 tile_set = ExtResource("47_blocking_tiles")
 
 [node name="Terrain" type="TileMapLayer" parent="."]
@@ -171,25 +277,50 @@ position = Vector2(380, 170)
 texture = ExtResource("20_marker")
 offset = Vector2(0, -90)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/MemorialRankA"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/MemorialRankA/Base"]
+shape = SubResource("base_SetDressing_MemorialRankA_Base")
+
 [node name="MemorialRankB" type="Sprite2D" parent="SetDressing"]
 position = Vector2(520, 240)
 texture = ExtResource("20_marker")
 offset = Vector2(0, -90)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/MemorialRankB"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/MemorialRankB/Base"]
+shape = SubResource("base_SetDressing_MemorialRankB_Base")
 
 [node name="MemorialRankC" type="Sprite2D" parent="SetDressing"]
 position = Vector2(660, 310)
 texture = ExtResource("20_marker")
 offset = Vector2(0, -90)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/MemorialRankC"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/MemorialRankC/Base"]
+shape = SubResource("base_SetDressing_MemorialRankC_Base")
+
 [node name="MemorialRankD" type="Sprite2D" parent="SetDressing"]
 position = Vector2(800, 380)
 texture = ExtResource("20_marker")
 offset = Vector2(0, -90)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/MemorialRankD"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/MemorialRankD/Base"]
+shape = SubResource("base_SetDressing_MemorialRankD_Base")
+
 [node name="MemorialPlate" type="Sprite2D" parent="SetDressing"]
 position = Vector2(470, 320)
 texture = ExtResource("24_plate")
 offset = Vector2(0, -90)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/MemorialPlate"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/MemorialPlate/Base"]
+shape = SubResource("base_SetDressing_MemorialPlate_Base")
 
 [node name="MemorialStone" type="Sprite2D" parent="SetDressing"]
 position = Vector2(320, 230)
@@ -197,20 +328,40 @@ texture = ExtResource("28_stone_tall")
 offset = Vector2(0, -50.596)
 scale = Vector2(0.75, 0.75)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/MemorialStone"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/MemorialStone/Base"]
+shape = SubResource("base_SetDressing_MemorialStone_Base")
+
 [node name="WarnPostA" type="Sprite2D" parent="SetDressing"]
 position = Vector2(540, 600)
 texture = ExtResource("21_post")
 offset = Vector2(0, -90)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/WarnPostA"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/WarnPostA/Base"]
+shape = SubResource("base_SetDressing_WarnPostA_Base")
 
 [node name="WarnPostB" type="Sprite2D" parent="SetDressing"]
 position = Vector2(640, 660)
 texture = ExtResource("21_post")
 offset = Vector2(0, -90)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/WarnPostB"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/WarnPostB/Base"]
+shape = SubResource("base_SetDressing_WarnPostB_Base")
+
 [node name="WarnChain" type="Sprite2D" parent="SetDressing"]
 position = Vector2(590, 700)
 texture = ExtResource("25_chain")
 offset = Vector2(0, -90)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/WarnChain"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/WarnChain/Base"]
+shape = SubResource("base_SetDressing_WarnChain_Base")
 
 [node name="WarnRock" type="Sprite2D" parent="SetDressing"]
 position = Vector2(480, 660)
@@ -218,11 +369,21 @@ texture = ExtResource("29_stone_large")
 offset = Vector2(0, -50.596)
 scale = Vector2(0.75, 0.75)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/WarnRock"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/WarnRock/Base"]
+shape = SubResource("base_SetDressing_WarnRock_Base")
+
 [node name="CampTentA" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1480, 660)
 texture = ExtResource("32_tent")
 offset = Vector2(0, -50.596)
 scale = Vector2(1.1, 1.1)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/CampTentA"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/CampTentA/Base"]
+shape = SubResource("base_SetDressing_CampTentA_Base")
 
 [node name="CampTentB" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1630, 720)
@@ -230,16 +391,31 @@ texture = ExtResource("32_tent")
 offset = Vector2(0, -50.596)
 scale = Vector2(1.1, 1.1)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/CampTentB"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/CampTentB/Base"]
+shape = SubResource("base_SetDressing_CampTentB_Base")
+
 [node name="CampFire" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1550, 740)
 texture = ExtResource("33_campfire")
 offset = Vector2(0, -50.596)
 scale = Vector2(1.05, 1.05)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/CampFire"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/CampFire/Base"]
+shape = SubResource("base_SetDressing_CampFire_Base")
+
 [node name="CampCart" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1400, 780)
 texture = ExtResource("23_cart")
 offset = Vector2(0, -90)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/CampCart"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/CampCart/Base"]
+shape = SubResource("base_SetDressing_CampCart_Base")
 
 [node name="CampDrumA" type="Sprite2D" parent="SetDressing"]
 scale = Vector2(0.4319, 0.4319)
@@ -247,11 +423,21 @@ offset = Vector2(0, -111)
 position = Vector2(1500, 800)
 texture = ExtResource("22_drum")
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/CampDrumA"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/CampDrumA/Base"]
+shape = SubResource("base_SetDressing_CampDrumA_Base")
+
 [node name="CampDrumB" type="Sprite2D" parent="SetDressing"]
 scale = Vector2(0.4319, 0.4319)
 offset = Vector2(0, -111)
 position = Vector2(1680, 640)
 texture = ExtResource("22_drum")
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/CampDrumB"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/CampDrumB/Base"]
+shape = SubResource("base_SetDressing_CampDrumB_Base")
 
 [node name="CampLogs" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1580, 620)
@@ -259,15 +445,30 @@ texture = ExtResource("31_log_stack")
 offset = Vector2(0, -50.596)
 scale = Vector2(1.5, 1.5)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/CampLogs"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/CampLogs/Base"]
+shape = SubResource("base_SetDressing_CampLogs_Base")
+
 [node name="ShoulderMarkerA" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1000, 620)
 texture = ExtResource("20_marker")
 offset = Vector2(0, -90)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/ShoulderMarkerA"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/ShoulderMarkerA/Base"]
+shape = SubResource("base_SetDressing_ShoulderMarkerA_Base")
+
 [node name="ShoulderMarkerB" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1200, 700)
 texture = ExtResource("20_marker")
 offset = Vector2(0, -90)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/ShoulderMarkerB"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/ShoulderMarkerB/Base"]
+shape = SubResource("base_SetDressing_ShoulderMarkerB_Base")
 
 [node name="ShoulderDrum" type="Sprite2D" parent="SetDressing"]
 scale = Vector2(0.4319, 0.4319)
@@ -275,10 +476,20 @@ offset = Vector2(0, -111)
 position = Vector2(850, 560)
 texture = ExtResource("22_drum")
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/ShoulderDrum"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/ShoulderDrum/Base"]
+shape = SubResource("base_SetDressing_ShoulderDrum_Base")
+
 [node name="ShoulderCart" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1120, 300)
 texture = ExtResource("23_cart")
 offset = Vector2(0, -90)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/ShoulderCart"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/ShoulderCart/Base"]
+shape = SubResource("base_SetDressing_ShoulderCart_Base")
 
 [node name="DeadTreeA" type="Sprite2D" parent="SetDressing"]
 position = Vector2(250, 100)
@@ -286,11 +497,21 @@ texture = ExtResource("26_thin_tree")
 offset = Vector2(0, -50.596)
 scale = Vector2(1, 1)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/DeadTreeA"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/DeadTreeA/Base"]
+shape = SubResource("base_SetDressing_DeadTreeA_Base")
+
 [node name="DeadTreeB" type="Sprite2D" parent="SetDressing"]
 position = Vector2(450, 120)
 texture = ExtResource("27_blocks_tree")
 offset = Vector2(0, -50.596)
 scale = Vector2(1, 1)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/DeadTreeB"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/DeadTreeB/Base"]
+shape = SubResource("base_SetDressing_DeadTreeB_Base")
 
 [node name="DeadTreeC" type="Sprite2D" parent="SetDressing"]
 position = Vector2(600, 90)
@@ -298,11 +519,21 @@ texture = ExtResource("26_thin_tree")
 offset = Vector2(0, -50.596)
 scale = Vector2(1, 1)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/DeadTreeC"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/DeadTreeC/Base"]
+shape = SubResource("base_SetDressing_DeadTreeC_Base")
+
 [node name="DeadTreeD" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1250, 110)
 texture = ExtResource("27_blocks_tree")
 offset = Vector2(0, -50.596)
 scale = Vector2(1, 1)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/DeadTreeD"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/DeadTreeD/Base"]
+shape = SubResource("base_SetDressing_DeadTreeD_Base")
 
 [node name="DeadTreeE" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1450, 140)
@@ -310,11 +541,21 @@ texture = ExtResource("26_thin_tree")
 offset = Vector2(0, -50.596)
 scale = Vector2(1, 1)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/DeadTreeE"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/DeadTreeE/Base"]
+shape = SubResource("base_SetDressing_DeadTreeE_Base")
+
 [node name="DeadTreeF" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1650, 100)
 texture = ExtResource("27_blocks_tree")
 offset = Vector2(0, -50.596)
 scale = Vector2(1, 1)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/DeadTreeF"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/DeadTreeF/Base"]
+shape = SubResource("base_SetDressing_DeadTreeF_Base")
 
 [node name="SouthStoneA" type="Sprite2D" parent="SetDressing"]
 position = Vector2(300, 800)
@@ -322,11 +563,21 @@ texture = ExtResource("28_stone_tall")
 offset = Vector2(0, -50.596)
 scale = Vector2(0.75, 0.75)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/SouthStoneA"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/SouthStoneA/Base"]
+shape = SubResource("base_SetDressing_SouthStoneA_Base")
+
 [node name="SouthStoneB" type="Sprite2D" parent="SetDressing"]
 position = Vector2(700, 830)
 texture = ExtResource("29_stone_large")
 offset = Vector2(0, -50.596)
 scale = Vector2(0.75, 0.75)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/SouthStoneB"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/SouthStoneB/Base"]
+shape = SubResource("base_SetDressing_SouthStoneB_Base")
 
 [node name="SouthRock" type="Sprite2D" parent="SetDressing"]
 position = Vector2(900, 790)
@@ -334,11 +585,21 @@ texture = ExtResource("30_rock_small")
 offset = Vector2(0, -50.596)
 scale = Vector2(0.35, 0.35)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/SouthRock"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/SouthRock/Base"]
+shape = SubResource("base_SetDressing_SouthRock_Base")
+
 [node name="SouthStoneC" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1100, 840)
 texture = ExtResource("28_stone_tall")
 offset = Vector2(0, -50.596)
 scale = Vector2(0.75, 0.75)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/SouthStoneC"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/SouthStoneC/Base"]
+shape = SubResource("base_SetDressing_SouthStoneC_Base")
 
 [node name="SouthTree" type="Sprite2D" parent="SetDressing"]
 position = Vector2(200, 700)
@@ -346,22 +607,42 @@ texture = ExtResource("26_thin_tree")
 offset = Vector2(0, -50.596)
 scale = Vector2(1, 1)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/SouthTree"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/SouthTree/Base"]
+shape = SubResource("base_SetDressing_SouthTree_Base")
+
 [node name="EastStone" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1730, 400)
 texture = ExtResource("29_stone_large")
 offset = Vector2(0, -50.596)
 scale = Vector2(0.75, 0.75)
 
+[node name="Base" type="StaticBody2D" parent="SetDressing/EastStone"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/EastStone/Base"]
+shape = SubResource("base_SetDressing_EastStone_Base")
+
 [node name="EastPost" type="Sprite2D" parent="SetDressing"]
 position = Vector2(1720, 250)
 texture = ExtResource("21_post")
 offset = Vector2(0, -90)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/EastPost"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/EastPost/Base"]
+shape = SubResource("base_SetDressing_EastPost_Base")
 
 [node name="NorthRock" type="Sprite2D" parent="SetDressing"]
 position = Vector2(950, 200)
 texture = ExtResource("30_rock_small")
 offset = Vector2(0, -50.596)
 scale = Vector2(0.35, 0.35)
+
+[node name="Base" type="StaticBody2D" parent="SetDressing/NorthRock"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SetDressing/NorthRock/Base"]
+shape = SubResource("base_SetDressing_NorthRock_Base")
 
 [node name="CampCache" parent="." instance=ExtResource("34_chest")]
 position = Vector2(1390, 720)
@@ -443,8 +724,7 @@ period = 11.8
 breath_strength = 0.02
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DorthkorRoadDressing/SolidProps/MemorialNorthWest"]
-position = Vector2(0, -6)
-shape = SubResource("shape_memorial_foot")
+shape = SubResource("base_DorthkorRoadDressing_SolidProps_MemorialNorthWest")
 
 [node name="BreachWarningSouthWest" type="StaticBody2D" parent="DorthkorRoadDressing/SolidProps"]
 position = Vector2(620, 735)
@@ -460,8 +740,7 @@ period = 12.6
 breath_strength = 0.018
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DorthkorRoadDressing/SolidProps/BreachWarningSouthWest"]
-position = Vector2(0, -5)
-shape = SubResource("shape_warning_foot")
+shape = SubResource("base_DorthkorRoadDressing_SolidProps_BreachWarningSouthWest")
 
 [node name="HangingRoadDrumNorth" type="StaticBody2D" parent="DorthkorRoadDressing/SolidProps"]
 position = Vector2(1320, 250)
@@ -476,8 +755,7 @@ period = 5.8
 sway_degrees = 0.45
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DorthkorRoadDressing/SolidProps/HangingRoadDrumNorth"]
-position = Vector2(0, -7)
-shape = SubResource("shape_drum_foot")
+shape = SubResource("base_DorthkorRoadDressing_SolidProps_HangingRoadDrumNorth")
 
 [node name="MendersCartSouth" type="StaticBody2D" parent="DorthkorRoadDressing/SolidProps"]
 position = Vector2(1040, 735)
@@ -488,8 +766,7 @@ offset = Vector2(0, -98)
 scale = Vector2(0.55, 0.55)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DorthkorRoadDressing/SolidProps/MendersCartSouth"]
-position = Vector2(0, -7)
-shape = SubResource("shape_cart_foot")
+shape = SubResource("base_DorthkorRoadDressing_SolidProps_MendersCartSouth")
 
 [node name="AmbientTravelers" type="Node2D" parent="."]
 y_sort_enabled = true

@@ -17,6 +17,9 @@ func _ready() -> void:
 	item_changed.connect(_on_item_changed)
 	_frame = PanelContainer.new()
 	_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# Inside a GLoot grid the slot sits in a draggable wrapper that handles press, select and
+	# drag; a PanelContainer stops the mouse by default and would swallow all three.
+	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_frame)
 	_icon = TextureRect.new()
 	_icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR

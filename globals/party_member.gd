@@ -5,6 +5,7 @@ extends Resource
 ## PROVISIONAL base-tier pool from docs/casting-economy.md; keep this value aligned
 ## with that numeric sweep until class-tier Breath values are ratified.
 const DEFAULT_BREATH_MAX := 15
+const EQUIPMENT_DATA: JSON = preload("res://data/generated/gloot_prototree.json")
 
 @export var id: String = ""
 @export var display_name: String = "Unnamed"
@@ -55,6 +56,8 @@ const DEFAULT_BREATH_MAX := 15
 @export var breath_max: int = DEFAULT_BREATH_MAX
 @export var attack: int = 5
 @export var defense: int = 2
+## Rail slot -> item prototype id. Base attack/defense above never include equipment.
+@export var equipped_slots: Dictionary = {}
 @export_multiline var bio: String = ""
 @export var portrait: Texture2D
 
@@ -115,6 +118,7 @@ func to_dict() -> Dictionary:
 		"breath_max": breath_max,
 		"attack": attack,
 		"defense": defense,
+		"equipped_slots": equipped_slots.duplicate(true),
 		"bio": bio,
 		"portrait_path": portrait.resource_path if portrait else "",
 		"attributes": attributes.duplicate(true),
@@ -162,6 +166,7 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	member.breath = clampi(int(data.get("breath", member.breath_max)), 0, member.breath_max)
 	member.attack = int(data.get("attack", 5))
 	member.defense = int(data.get("defense", 2))
+	member.equipped_slots = _dictionary_from_save(data.get("equipped_slots", {}))
 	member.bio = str(data.get("bio", ""))
 	member.attributes = _dictionary_from_save(data.get("attributes", {}))
 	member.skill_percentages = _dictionary_from_save(data.get("skill_percentages", {}))
@@ -189,6 +194,21 @@ static func from_dict(data: Dictionary) -> PartyMember:
 	member.anatomy = (saved_anatomy as Dictionary).duplicate(true) if saved_anatomy is Dictionary \
 		else HUMANOID_ANATOMY.duplicate(true)
 	return member
+
+
+## The sole equipment-to-combat read path. Missing/unknown items are neutral, and
+## duplicate references in a legacy/malformed member record cannot count twice.
+func equipment_bonus() -> Dictionary:
+	var bonus: Dictionary = {"attack": 0, "defense": 0}
+	var counted: Dictionary = {}
+	for value: Variant in equipped_slots.values():
+		if not value is String or counted.has(value):
+			continue
+		counted[value] = true
+		var item: Dictionary = EQUIPMENT_DATA.data.get(value, {})
+		bonus["attack"] += int(item.get("attack_bonus", 0))
+		bonus["defense"] += int(item.get("defense_bonus", 0))
+	return bonus
 
 
 ## Reads a DRAMGID attribute. Until save schema 8 rewrites every row, a member may carry

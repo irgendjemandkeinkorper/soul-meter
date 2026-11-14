@@ -368,7 +368,9 @@ static func deployable_cells(field: FieldMap) -> Array[Vector2i]:
 	if field == null or field.ground() == null or field.iso_grid() == null:
 		return cells
 	var grid: IsoGrid = field.iso_grid()
-	for cell: Vector2i in field.ground().get_used_cells():
+	# On hexes every hex of the painted ground; on squares the painted cells, as before.
+	var candidates: Array[Vector2i] = grid.region_cells() if grid.hex_mode else field.ground().get_used_cells()
+	for cell: Vector2i in candidates:
 		if grid.is_in_bounds(cell) and not grid.is_blocked_for(cell, grid.occupant_of(cell)):
 			cells.append(cell)
 	return cells

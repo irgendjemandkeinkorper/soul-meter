@@ -1,0 +1,201 @@
+{
+  "source_head": "25d3cf1d",
+  "note": "Existing inspected 2/3 evidence retained without rerunning capture. Control references the cached fixture; it has no separate capture.",
+  "variants": {
+    "full": {
+      "automated_facts": 2,
+      "before": "/home/adamjroder/projects/soul-meter-wt/codex-planner-603/docs/qa/p3-1-planner-spike-2026-11-09/full-legibility-before.jpg",
+      "facts": [
+        {
+          "answer": "Benchmark Wight 001",
+          "marker_index": 1,
+          "name": "next_actor",
+          "verified": true
+        },
+        {
+          "answer": "CT 100 \u2192 100\n\u2192 Vex the Unbowed \u00b7 74% \u00b7 13 dmg \u00b7 weak: the knee, what it conceals \u00b7 resists vekh, mozh, khash",
+          "name": "revealed_intent",
+          "plan": {
+            "action_id": "enemy-strike",
+            "aim_location": "",
+            "damage_on_hit": 13,
+            "element": "mozh",
+            "hit_chance": 74,
+            "injury_chance": 0,
+            "kind": "strike",
+            "resists": [
+              "vekh",
+              "mozh",
+              "khash"
+            ],
+            "target_id": "ally-0",
+            "target_name": "Vex the Unbowed",
+            "weaknesses": [
+              "the knee",
+              "what it conceals"
+            ]
+          },
+          "rect": {
+            "height": 35.0,
+            "width": 685.0,
+            "x": 99.5,
+            "y": 27.0
+          },
+          "verified": true
+        },
+        {
+          "answer": "Vex the Unbowed uses Guard against the revealed strike",
+          "name": "right_response",
+          "rect": {
+            "height": 103.0,
+            "width": 84.0,
+            "x": 629.0,
+            "y": 892.0
+          },
+          "submit": true,
+          "trace": {
+            "enemy_action_id": "enemy-strike",
+            "enemy_target_id": "ally-0",
+            "guarded_damage": 13,
+            "guarding": true
+          },
+          "unguarded_damage_on_hit": 13,
+          "verified": false
+        }
+      ],
+      "fixture": "After timing only: adjacent existing wight, attack 20; allies HP 100 and unguarded; ally CT 110, wight CT 100, other seats CT 0; lock via existing controller seam; presentation replay flush. All numbers PROVISIONAL.",
+      "response": "/home/adamjroder/projects/soul-meter-wt/codex-planner-603/docs/qa/p3-1-planner-spike-2026-11-09/full-legibility-response.jpg",
+      "visual_inspection_required": true
+    },
+    "cached": {
+      "automated_facts": 2,
+      "before": "/home/adamjroder/projects/soul-meter-wt/codex-planner-603/docs/qa/p3-1-planner-spike-2026-11-09/cached-legibility-before.jpg",
+      "facts": [
+        {
+          "answer": "Benchmark Wight 001",
+          "marker_index": 1,
+          "name": "next_actor",
+          "verified": true
+        },
+        {
+          "answer": "CT 100 \u2192 100\n\u2192 Vex the Unbowed \u00b7 74% \u00b7 13 dmg \u00b7 weak: the knee, what it conceals \u00b7 resists vekh, mozh, khash",
+          "name": "revealed_intent",
+          "plan": {
+            "action_id": "enemy-strike",
+            "aim_location": "",
+            "damage_on_hit": 13,
+            "element": "mozh",
+            "hit_chance": 74,
+            "injury_chance": 0,
+            "kind": "strike",
+            "resists": [
+              "vekh",
+              "mozh",
+              "khash"
+            ],
+            "target_id": "ally-0",
+            "target_name": "Vex the Unbowed",
+            "weaknesses": [
+              "the knee",
+              "what it conceals"
+            ]
+          },
+          "rect": {
+            "height": 35.0,
+            "width": 685.0,
+            "x": 99.5,
+            "y": 27.0
+          },
+          "verified": true
+        },
+        {
+          "answer": "Vex the Unbowed uses Guard against the revealed strike",
+          "name": "right_response",
+          "rect": {
+            "height": 103.0,
+            "width": 84.0,
+            "x": 629.0,
+            "y": 892.0
+          },
+          "submit": true,
+          "trace": {
+            "enemy_action_id": "enemy-strike",
+            "enemy_target_id": "ally-0",
+            "guarded_damage": 13,
+            "guarding": true
+          },
+          "unguarded_damage_on_hit": 13,
+          "verified": false
+        }
+      ],
+      "fixture": "After timing only: adjacent existing wight, attack 20; allies HP 100 and unguarded; ally CT 110, wight CT 100, other seats CT 0; lock via existing controller seam; presentation replay flush. All numbers PROVISIONAL.",
+      "response": "/home/adamjroder/projects/soul-meter-wt/codex-planner-603/docs/qa/p3-1-planner-spike-2026-11-09/cached-legibility-response.jpg",
+      "visual_inspection_required": true
+    },
+    "fallback24": {
+      "automated_facts": 2,
+      "before": "/home/adamjroder/projects/soul-meter-wt/codex-planner-603/docs/qa/p3-1-planner-spike-2026-11-09/fallback24-legibility-before.jpg",
+      "facts": [
+        {
+          "answer": "Benchmark Wight 001",
+          "marker_index": 1,
+          "name": "next_actor",
+          "verified": true
+        },
+        {
+          "answer": "CT 100 \u2192 100\n\u2192 Vex the Unbowed \u00b7 74% \u00b7 13 dmg \u00b7 weak: the knee, what it conceals \u00b7 resists vekh, mozh, khash",
+          "name": "revealed_intent",
+          "plan": {
+            "action_id": "enemy-strike",
+            "aim_location": "",
+            "damage_on_hit": 13,
+            "element": "mozh",
+            "hit_chance": 74,
+            "injury_chance": 0,
+            "kind": "strike",
+            "resists": [
+              "vekh",
+              "mozh",
+              "khash"
+            ],
+            "target_id": "ally-0",
+            "target_name": "Vex the Unbowed",
+            "weaknesses": [
+              "the knee",
+              "what it conceals"
+            ]
+          },
+          "rect": {
+            "height": 35.0,
+            "width": 685.0,
+            "x": 99.5,
+            "y": 27.0
+          },
+          "verified": true
+        },
+        {
+          "answer": "Vex the Unbowed uses Guard against the revealed strike",
+          "name": "right_response",
+          "rect": {
+            "height": 103.0,
+            "width": 84.0,
+            "x": 629.0,
+            "y": 892.0
+          },
+          "submit": true,
+          "trace": {
+            "enemy_action_id": "enemy-strike",
+            "enemy_target_id": "ally-0",
+            "guarded_damage": 13,
+            "guarding": true
+          },
+          "unguarded_damage_on_hit": 13,
+          "verified": false
+        }
+      ],
+      "fixture": "After timing only: adjacent existing wight, attack 20; allies HP 100 and unguarded; ally CT 110, wight CT 100, other seats CT 0; lock via existing controller seam; presentation replay flush. All numbers PROVISIONAL.",
+      "response": "/home/adamjroder/projects/soul-meter-wt/codex-planner-603/docs/qa/p3-1-planner-spike-2026-11-09/fallback24-legibility-response.jpg",
+      "visual_inspection_required": true
+    }
+  }
+}

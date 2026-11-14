@@ -91,10 +91,10 @@ const DOM_SIDE_QUESTS: Array[DomSideQuest] = [
 ## Chapter 1's re-Agreed place). Kept out of DOM_SIDE_QUESTS, whose size is Dom's "RESOLVED n"
 ## denominator on the chapter-complete screen; they route through `_registered_side_quests()`.
 const FIELD_SIDE_QUESTS: Array[DomSideQuest] = [INSTRUMENT_STAKE]
-## The six S8 stubs. Deliberately NOT in DOM_SIDE_QUESTS: that array is the ten
-## RESOLVABLE Dom side quests and `ui/screens/chapter_complete.gd` renders
-## "RESOLVED n / <its size>", so counting six unfinishable threads in that
-## denominator would report the player failed six quests they were never given a
+## The six S8 stubs. Deliberately NOT in DOM_SIDE_QUESTS or FIELD_SIDE_QUESTS: those are
+## the RESOLVABLE side quests and `ui/screens/chapter_complete.gd` renders
+## "RESOLVED n / resolvable_side_quests().size()", so counting six unfinishable threads
+## in that denominator would report the player failed six quests they were never given a
 ## way to finish. They join the routed set through `_registered_side_quests()`,
 ## which is what makes each giver's dialogue resolve to the stub.
 const STUB_SIDE_QUESTS: Array[StubSideQuest] = [
@@ -361,6 +361,15 @@ func restorable_agreement_ids() -> Dictionary:
 			for agreement_id: String in restored:
 				ids[agreement_id] = true
 	return ids
+
+
+## The side quests Chapter One commits to resolving: the ten Dom commissions and the field
+## quests. Stubs and runtime (campaign) quests stay out; see STUB_SIDE_QUESTS and the
+## chapter-complete ledger, which counts over this set on both sides of its ratio.
+func resolvable_side_quests() -> Array[DomSideQuest]:
+	var quests: Array[DomSideQuest] = DOM_SIDE_QUESTS.duplicate()
+	quests.append_array(FIELD_SIDE_QUESTS)
+	return quests
 
 
 func _registered_side_quests() -> Array[DomSideQuest]:
@@ -727,7 +736,9 @@ func resolve_side_quest(quest: DomSideQuest, outcome_id: StringName) -> bool:
 	var tags: PackedStringArray = outcome["tags"]
 	if tags.has(DomSideQuest.ACT_OF_AGREEMENT_TAG):
 		var soul_before := GameState.soul_meter
-		GameState.set_soul_meter(soul_before + float(outcome["soul_delta"]))
+		GameState.set_soul_meter_with_cause(
+			soul_before + float(outcome["soul_delta"]), "quest:%s:%s" % [quest.id, outcome["id"]]
+		)
 		var soul_credited := GameState.soul_meter - soul_before
 		reward_entries.append(
 			_reward_entry(
@@ -858,7 +869,9 @@ func resolve_companion_quest(
 	# #519 (owner 2026-10-29): a companion quest resolved either way is an act of Agreement.
 	# Through set_soul_meter, so a husked Gauge still stops at its recovery ceiling.
 	var soul_before := GameState.soul_meter
-	GameState.set_soul_meter(soul_before + COMPANION_AGREEMENT_SOUL)
+	GameState.set_soul_meter_with_cause(
+		soul_before + COMPANION_AGREEMENT_SOUL, "quest:companion_agreement:%s" % companion_id
+	)
 	var soul_credited := GameState.soul_meter - soul_before
 	SaveGame.request_autosave("companion-quest-resolved")
 	_publish_reward_summary(

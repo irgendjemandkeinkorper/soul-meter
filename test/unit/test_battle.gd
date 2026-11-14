@@ -285,6 +285,23 @@ func test_defeat_restores_half_health_without_story_resolution() -> void:
 	assert_float(Reputation.standing("ironbrand-sentinels")).is_equal(0.0)
 
 
+## SR7 touches ambient sessions only: an authored defeat keeps its own stake, takes no coin
+## and names no wake hub.
+func test_an_authored_defeat_keeps_its_own_stake_and_takes_no_coin() -> void:
+	GameState.discover_fast_travel_hub(&"dom")
+	GameState.set_gp(200)
+	var events_before := Reputation.event_count()
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle._finish(BattleResult.State.DEFEAT, &"defeat")
+
+	assert_int(GameState.gp).is_equal(200)
+	assert_int(battle.last_result.coin_lost).is_equal(0)
+	assert_str(String(battle.last_result.wake_hub_id)).is_equal("")
+	assert_int(Reputation.event_count()).is_equal(events_before + 1)
+	assert_str(Reputation.history(1)[0].faction).is_equal("ssae-seeders")
+	assert_float(Reputation.history(1)[0].delta).is_equal(-3.0)
+
+
 ## To-hit can whiff (#169/#98), so strike repeatedly — but budgeted, so a
 ## refused strike can never hang the whole suite (the Wave R lesson: an
 ## unbudgeted `while not battle.ended` assert loop spins forever on refusal).
@@ -393,6 +410,95 @@ func test_losing_and_fleeing_pay_nothing() -> void:
 		"running away paid the same as winning"
 	).is_equal(0)
 
+
+
+## SR10 (owner, 2026-11-08): a bypassed fight pays the same kill XP as winning it, once.
+func test_a_bypassed_fight_pays_the_same_xp_as_winning_it_once() -> void:
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+	var won_xp: int = battle.last_result.xp_awarded
+	assert_int(won_xp).is_greater(0)
+
+	for kind: StringName in BattleScript.BYPASS_KINDS:
+		_fresh_party()
+		GameState.flags.clear()
+		var before := _lead_total_xp()
+		var bypass: Dictionary = battle.award_bypass_xp(EncounterIds.BOG_WIGHT, kind)
+		assert_bool(bool(bypass["allowed"])).override_failure_message(
+			"the %s bypass was refused" % kind
+		).is_true()
+		assert_int(int(bypass["xp_awarded"])).override_failure_message(
+			"the %s bypass paid a different amount than winning" % kind
+		).is_equal(won_xp)
+		assert_int(_lead_total_xp() - before).is_equal(won_xp)
+		assert_str(str(bypass["cause"])).contains(String(kind))
+
+		var again: Dictionary = battle.award_bypass_xp(EncounterIds.BOG_WIGHT, kind)
+		assert_bool(bool(again["allowed"])).is_false()
+		assert_str(str(again["blocked_by"])).is_equal("already_resolved")
+
+		battle = auto_free(BattleScript.new())
+		battle.start(EncounterIds.BOG_WIGHT)
+		battle._finish(BattleResult.State.VICTORY, &"slain")
+		assert_int(battle.last_result.xp_awarded).override_failure_message(
+			"fighting an encounter the party already got past paid XP again"
+		).is_equal(0)
+		assert_int(_lead_total_xp() - before).is_equal(won_xp)
+
+
+func test_a_won_fight_cannot_then_be_bypassed_for_more_xp() -> void:
+	battle.start(EncounterIds.BOG_WIGHT)
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+	var before := _lead_total_xp()
+
+	var bypass: Dictionary = battle.award_bypass_xp(EncounterIds.BOG_WIGHT, &"talk")
+
+	assert_bool(bool(bypass["allowed"])).is_false()
+	assert_str(str(bypass["blocked_by"])).is_equal("already_resolved")
+	assert_int(_lead_total_xp()).is_equal(before)
+
+
+## Without a `defeated_flag` nothing could stop a second award, so the call refuses.
+func test_a_bypass_without_a_once_only_guard_or_kind_is_refused() -> void:
+	var before := _lead_total_xp()
+	var unguarded: Dictionary = battle.award_bypass_xp(EncounterIds.PHASE2_DEMON, &"talk")
+	assert_str(str(unguarded["blocked_by"])).is_equal("no_defeated_flag")
+	var unknown_kind: Dictionary = battle.award_bypass_xp(EncounterIds.BOG_WIGHT, &"bribe")
+	assert_str(str(unknown_kind["blocked_by"])).is_equal("unknown_bypass")
+	var unknown_encounter: Dictionary = battle.award_bypass_xp(&"no-such-encounter", &"talk")
+	assert_str(str(unknown_encounter["blocked_by"])).is_equal("unknown_encounter")
+	assert_int(_lead_total_xp()).is_equal(before)
+	assert_bool(GameState.flag_is_true(EncounterCatalog.defeated_flag(EncounterIds.BOG_WIGHT))).is_false()
+
+
+## SR10 audit: talking a fight down in battle is already a VICTORY, so it pays the same.
+func test_talking_a_fight_down_in_battle_pays_the_same_as_slaying_it() -> void:
+	battle.start(EncounterIds.DORTHKOR_MUSTER)
+	battle._finish(BattleResult.State.VICTORY, &"slain")
+	var slain_xp: int = battle.last_result.xp_awarded
+
+	_fresh_party()
+	GameState.flags.clear()
+	battle = auto_free(BattleScript.new())
+	battle.start(EncounterIds.DORTHKOR_MUSTER)
+	battle._finish(BattleResult.State.VICTORY, &"released")
+
+	assert_int(slain_xp).is_greater(0)
+	assert_int(battle.last_result.xp_awarded).is_equal(slain_xp)
+
+
+func _fresh_party() -> void:
+	GameState.party.clear()
+	GameState.party.append(_member("Vex", 20, 8, 2))
+	GameState.party.append(_member("Serai", 16, 6, 1))
+
+
+func _lead_total_xp() -> int:
+	var lead: PartyMember = GameState.party[0]
+	var total := lead.xp
+	for level in range(1, lead.level):
+		total += Advancement.xp_for_next_level(level)
+	return total
 
 
 func test_serious_injuries_persist_past_every_finish_and_minor_ones_do_not() -> void:

@@ -183,7 +183,8 @@ static func audit_project(strict: bool = false) -> Dictionary:
 			_source_files(LOCATION_DIRECTORY, PackedStringArray(["tres"]))
 		),
 		read_back_coverage,
-		_softlock_writer_sources(readback_sources)
+		_softlock_writer_sources(readback_sources),
+		scan_zhavar_routes()
 	)
 
 
@@ -196,7 +197,8 @@ static func build_report(
 	dialogue_sources: Dictionary = {},
 	template_violations: Array[Dictionary] = [],
 	read_back_coverage: Array[Dictionary] = [],
-	writer_sources: Dictionary = {}
+	writer_sources: Dictionary = {},
+	zhavar_routes: Dictionary = {}
 ) -> Dictionary:
 	if read_back_coverage.is_empty() and not quest_results.is_empty():
 		var readback_sources := _readback_sources(dialogue_sources)
@@ -210,6 +212,7 @@ static func build_report(
 		"phase_reachability": _category(),
 		"check_softlocks": _category(),
 		"template_conformance": _category(),
+		"zhavar_routes": _category(),
 	}
 	var main_read := 0
 	var main_total := 0
@@ -339,6 +342,14 @@ static func build_report(
 		if violation_severity == "error":
 			template_error_count += 1
 		_add_finding(categories["template_conformance"], violation_severity, violation_code, details)
+	var zhavar_zones: Dictionary = zhavar_routes.get("zones", {})
+	for zone_id: String in zhavar_routes.get("unwritten_zones", PackedStringArray()):
+		_add_finding(
+			categories["zhavar_routes"],
+			"error",
+			"zhavar_route_unwritten",
+			{"zone": zone_id, "routes": (zhavar_zones[zone_id] as Dictionary)["routes"]}
+		)
 	var routined_critical_count := 0
 	for npc_id: String in quest_critical_ids:
 		if NpcRoutines.has_routine(npc_id):
@@ -402,6 +413,11 @@ static func build_report(
 				"violations": template_violations.size(),
 				"errors": template_error_count,
 				"passes": template_error_count == 0,
+			},
+			"zhavar_routes": {
+				"zones": zhavar_zones,
+				"unwritten_zones": zhavar_routes.get("unwritten_zones", PackedStringArray()),
+				"passes": (zhavar_routes.get("unwritten_zones", PackedStringArray()) as PackedStringArray).is_empty(),
 			},
 		},
 		"categories": categories,
@@ -499,6 +515,77 @@ static func scan_grammar_flags() -> PackedStringArray:
 	var result := PackedStringArray(flags.keys())
 	result.sort()
 	return result
+
+
+## FR-308 / P1.6 (#535): which zones authored Zhavar content reads, and which production
+## writers raise them. A zone that any route reads but nothing raises is an unreachable route.
+##
+## Route classes, matched on literals only (limitation 2 applies):
+## - `rumour`: an NpcReactions rule keyed on `"zhavar_zone": "<zone>"` or on the
+##   `zhavar_tolling_<zone>` flag.
+## - `telegraph`: the `ZhavarTelegraph` actor's default zone, and any line conditioned on
+##   `zhavar_rung("<zone>")`.
+## - `toll`: the `ZhavarToll` actor's default zone, and any line reading `zhavar_tolling_<zone>`.
+## Writers are literal `raise_zhavar("<zone>")` calls. `test/` and `tools/` are not scanned.
+static func scan_zhavar_routes() -> Dictionary:
+	var sources := {}
+	for directory_value: Variant in GRAMMAR_SCAN_DIRECTORIES:
+		sources.merge(_source_files(str(directory_value), PackedStringArray(["gd", "dialogue"])))
+	return zhavar_route_sites(sources)
+
+
+static func zhavar_route_sites(sources: Dictionary) -> Dictionary:
+	var writer_regex := _regex('raise_zhavar\\(\\s*["\']([a-z][a-z0-9_-]*)["\']')
+	var rule_zone_regex := _regex('["\']zhavar_zone["\']\\s*:\\s*["\']([a-z][a-z0-9_-]*)["\']')
+	var rung_read_regex := _regex('zhavar_rung\\(\\s*["\']([a-z][a-z0-9_-]*)["\']')
+	var tolling_regex := _regex('zhavar_tolling_(?!witnessed)([a-z][a-z0-9_-]*)')
+	var actor_zone_regex := _regex('@export var zone_id\\s*:?=\\s*["\']([a-z][a-z0-9_-]*)["\']')
+	var zones := {}
+	var paths := PackedStringArray(sources.keys())
+	paths.sort()
+	for path: String in paths:
+		var source := str(sources[path])
+		for result: RegExMatch in writer_regex.search_all(source):
+			_zhavar_zone(zones, result.get_string(1))["writers"].append(_site(path, source, result))
+		var tolling_class := "rumour" if path.ends_with("npc_reactions.gd") else "toll"
+		for result: RegExMatch in rule_zone_regex.search_all(source):
+			_zhavar_route(zones, result.get_string(1), "rumour", _site(path, source, result))
+		for result: RegExMatch in tolling_regex.search_all(source):
+			_zhavar_route(zones, result.get_string(1), tolling_class, _site(path, source, result))
+		for result: RegExMatch in rung_read_regex.search_all(source):
+			_zhavar_route(zones, result.get_string(1), "telegraph", _site(path, source, result))
+		var actor_class := ""
+		if path.ends_with("zhavar_telegraph.gd"):
+			actor_class = "telegraph"
+		elif path.ends_with("zhavar_toll.gd"):
+			actor_class = "toll"
+		if not actor_class.is_empty():
+			for result: RegExMatch in actor_zone_regex.search_all(source):
+				_zhavar_route(zones, result.get_string(1), actor_class, _site(path, source, result))
+	var unwritten := PackedStringArray()
+	for zone_id: String in zones:
+		var zone: Dictionary = zones[zone_id]
+		if (zone["writers"] as Array).is_empty() and not (zone["routes"] as Dictionary).is_empty():
+			unwritten.append(zone_id)
+	unwritten.sort()
+	return {"zones": zones, "unwritten_zones": unwritten}
+
+
+static func _zhavar_zone(zones: Dictionary, zone_id: String) -> Dictionary:
+	if not zones.has(zone_id):
+		zones[zone_id] = {"writers": [], "routes": {}}
+	return zones[zone_id]
+
+
+static func _zhavar_route(zones: Dictionary, zone_id: String, route_class: String, site: String) -> void:
+	var routes: Dictionary = _zhavar_zone(zones, zone_id)["routes"]
+	if not routes.has(route_class):
+		routes[route_class] = []
+	(routes[route_class] as Array).append(site)
+
+
+static func _site(path: String, source: String, result: RegExMatch) -> String:
+	return "%s:%d" % [path, source.substr(0, result.get_start()).count("\n") + 1]
 
 
 ## FR-905 §3.4 (docs/prd-amendment-living-world.md): the quest-critical NPC surface —

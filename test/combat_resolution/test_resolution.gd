@@ -298,6 +298,81 @@ func test_cast_cost_spends_breath_then_soul_and_refuses_insufficient_soul_withou
 	assert_bool(refused.has("writes")).is_false()
 
 
+## Owner 2026-11-02 (item 33): a rolled hit in the lowest tenth of the hit chance is a
+## PROVISIONAL critical; the target takes 1.5x the damage it would otherwise take, after
+## mitigation. A forced hit and the on-hit preview roll nothing, so they never crit.
+func test_a_low_hit_roll_is_a_critical_for_half_again_the_damage_taken() -> void:
+	assert_int(ResolutionScript.critical_threshold(93)).is_equal(9)
+	assert_int(ResolutionScript.critical_threshold(70)).is_equal(7)
+	assert_int(ResolutionScript.critical_threshold(5)).is_equal(1)
+	assert_int(ResolutionScript.critical_damage(4, true)).is_equal(6)
+	assert_int(ResolutionScript.critical_damage(3, true)).is_equal(5)
+	assert_int(ResolutionScript.critical_damage(4, false)).is_equal(4)
+	assert_int(ResolutionScript.critical_damage(0, true)).is_equal(0)
+	var context := _walkthrough_context()
+	context["to_hit_enabled"] = true
+	context["facing"] = {"id": &"back"}
+	context["height_advantage_steps"] = 2  # 93% to hit, criticals on 1..9
+	var plain_seed := -1
+	var critical_seed := -1
+	for candidate in range(1, 800):
+		context["seed"] = candidate
+		var probe := ResolutionScript.resolve(context)
+		if not bool(probe.get("allowed", false)) or not bool(probe["hit"]):
+			continue
+		if bool(probe["critical"]):
+			critical_seed = candidate if critical_seed < 0 else critical_seed
+		elif plain_seed < 0:
+			plain_seed = candidate
+		if critical_seed > 0 and plain_seed > 0:
+			break
+	assert_int(critical_seed).is_greater(0)
+	assert_int(plain_seed).is_greater(0)
+	context["seed"] = plain_seed
+	var plain := ResolutionScript.resolve(context)
+	context["seed"] = critical_seed
+	var critical := ResolutionScript.resolve(context)
+	assert_int(critical["hit_roll"]).is_less_equal(9)
+	assert_int(critical["critical_threshold"]).is_equal(9)
+	assert_bool(plain["critical"]).is_false()
+	assert_int(plain["hit_roll"]).is_greater(9)
+	# Resolution flags the critical; the pre-mitigation number is the same either way.
+	assert_int(critical["damage"]).is_equal(plain["damage"])
+	assert_bool(ResolutionScript.preview_on_hit(context)["critical"]).is_false()
+	context["unit"]["hit"] = true
+	assert_bool(ResolutionScript.resolve(context)["critical"]).is_false()
+
+
+## Owner 2026-11-02 (item 33, fresh dice every fight): a fight seed salts every roll, so the
+## same action rolls differently from fight to fight; seed 0 keeps the historical keys exactly.
+func test_a_fight_seed_salts_every_roll_and_zero_keeps_the_historical_keys() -> void:
+	var context := _walkthrough_context()
+	var unit := {"id": "caster"}
+	var target := {"id": "defender"}
+	var historical: int = ResolutionScript._deterministic_hit_roll(context, "zhur_strike", unit, target)
+	context["fight_seed"] = 0
+	assert_int(ResolutionScript._deterministic_hit_roll(context, "zhur_strike", unit, target)).is_equal(historical)
+	var seen := {}
+	for fight in range(1, 41):
+		context["fight_seed"] = fight
+		var roll: int = ResolutionScript._deterministic_hit_roll(context, "zhur_strike", unit, target)
+		seen[roll] = true
+		# Forecast and commit share the context: the same fight seed rolls the same number.
+		assert_int(ResolutionScript._deterministic_hit_roll(context, "zhur_strike", unit, target)).is_equal(roll)
+	assert_int(seen.size()).is_greater(15)
+	context["fight_seed"] = 77
+	var fizzle_a: int = ResolutionScript._deterministic_fizzle_roll(context, "zhur_strike", unit, target)
+	var injury_a: int = ResolutionScript._deterministic_injury_roll(context, "zhur_strike", unit, target)
+	var draw_a: int = ResolutionScript._deterministic_draw_roll(context, "zhur_strike", unit, target, "k")
+	var differs := 0
+	for fight in [78, 79, 80, 81]:
+		context["fight_seed"] = fight
+		differs += int(ResolutionScript._deterministic_fizzle_roll(context, "zhur_strike", unit, target) != fizzle_a)
+		differs += int(ResolutionScript._deterministic_injury_roll(context, "zhur_strike", unit, target) != injury_a)
+		differs += int(ResolutionScript._deterministic_draw_roll(context, "zhur_strike", unit, target, "k") != draw_a)
+	assert_int(differs).is_greater(8)
+
+
 func _walkthrough_context() -> Dictionary:
 	return {
 		"battle_id": "walkthrough",

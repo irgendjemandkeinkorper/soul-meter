@@ -104,6 +104,7 @@ static func buy(member: PartyMember, skill_id: String) -> Dictionary:
 	var ledger := _ledger_row(member, skill_id)
 	ledger["percentage"] = float(ledger.get("percentage", 0.0)) + STEP_PERCENT
 	ledger["advancement_points_spent"] = int(ledger.get("advancement_points_spent", 0)) + cost
+	member.emit_changed()
 	return {"allowed": true, "blocked_by": "", "cost": cost,
 		"new_percentage": float(member.skill_percentages[skill_id])}
 
@@ -194,6 +195,7 @@ static func mirror_rewriting(member: PartyMember) -> Dictionary:
 		row["percentage"] = 0.0
 		row["advancement_points_spent"] = 0
 	member.advancement_points += refunded
+	member.emit_changed()
 	return {"allowed": true, "refunded_points": refunded}
 
 

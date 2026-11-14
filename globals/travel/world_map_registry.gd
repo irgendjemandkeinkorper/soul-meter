@@ -57,6 +57,48 @@ static func routes_from(location_id: StringName) -> Array[Dictionary]:
 	return result
 
 
+## SR7: the candidate nearest `from_id` over the authored route graph, by total route `steps`
+## (routes run both ways). A tie keeps the candidates' own order, so a caller that passes
+## hubs in FastTravelRegistry order prefers Dom. `from_id` itself wins at distance 0 when it
+## is a candidate. Returns &"" when no candidate is reachable.
+static func nearest_location(from_id: StringName, candidates: Array[StringName]) -> StringName:
+	if candidates.is_empty():
+		return &""
+	if candidates.has(from_id):
+		return from_id
+	var distance: Dictionary = {from_id: 0}
+	var open: Array[StringName] = [from_id]
+	var routes := _route_rows()
+	while not open.is_empty():
+		var current: StringName = open[0]
+		for candidate: StringName in open:
+			if int(distance[candidate]) < int(distance[current]):
+				current = candidate
+		open.erase(current)
+		for route: Dictionary in routes:
+			var origin := StringName(route.get("origin_id", &""))
+			var destination := StringName(route.get("destination_id", &""))
+			var neighbour: StringName
+			if origin == current:
+				neighbour = destination
+			elif destination == current:
+				neighbour = origin
+			else:
+				continue
+			var reached := int(distance[current]) + int(route.get("steps", 0))
+			if not distance.has(neighbour) or reached < int(distance[neighbour]):
+				distance[neighbour] = reached
+				if not open.has(neighbour):
+					open.append(neighbour)
+	var best: StringName = &""
+	for candidate: StringName in candidates:
+		if not distance.has(candidate):
+			continue
+		if best == &"" or int(distance[candidate]) < int(distance[best]):
+			best = candidate
+	return best
+
+
 static func _location_rows() -> Array[Dictionary]:
 	return _locations.duplicate(true)
 

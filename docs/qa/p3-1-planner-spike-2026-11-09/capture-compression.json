@@ -1,0 +1,80 @@
+[
+  {
+    "source": "cached-legibility-before.png",
+    "target": "cached-legibility-before.jpg",
+    "source_bytes": 3514968,
+    "target_bytes": 739707,
+    "quality": 90,
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "source_sha256": "5f8c2193bd040db7d1dc0d9c2995f2e60ac6e9f8ad691a54b7e346b2d4cc0ad1",
+    "target_sha256": "3f8b7883c127ef535a8e911faf090c5ec22bf2098cfea9d28ed7d3c3ed76565b"
+  },
+  {
+    "source": "cached-legibility-response.png",
+    "target": "cached-legibility-response.jpg",
+    "source_bytes": 3544590,
+    "target_bytes": 748839,
+    "quality": 90,
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "source_sha256": "b6216b125ac2cd0e44d8f84c6d4a80365a71c572a299effc3df8fda75eb56e0d",
+    "target_sha256": "d4c03dbcfa0622fa871ad7b22e40bb47fa75e6fd53718be69be8c9d1f519db4f"
+  },
+  {
+    "source": "fallback24-legibility-before.png",
+    "target": "fallback24-legibility-before.jpg",
+    "source_bytes": 3514969,
+    "target_bytes": 739644,
+    "quality": 90,
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "source_sha256": "c18af28caea0300fd7fa6837c1292a653d95d2185f1187bdbf84b1d723a2986c",
+    "target_sha256": "86d77b671c5a67e4cf363c1e2328e2f900c29b1da96da3790b1718153f8056f6"
+  },
+  {
+    "source": "fallback24-legibility-response.png",
+    "target": "fallback24-legibility-response.jpg",
+    "source_bytes": 3544582,
+    "target_bytes": 748820,
+    "quality": 90,
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "source_sha256": "fef23d72a7e03ecf54dc9d60b63245488562c3dbddac2c0fcfe90c7da1ce904b",
+    "target_sha256": "ba72abafb85ba98706edee6925b0cff5f8a34f59d36fb23c9eab76779dad4ec1"
+  },
+  {
+    "source": "full-legibility-before.png",
+    "target": "full-legibility-before.jpg",
+    "source_bytes": 3515047,
+    "target_bytes": 739630,
+    "quality": 90,
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "source_sha256": "cd983c15afe0987f5cccfa04b87425aaa1bd50f9a76e85a96de1f96549343636",
+    "target_sha256": "78ad8767ebae8538ac65c1a5431418a25e30dcb6d328128f1f4211a25893053e"
+  },
+  {
+    "source": "full-legibility-response.png",
+    "target": "full-legibility-response.jpg",
+    "source_bytes": 3544583,
+    "target_bytes": 748816,
+    "quality": 90,
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "source_sha256": "cb02df0b0b50ddcec2c701a6df34b75b2205533a0a931d84d1e83c5686e1b542",
+    "target_sha256": "76950675a34468142e420444835599cf1d4c9f53e5583584538c610ee0f43ab8"
+  }
+]

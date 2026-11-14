@@ -3,6 +3,20 @@ extends "res://test/helpers/scene_pick_fixture.gd"
 ## for each button edge. The live grid is the `ClickMoveController`'s own `IsoGrid` (reached
 ## through `FieldMap.iso_grid()`), so a painted stroke must change where the player can walk.
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
+
 const GROUND_TILES := preload("res://assets/generated/sprites/ground/ground_tileset.tres")
 const BLOCKING_TILES := preload("res://world/nav/blocking_tiles.tres")
 const LATTICE := Vector2i(16, 16)

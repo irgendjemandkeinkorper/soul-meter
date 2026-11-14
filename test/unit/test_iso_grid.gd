@@ -2,6 +2,20 @@ extends GdUnitTestSuite
 ## Covers world/nav/iso_grid.gd — the shared AStarGrid2D substrate described in
 ## docs/architecture-tactical-and-navigation.md §2.2.
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
+
 const IsoGridScript := preload("res://world/nav/iso_grid.gd")
 const TILE_SIZE := Vector2i(64, 32)
 

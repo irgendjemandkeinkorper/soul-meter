@@ -1,0 +1,176 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://dev/dev_room.gd" id="1_room"]
+[ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://actors/party_followers/party_followers.tscn" id="3_followers"]
+[ext_resource type="PackedScene" path="res://ui/hud/field_hud.tscn" id="4_hud"]
+[ext_resource type="Script" path="res://world/field_map.gd" id="5_field"]
+[ext_resource type="Script" path="res://world/isometric_blockout.gd" id="6_ground"]
+[ext_resource type="PackedScene" path="res://actors/chest/chest.tscn" id="7_chest"]
+[ext_resource type="PackedScene" path="res://actors/npc/npc.tscn" id="8_npc"]
+[ext_resource type="PackedScene" path="res://actors/interactable/interactable.tscn" id="9_interact"]
+[ext_resource type="PackedScene" path="res://actors/travel_exit/travel_exit.tscn" id="10_exit"]
+[ext_resource type="Script" path="res://dev/dev_combat_trigger.gd" id="11_combat"]
+[ext_resource type="TileSet" path="res://world/nav/blocking_tiles.tres" id="12_tiles"]
+[ext_resource type="Script" path="res://world/nav/blocking_layer.gd" id="13_blocking"]
+
+[sub_resource type="RectangleShape2D" id="wall_h"]
+size = Vector2(2000, 40)
+
+[sub_resource type="RectangleShape2D" id="wall_v"]
+size = Vector2(40, 1200)
+
+[node name="DevRoom" type="Node2D"]
+texture_filter = 2
+y_sort_enabled = true
+script = ExtResource("1_room")
+
+[node name="IsometricGround" type="TileMapLayer" parent="."]
+position = Vector2(1000, -680)
+script = ExtResource("6_ground")
+map_size = Vector2i(80, 80)
+ground_style = 1
+road_axis = 3
+
+[node name="Blocking" type="TileMapLayer" parent="."]
+visible = false
+position = Vector2(1000, -680)
+tile_set = ExtResource("12_tiles")
+script = ExtResource("13_blocking")
+
+[node name="FieldMap" type="Node2D" parent="."]
+script = ExtResource("5_field")
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="Top" type="CollisionShape2D" parent="Walls"]
+position = Vector2(1000, 20)
+shape = SubResource("wall_h")
+
+[node name="Bottom" type="CollisionShape2D" parent="Walls"]
+position = Vector2(1000, 1180)
+shape = SubResource("wall_h")
+
+[node name="Left" type="CollisionShape2D" parent="Walls"]
+position = Vector2(20, 600)
+shape = SubResource("wall_v")
+
+[node name="Right" type="CollisionShape2D" parent="Walls"]
+position = Vector2(1980, 600)
+shape = SubResource("wall_v")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(1000, 700)
+camera_bounds = Rect2i(0, 0, 2000, 1200)
+
+[node name="PartyFollowers" parent="." instance=ExtResource("3_followers")]
+
+[node name="SpawnDefault" type="Marker2D" parent="."]
+position = Vector2(1000, 700)
+
+[node name="FieldHUD" parent="." instance=ExtResource("4_hud")]
+
+[node name="Instructions" type="Label" parent="."]
+offset_left = 500.0
+offset_top = 345.0
+offset_right = 1500.0
+offset_bottom = 410.0
+theme_type_variation = "HeadingLabel"
+text = "DEV ROOM\nE: use   F: pocket   Esc: pause / title"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="LockedChest" parent="." instance=ExtResource("7_chest")]
+position = Vector2(450, 550)
+display_name = "DEV LOCK"
+prompt_text = "OPEN"
+container_id = "dev-locked-chest"
+lock_skill = "slip"
+loot = Array[Dictionary]([{"item_id": "tools/lockpick_roll", "quantity": 1}])
+
+[node name="LootChest" parent="." instance=ExtResource("7_chest")]
+position = Vector2(1000, 550)
+display_name = "DEV LOOT TABLE"
+prompt_text = "SEARCH"
+container_id = "dev-loot-table-chest"
+loot_table_id = &"road-cache"
+
+[node name="SkillObject" parent="." instance=ExtResource("9_interact")]
+position = Vector2(1550, 550)
+display_name = "DEV STRAIN"
+prompt_text = "TRY"
+interaction_text = "DEV: passed"
+interaction_flag = "dev-object-used"
+lock_id = "dev-strain-object"
+lock_skill = "strain"
+
+[node name="PocketNPC" parent="." instance=ExtResource("8_npc")]
+position = Vector2(450, 900)
+npc_name = "Toma Reedhand"
+npc_id = "toma-reedhand"
+dialogue_path = "res://dialogue/toma_reedhand.dialogue"
+pocket_id = "dev-toma-pocket"
+pocket_skill = "slip"
+pocket_gp = 9
+
+[node name="PocketLabel" type="Label" parent="."]
+offset_left = 300.0
+offset_top = 950.0
+offset_right = 600.0
+offset_bottom = 980.0
+theme_type_variation = "EyebrowLabel"
+text = "DEV PICKPOCKET"
+horizontal_alignment = 1
+mouse_filter = 2
+
+[node name="Vendor" parent="." instance=ExtResource("9_interact")]
+position = Vector2(1000, 900)
+display_name = "DEV SHOP"
+prompt_text = "TRADE"
+interaction_text = "DEV: equipment"
+repeatable = true
+shop_type = "equipment"
+
+[node name="CombatTrigger" parent="." instance=ExtResource("9_interact")]
+position = Vector2(1550, 900)
+script = ExtResource("11_combat")
+display_name = "DEV COMBAT"
+prompt_text = "BOG WIGHT"
+interaction_text = "DEV: encounter"
+repeatable = true
+encounter_id = &"bog-wight"
+
+[node name="DoorBoard" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Dom" parent="DoorBoard" instance=ExtResource("10_exit")]
+position = Vector2(195, 300)
+label_text = "DEV DOM"
+
+[node name="Ashlaren" parent="DoorBoard" instance=ExtResource("10_exit")]
+position = Vector2(425, 300)
+label_text = "DEV ASHLAREN"
+
+[node name="Kesselford" parent="DoorBoard" instance=ExtResource("10_exit")]
+position = Vector2(655, 300)
+label_text = "DEV KESSELFORD"
+
+[node name="LongVerge" parent="DoorBoard" instance=ExtResource("10_exit")]
+position = Vector2(885, 300)
+label_text = "DEV LONG VERGE"
+
+[node name="Hollowmere" parent="DoorBoard" instance=ExtResource("10_exit")]
+position = Vector2(1115, 300)
+label_text = "DEV HOLLOWMERE"
+
+[node name="Wilds" parent="DoorBoard" instance=ExtResource("10_exit")]
+position = Vector2(1345, 300)
+label_text = "DEV WILDS"
+
+[node name="DorthkorRoad" parent="DoorBoard" instance=ExtResource("10_exit")]
+position = Vector2(1575, 300)
+label_text = "DEV DORTHKOR"
+
+[node name="WoundLip" parent="DoorBoard" instance=ExtResource("10_exit")]
+position = Vector2(1805, 300)
+label_text = "DEV WOUND LIP"

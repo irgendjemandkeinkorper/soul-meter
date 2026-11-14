@@ -45,12 +45,12 @@ func test_live_field_session_accord_context() -> void:
 	var field := root.find_child("FieldMap", true, false) as FieldMap
 	# Production runs the field as the current scene; Battle reads the location base from it.
 	get_tree().current_scene = root
-	var hostile := load("res://actors/hostile/hostile.tscn").instantiate() as Hostile
-	hostile.name = "AccordCaptureWight"
-	hostile.unit_id = &"bog-wight"
+	# The Wilds' authored Bog Wight stands on the battlefield; a fixed spawn cell does not
+	# survive edits to the room's ground.
+	GameState.set_flag("defeated_bog_wight", false)
+	var hostile := root.find_child("BogWight", true, false) as Hostile
+	assert_object(hostile).override_failure_message("test_room must author BogWight").is_not_null()
 	hostile.alert_radius = 0.0
-	root.add_child(hostile)
-	hostile.global_position = field.iso_grid().cell_to_world(Vector2i(30, 30))
 	hostile.sync_cell()
 	var opened := Battle.start_session(field, hostile)
 	assert_bool(opened.get("allowed", false)).override_failure_message(str(opened)).is_true()
@@ -94,8 +94,12 @@ func test_live_field_session_accord_context() -> void:
 	]
 	print("ACCORD ", caption_text)
 
+	# One bar, both modes (owner 2026-11-01): the field's own HUD grows its combat parts, as
+	# GameFlow._on_battle_entered() does on a live field. Every other field layer stays hidden.
+	var field_hud := field.field_hud()
 	for layer: Node in root.find_children("*", "CanvasLayer", true, false):
-		(layer as CanvasLayer).hide()
+		if layer != field_hud:
+			(layer as CanvasLayer).hide()
 	UIManager.close_all()
 	# Handing current_scene to the field leaves the boot menu drawn; keep it out of the shot.
 	var main_menu := get_tree().root.get_node_or_null("MainMenu") as CanvasItem
@@ -105,12 +109,11 @@ func test_live_field_session_accord_context() -> void:
 		# CanvasLayers do not inherit the hidden boot scene's visibility.
 		for layer: Node in _boot_scene.find_children("*", "CanvasLayer", true, false):
 			(layer as CanvasLayer).hide()
+	field.set_combat_mode(true)
+	field_hud.enter_combat(field)
 	var hud := CanvasLayer.new()
-	hud.layer = 10
+	hud.layer = 12
 	root.add_child(hud)
-	var screen := load("res://ui/screens/battle.tscn").instantiate() as Screen
-	screen.theme = ThemeBuilder.build()
-	hud.add_child(screen)
 	var caption := PanelContainer.new()
 	caption.theme = ThemeBuilder.build()
 	caption.position = Vector2(32, 620)
@@ -129,7 +132,8 @@ func test_live_field_session_accord_context() -> void:
 	image.resize(1280, 720, Image.INTERPOLATE_LANCZOS)
 	assert_int(image.save_jpg("user://qa/accord-349-zone-forecast.jpg", 0.82)).is_equal(OK)
 	print("SHOT accord-349-zone-forecast ", ProjectSettings.globalize_path("user://qa"))
-	screen.free()
+	field_hud.exit_combat()
+	field.set_combat_mode(false)
 	Battle._end_session(null)
 
 

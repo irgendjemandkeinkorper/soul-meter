@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=32 format=3]
 
 [ext_resource type="Script" path="res://world/chapter_location.gd" id="1_location"]
 [ext_resource type="PackedScene" path="res://actors/player/player.tscn" id="2_player"]
@@ -28,17 +28,26 @@ size = Vector2(1800, 40)
 [sub_resource type="RectangleShape2D" id="shape_v"]
 size = Vector2(40, 900)
 
-[sub_resource type="RectangleShape2D" id="shape_chain_post"]
-size = Vector2(42, 28)
+[sub_resource type="ConvexPolygonShape2D" id="base_WoundLipDressing_SolidProps_ChainPostWest"]
+points = PackedVector2Array(-50.22, -9.3, -3.72, 13.02, 47.74, -7.44, 1.24, -29.76)
 
-[sub_resource type="RectangleShape2D" id="shape_guard_post"]
-size = Vector2(48, 34)
+[sub_resource type="ConvexPolygonShape2D" id="base_WoundLipDressing_SolidProps_ChainPostEast"]
+points = PackedVector2Array(50.22, -9.3, 3.72, 13.02, -47.74, -7.44, -1.24, -29.76)
 
-[sub_resource type="RectangleShape2D" id="shape_retaining_structure"]
-size = Vector2(82, 32)
+[sub_resource type="ConvexPolygonShape2D" id="base_WoundLipDressing_SolidProps_EmptyGuardPost"]
+points = PackedVector2Array(-28.8, -6.6, 1.2, 6, 28.8, -5.4, -1.2, -18)
 
-[sub_resource type="RectangleShape2D" id="shape_warning_plate"]
-size = Vector2(58, 24)
+[sub_resource type="ConvexPolygonShape2D" id="base_WoundLipDressing_SolidProps_RetainingStructureWest"]
+points = PackedVector2Array(-45.5, -18.85, 8.45, 0.65, 44.85, -6.5, -9.1, -26)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_WoundLipDressing_SolidProps_RetainingStructureEast"]
+points = PackedVector2Array(45.5, -18.85, -8.45, 0.65, -44.85, -6.5, 9.1, -26)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_WoundLipDressing_SolidProps_WarningPlateEntry"]
+points = PackedVector2Array(-42, -2.24, -18.48, 8.96, 39.76, -14, 16.24, -25.2)
+
+[sub_resource type="ConvexPolygonShape2D" id="base_WoundLipDressing_SolidProps_WarningPlateLedge"]
+points = PackedVector2Array(42, -2.24, 18.48, 8.96, -39.76, -14, -16.24, -25.2)
 
 [node name="WoundLip" type="Node2D"]
 texture_filter = 2
@@ -49,12 +58,18 @@ arrival_flag = "chapter_wound_lip_reached"
 [node name="FieldMap" type="Node2D" parent="."]
 script = ExtResource("18_field_map")
 
+; The walk and fight grid covers the walled 1800x900 ledge: a 58x58 diamond centred on it
+; (the default 25x25 at the origin covered only the west edge, so fights here had no floor).
 [node name="IsometricGround" type="TileMapLayer" parent="."]
 visible = false
+position = Vector2(900, -478)
 script = ExtResource("19_iso")
+map_size = Vector2i(58, 58)
 
 [node name="Blocking" type="TileMapLayer" parent="."]
 visible = false
+position = Vector2(900, -478)
+tile_map_data = PackedByteArray("AAAAAB0AAAAAAAAAAAABABwAAAAAAAAAAAABAB0AAAAAAAAAAAABAB4AAAAAAAAAAAACABsAAAAAAAAAAAACABwAAAAAAAAAAAACAB0AAAAAAAAAAAACAB4AAAAAAAAAAAACAB8AAAAAAAAAAAADABoAAAAAAAAAAAADABsAAAAAAAAAAAADABwAAAAAAAAAAAADAB8AAAAAAAAAAAADACAAAAAAAAAAAAAEABkAAAAAAAAAAAAEABoAAAAAAAAAAAAEABsAAAAAAAAAAAAEACAAAAAAAAAAAAAEACEAAAAAAAAAAAAFABgAAAAAAAAAAAAFABkAAAAAAAAAAAAFABoAAAAAAAAAAAAFACEAAAAAAAAAAAAFACIAAAAAAAAAAAAGABcAAAAAAAAAAAAGABgAAAAAAAAAAAAGABkAAAAAAAAAAAAGACIAAAAAAAAAAAAGACMAAAAAAAAAAAAHABYAAAAAAAAAAAAHABcAAAAAAAAAAAAHABgAAAAAAAAAAAAHACMAAAAAAAAAAAAHACQAAAAAAAAAAAAIABUAAAAAAAAAAAAIABYAAAAAAAAAAAAIABcAAAAAAAAAAAAIACQAAAAAAAAAAAAIACUAAAAAAAAAAAAJABQAAAAAAAAAAAAJABUAAAAAAAAAAAAJABYAAAAAAAAAAAAJACUAAAAAAAAAAAAJACYAAAAAAAAAAAAKABMAAAAAAAAAAAAKABQAAAAAAAAAAAAKABUAAAAAAAAAAAAKACYAAAAAAAAAAAAKACcAAAAAAAAAAAALABIAAAAAAAAAAAALABMAAAAAAAAAAAALABQAAAAAAAAAAAALACMAAAAAAAAAAAALACcAAAAAAAAAAAALACgAAAAAAAAAAAAMABEAAAAAAAAAAAAMABIAAAAAAAAAAAAMABMAAAAAAAAAAAAMACgAAAAAAAAAAAAMACkAAAAAAAAAAAANABAAAAAAAAAAAAANABEAAAAAAAAAAAANABIAAAAAAAAAAAANACkAAAAAAAAAAAANACoAAAAAAAAAAAAOAA8AAAAAAAAAAAAOABAAAAAAAAAAAAAOABEAAAAAAAAAAAAOACoAAAAAAAAAAAAOACsAAAAAAAAAAAAPAA4AAAAAAAAAAAAPAA8AAAAAAAAAAAAPABAAAAAAAAAAAAAPACsAAAAAAAAAAAAPACwAAAAAAAAAAAAQAA0AAAAAAAAAAAAQAA4AAAAAAAAAAAAQAA8AAAAAAAAAAAAQACwAAAAAAAAAAAAQAC0AAAAAAAAAAAARAAwAAAAAAAAAAAARAA0AAAAAAAAAAAARAA4AAAAAAAAAAAARAC0AAAAAAAAAAAARAC4AAAAAAAAAAAASAAsAAAAAAAAAAAASAAwAAAAAAAAAAAASAA0AAAAAAAAAAAASAC4AAAAAAAAAAAASAC8AAAAAAAAAAAATAAoAAAAAAAAAAAATAAsAAAAAAAAAAAATAAwAAAAAAAAAAAATAC8AAAAAAAAAAAATADAAAAAAAAAAAAAUAAkAAAAAAAAAAAAUAAoAAAAAAAAAAAAUAAsAAAAAAAAAAAAUADAAAAAAAAAAAAAUADEAAAAAAAAAAAAVAAgAAAAAAAAAAAAVAAkAAAAAAAAAAAAVAAoAAAAAAAAAAAAVADEAAAAAAAAAAAAVADIAAAAAAAAAAAAWAAcAAAAAAAAAAAAWAAgAAAAAAAAAAAAWAAkAAAAAAAAAAAAWADIAAAAAAAAAAAAWADMAAAAAAAAAAAAXAAYAAAAAAAAAAAAXAAcAAAAAAAAAAAAXAAgAAAAAAAAAAAAXADMAAAAAAAAAAAAXADQAAAAAAAAAAAAYAAUAAAAAAAAAAAAYAAYAAAAAAAAAAAAYAAcAAAAAAAAAAAAYADQAAAAAAAAAAAAYADUAAAAAAAAAAAAZAAQAAAAAAAAAAAAZAAUAAAAAAAAAAAAZAAYAAAAAAAAAAAAZADUAAAAAAAAAAAAZADYAAAAAAAAAAAAaAAMAAAAAAAAAAAAaAAQAAAAAAAAAAAAaAAUAAAAAAAAAAAAaADYAAAAAAAAAAAAaADcAAAAAAAAAAAAbAAIAAAAAAAAAAAAbAAMAAAAAAAAAAAAbAAQAAAAAAAAAAAAbADcAAAAAAAAAAAAbADgAAAAAAAAAAAAcAAEAAAAAAAAAAAAcAAIAAAAAAAAAAAAcAAMAAAAAAAAAAAAcAC4AAAAAAAAAAAAcADcAAAAAAAAAAAAcADgAAAAAAAAAAAAcADkAAAAAAAAAAAAdAAIAAAAAAAAAAAAdAAMAAAAAAAAAAAAdADYAAAAAAAAAAAAdADcAAAAAAAAAAAAdADgAAAAAAAAAAAAeAAMAAAAAAAAAAAAeAAQAAAAAAAAAAAAeADUAAAAAAAAAAAAeADYAAAAAAAAAAAAeADcAAAAAAAAAAAAfAAQAAAAAAAAAAAAfAAUAAAAAAAAAAAAfACUAAAAAAAAAAAAfACYAAAAAAAAAAAAfADQAAAAAAAAAAAAfADUAAAAAAAAAAAAfADYAAAAAAAAAAAAgAAUAAAAAAAAAAAAgAAYAAAAAAAAAAAAgACUAAAAAAAAAAAAgACYAAAAAAAAAAAAgADMAAAAAAAAAAAAgADQAAAAAAAAAAAAgADUAAAAAAAAAAAAhAAYAAAAAAAAAAAAhAAcAAAAAAAAAAAAhADIAAAAAAAAAAAAhADMAAAAAAAAAAAAhADQAAAAAAAAAAAAiAAcAAAAAAAAAAAAiAAgAAAAAAAAAAAAiAAwAAAAAAAAAAAAiADEAAAAAAAAAAAAiADIAAAAAAAAAAAAiADMAAAAAAAAAAAAjAAgAAAAAAAAAAAAjAAkAAAAAAAAAAAAjADAAAAAAAAAAAAAjADEAAAAAAAAAAAAjADIAAAAAAAAAAAAkAAkAAAAAAAAAAAAkAAoAAAAAAAAAAAAkACAAAAAAAAAAAAAkACEAAAAAAAAAAAAkAC8AAAAAAAAAAAAkADAAAAAAAAAAAAAkADEAAAAAAAAAAAAlAAoAAAAAAAAAAAAlAAsAAAAAAAAAAAAlACAAAAAAAAAAAAAlACEAAAAAAAAAAAAlAC4AAAAAAAAAAAAlAC8AAAAAAAAAAAAlADAAAAAAAAAAAAAmAAsAAAAAAAAAAAAmAAwAAAAAAAAAAAAmAC0AAAAAAAAAAAAmAC4AAAAAAAAAAAAmAC8AAAAAAAAAAAAnAAwAAAAAAAAAAAAnAA0AAAAAAAAAAAAnACwAAAAAAAAAAAAnAC0AAAAAAAAAAAAnAC4AAAAAAAAAAAAoAA0AAAAAAAAAAAAoAA4AAAAAAAAAAAAoACsAAAAAAAAAAAAoACwAAAAAAAAAAAAoAC0AAAAAAAAAAAApAA4AAAAAAAAAAAApAA8AAAAAAAAAAAApACoAAAAAAAAAAAApACsAAAAAAAAAAAApACwAAAAAAAAAAAAqAA8AAAAAAAAAAAAqABAAAAAAAAAAAAAqACkAAAAAAAAAAAAqACoAAAAAAAAAAAAqACsAAAAAAAAAAAArABAAAAAAAAAAAAArABEAAAAAAAAAAAArACgAAAAAAAAAAAArACkAAAAAAAAAAAArACoAAAAAAAAAAAAsABEAAAAAAAAAAAAsABIAAAAAAAAAAAAsABkAAAAAAAAAAAAsACcAAAAAAAAAAAAsACgAAAAAAAAAAAAsACkAAAAAAAAAAAAtABIAAAAAAAAAAAAtABMAAAAAAAAAAAAtAB0AAAAAAAAAAAAtACYAAAAAAAAAAAAtACcAAAAAAAAAAAAtACgAAAAAAAAAAAAuABMAAAAAAAAAAAAuABQAAAAAAAAAAAAuACUAAAAAAAAAAAAuACYAAAAAAAAAAAAuACcAAAAAAAAAAAAvABQAAAAAAAAAAAAvABUAAAAAAAAAAAAvACQAAAAAAAAAAAAvACUAAAAAAAAAAAAvACYAAAAAAAAAAAAwABUAAAAAAAAAAAAwABYAAAAAAAAAAAAwACMAAAAAAAAAAAAwACQAAAAAAAAAAAAwACUAAAAAAAAAAAAxABYAAAAAAAAAAAAxABcAAAAAAAAAAAAxACIAAAAAAAAAAAAxACMAAAAAAAAAAAAxACQAAAAAAAAAAAAyABcAAAAAAAAAAAAyABgAAAAAAAAAAAAyACEAAAAAAAAAAAAyACIAAAAAAAAAAAAyACMAAAAAAAAAAAAzABgAAAAAAAAAAAAzABkAAAAAAAAAAAAzACAAAAAAAAAAAAAzACEAAAAAAAAAAAAzACIAAAAAAAAAAAA0ABkAAAAAAAAAAAA0ABoAAAAAAAAAAAA0AB8AAAAAAAAAAAA0ACAAAAAAAAAAAAA0ACEAAAAAAAAAAAA1ABoAAAAAAAAAAAA1ABsAAAAAAAAAAAA1AB4AAAAAAAAAAAA1AB8AAAAAAAAAAAA1ACAAAAAAAAAAAAA2ABsAAAAAAAAAAAA2ABwAAAAAAAAAAAA2AB0AAAAAAAAAAAA2AB4AAAAAAAAAAAA2AB8AAAAAAAAAAAA3ABwAAAAAAAAAAAA3AB0AAAAAAAAAAAA3AB4AAAAAAAAAAAA4AB0AAAAAAAAAAAA=")
 tile_set = ExtResource("20_blocking_tiles")
 
 [node name="Terrain" type="TileMapLayer" parent="."]
@@ -256,8 +271,7 @@ scale = Vector2(0.62, 0.62)
 texture = ExtResource("13_chain_post")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WoundLipDressing/SolidProps/ChainPostWest"]
-position = Vector2(0, -8)
-shape = SubResource("shape_chain_post")
+shape = SubResource("base_WoundLipDressing_SolidProps_ChainPostWest")
 
 [node name="ChainPostEast" type="StaticBody2D" parent="WoundLipDressing/SolidProps"]
 position = Vector2(1065, 650)
@@ -268,8 +282,7 @@ scale = Vector2(-0.62, 0.62)
 texture = ExtResource("13_chain_post")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WoundLipDressing/SolidProps/ChainPostEast"]
-position = Vector2(0, -8)
-shape = SubResource("shape_chain_post")
+shape = SubResource("base_WoundLipDressing_SolidProps_ChainPostEast")
 
 [node name="EmptyGuardPost" type="StaticBody2D" parent="WoundLipDressing/SolidProps"]
 position = Vector2(1540, 635)
@@ -280,8 +293,7 @@ scale = Vector2(0.6, 0.6)
 texture = ExtResource("14_guard_post")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WoundLipDressing/SolidProps/EmptyGuardPost"]
-position = Vector2(0, -8)
-shape = SubResource("shape_guard_post")
+shape = SubResource("base_WoundLipDressing_SolidProps_EmptyGuardPost")
 
 [node name="RetainingStructureWest" type="StaticBody2D" parent="WoundLipDressing/SolidProps"]
 position = Vector2(190, 285)
@@ -292,8 +304,7 @@ scale = Vector2(0.65, 0.65)
 texture = ExtResource("15_retaining_structure")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WoundLipDressing/SolidProps/RetainingStructureWest"]
-position = Vector2(0, -8)
-shape = SubResource("shape_retaining_structure")
+shape = SubResource("base_WoundLipDressing_SolidProps_RetainingStructureWest")
 
 [node name="RetainingStructureEast" type="StaticBody2D" parent="WoundLipDressing/SolidProps"]
 position = Vector2(1610, 285)
@@ -304,8 +315,7 @@ scale = Vector2(-0.65, 0.65)
 texture = ExtResource("15_retaining_structure")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WoundLipDressing/SolidProps/RetainingStructureEast"]
-position = Vector2(0, -8)
-shape = SubResource("shape_retaining_structure")
+shape = SubResource("base_WoundLipDressing_SolidProps_RetainingStructureEast")
 
 [node name="WarningPlateEntry" type="StaticBody2D" parent="WoundLipDressing/SolidProps"]
 position = Vector2(355, 735)
@@ -316,8 +326,7 @@ scale = Vector2(0.56, 0.56)
 texture = ExtResource("16_warning_plate")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WoundLipDressing/SolidProps/WarningPlateEntry"]
-position = Vector2(0, -8)
-shape = SubResource("shape_warning_plate")
+shape = SubResource("base_WoundLipDressing_SolidProps_WarningPlateEntry")
 
 [node name="WarningPlateLedge" type="StaticBody2D" parent="WoundLipDressing/SolidProps"]
 position = Vector2(1445, 735)
@@ -328,8 +337,7 @@ scale = Vector2(-0.56, 0.56)
 texture = ExtResource("16_warning_plate")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WoundLipDressing/SolidProps/WarningPlateLedge"]
-position = Vector2(0, -8)
-shape = SubResource("shape_warning_plate")
+shape = SubResource("base_WoundLipDressing_SolidProps_WarningPlateLedge")
 
 [node name="JawbraceLabel" type="Label" parent="."]
 z_index = 10

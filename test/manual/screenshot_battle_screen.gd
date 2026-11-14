@@ -1,9 +1,9 @@
 extends GdUnitTestSuite
 ## Screenshot harness, not an assertion suite — run under Xvfb to eyeball the
-## battle screen (used for #211 layout QA). scripts/test.sh excludes test/manual
-## from whole-tree runs; invoke this file explicitly under Xvfb.
-## Whole-tree CI and acceptance runs skip it.
-##   xvfb-run -a -s "-screen 0 1920x1080x24" bash addons/gdUnit4/runtest.sh \
+## standalone battle shell (a fight with no live field) with the one-bar combat HUD
+## (owner 2026-11-01) it hosts. scripts/test.sh excludes test/manual from whole-tree
+## runs; invoke this file explicitly under Xvfb.
+##   xvfb-run -a -s "-screen 0 1920x1080x24" bash scripts/test.sh \
 ##     -a test/manual/screenshot_battle_screen.gd
 ## Writes user://battle_screen_qa.png.
 
@@ -17,13 +17,15 @@ func test_capture_battle_screen() -> void:
 	var screen := runner.scene() as Control
 	screen.theme = ThemeBuilder.build()
 	await runner.simulate_frames(20)
-	var stage := screen.find_child("Stage", true, false) as BattleStageRegion
+	# The shell hosts the field HUD in combat: the one bar and its battle interface.
+	assert_object(screen.call("combat_bar")).is_not_null()
+	var interface: BattleInterface = screen.call("battle_interface")
+	var stage := interface.stage
 	assert_str(stage.background_texture_path()).ends_with(
 		"dorthkor-road-battlefield-v1.png"
 	)
-	# The harness scene sits BELOW the boot main menu in the canvas (in
-	# production, battle opens inside UIManager's CanvasLayer, above the field
-	# scene). Hide the boot scene so z0 battle content is photographable.
+	# The harness scene sits BELOW the boot main menu in the canvas. Hide the boot
+	# scene so the shell's backdrop and stage are photographable.
 	var boot_scene := screen.get_tree().current_scene
 	if boot_scene != null and boot_scene != screen:
 		boot_scene.hide()

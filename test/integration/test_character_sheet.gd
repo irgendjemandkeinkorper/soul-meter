@@ -100,15 +100,9 @@ func test_check_math_toggle_hides_the_log_and_persists() -> void:
 	assert_bool(bool(GameState.get_setting("interface", "show_check_math", true))).is_false()
 
 
-func test_party_screen_offers_a_character_sheet_button() -> void:
-	GameState.party = [_vex()]
-
-	var runner := scene_runner("res://ui/screens/party.tscn")
-	await runner.simulate_frames(2)
-
-	var button := runner.find_child("CharacterSheetButton", true, false) as Button
-	assert_object(button).is_not_null()
-	assert_bool(button.visible).is_true()
+func test_p_opens_the_register_of_persons() -> void:
+	# U3: the separate Party screen was folded into the sheet.
+	assert_str(UIManager.PARTY.resource_path).is_equal(UIManager.CHARACTER_SHEET.resource_path)
 
 
 func test_skills_are_grouped_under_schema_headings() -> void:

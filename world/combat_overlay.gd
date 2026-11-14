@@ -50,6 +50,19 @@ var _hp_tweens: Dictionary = {}
 var _queue: Array[CombatEvent] = []
 var _holding := false
 var _presented_event: CombatEvent  ## #473 beat cursor: the last event presented (read-only)
+var _approach_path: Array[Vector2i] = []
+var _approach_affordable := true
+## Hex slice H3: cells whose snapshot tile carries an element charge, read once per tile set, so
+## a redraw visits only the cells it marks (a hex field has tens of thousands of tiles).
+var _charged_cells: Dictionary = {}
+## Hex slice H3: the armed command's reach in grid steps (0: no ring). Drawn around the acting
+## unit on the player's turn, on hexes only.
+var _reach_steps := 0
+## Actor ids already placed on their cells once this session. A body is walked onto its first
+## cell (no jump at the fight's start); later syncs place it as before.
+var _placed: Dictionary = {}
+## Actor id -> node, while FieldMap walks the body onto its seat (`FieldMap.walk_to_seat`).
+var _seat_walkers: Dictionary = {}
 var _beat: Tween
 var _theme: Theme
 var animate_events := true:
@@ -61,29 +74,60 @@ var animate_events := true:
 			for effect: Node in get_children():
 				effect.queue_free()
 ## D6 camera: the field camera belongs to the player and keeps following them. The overlay
-## only drives its `offset`, so limits and smoothing stay the player's, and clearing the
-## offset at the end is all it takes to hand the view back.
+## only drives its `offset`, so limits, zoom and smoothing stay the player's, and clearing
+## the offset at the end is all it takes to hand the view back. Owner 2026-11-01 ("field
+## camera, follow the actor"): no reframing, no stage window, no zoom change and no
+## room-limit lifting — the view pans to whoever acts and the player scrolls freely on
+## their own turn.
 var _camera: Camera2D
 var _camera_anchor: Node2D
 var _camera_tween: Tween
-## The screen rect the battle HUD leaves open over the field. Framing centres the fight in
-## it and visibility checks use it, so an actor behind a HUD panel counts as off-screen.
+## The camera's own (room) limits as bound; restored when the overlay hands the view back.
+var _base_limit_top := 0
+var _base_limit_bottom := 0
+var _base_limit_smoothed := false
+var _limits_extended := false
+## The actor the view was last framed for; a window change (the bar growing) re-checks it.
+var _focused_id: StringName = &""
+## The viewport rect the HUD leaves open (viewport minus the bar and the turn strip).
+## Visibility checks and pans use it, so an actor under the bar counts as off-screen.
 ## Empty means the whole viewport.
 var _view_window := Rect2()
-## The camera's own limits, lifted for the fight so it can centre a fight at a room's edge,
-## and handed back once the release pan lands.
-var _saved_limits: Array[int] = []
-var _roster_framed := false
 ## Actor ids whose current turn began beyond one screen of margin (D9): no pan, no move
 ## tween — the actor snaps between cells until its next turn starts nearer the view.
 var _suppressed: Dictionary = {}
+## Player free scroll (their turn only): WASD / arrows nudge the offset inside the
+## camera's own limits; the next actor's turn cue pans away from wherever they left it.
+var _free_scroll := false
+## Move range (reachable cells) is drawn only while the player can act: it is what they
+## need now, not a permanent stage tint.
+var _range_visible := false
+## Poses on the current art (owner 2026-11-02): one pose tween per actor on its Sprite2D, the
+## sprite's resting transform, and who is slumped. Body positions stay the battlefield's.
+var _poses: Dictionary = {}
+var _sprite_base: Dictionary = {}
+var _slumped: Dictionary = {}
 const NUMERIC_FONT := preload(DS.FONT_NUMERIC)
 const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
 const SpellCastScript := preload("res://ui/hud/spell_cast_effect.gd")
 const CombatMotionScript := preload("res://ui/hud/combat_motion.gd")
+const CombatPosesScript := preload("res://world/combat_poses.gd")
+const ClassFlourishScript := preload("res://ui/hud/class_flourish.gd")
+## Casts and flourishes on the field draw at this scale: bodies stand ~112 px tall at zoom 1
+## (UnitArt), and a look sized for the HUD stage read as a speck beside them (2026-11-02).
+const FIELD_EFFECT_SCALE := 2.0
 const CombatResultScene := preload("res://ui/hud/combat_result.tscn")
 ## D9: how far past the visible rect an enemy may start its turn and still earn a pan.
 const CAMERA_MARGIN_SCREENS := 1.0
+## Free-scroll speed on the player's turn, in viewport pixels per second.
+const SCROLL_PIXELS_PER_SECOND := 900.0
+## Owner review 2026-11-01: the acting unit and its target are never covered by, or
+## touching, the bar or the strip. The camera's top and bottom limits are extended by the
+## HUD insets plus this clearance (viewport px) so a room edge can scroll clear of the HUD,
+## and a body counts as framed only when it sits this far inside the open window.
+const HUD_CLEARANCE := 64.0
+## Fallback body size (world px above the feet) for a bound node without a Sprite2D.
+const FALLBACK_BODY := Vector2(48, 96)
 ## #281 G1: how long an action beat with a result card stays alone on screen before the next
 ## presented event. The card itself lives longer (combat_result.gd); the next card or the
 ## next turn cue retires it, so a card never sits over a beat it does not describe.
@@ -92,16 +136,26 @@ const BEAT_READ_SECONDS := 1.2
 const TURN_CUE_SECONDS := DS.DUR_SLOW
 ## #281 G9: a downed body is dimmed, not hidden; it must stay clearly visible on the field.
 const KO_TINT := Color(0.6, 0.6, 0.66, 0.8)
+## Hex slice H3: a hex is about 23 px wide under a body about 40 px wide, so the acting unit's and
+## the target's rims draw at twice a hex. The square diamond already spans the body.
+const HEX_RIM_SCALE := 2.0
+## Hex slice H3: without a field (tests binding only a grid) a body walks onto its first cell at
+## FieldMap's pace.
+const SEAT_WALK_SPEED := FieldMap.SEAT_WALK_SPEED
 ## #281 G7: CombatEvent facing ids are grid directions (GridBattlefieldModel._ORDER, by
-## atan2 over the cell delta), not screen directions.
+## atan2 over the cell delta), not screen directions. Hex facings (`hex_*`, owner item 34) are
+## the six hex steps of `HexMath.DIRECTIONS`.
 const FACING_STEPS := {
 	"e": Vector2i(1, 0), "se": Vector2i(1, 1), "s": Vector2i(0, 1), "sw": Vector2i(-1, 1),
 	"w": Vector2i(-1, 0), "nw": Vector2i(-1, -1), "n": Vector2i(0, -1), "ne": Vector2i(1, -1),
+	"hex_e": Vector2i(1, 0), "hex_ne": Vector2i(1, -1), "hex_nw": Vector2i(0, -1),
+	"hex_w": Vector2i(-1, 0), "hex_sw": Vector2i(-1, 1), "hex_se": Vector2i(0, 1),
 }
 
 
 func _ready() -> void:
 	GameState.setting_changed.connect(_on_setting_changed)
+	set_process(_free_scroll)
 
 
 func set_preview_target(actor_id: StringName) -> void:
@@ -124,29 +178,144 @@ func bind_field(field: FieldMap) -> void:
 func bind_camera(camera: Camera2D, anchor: Node2D) -> void:
 	_camera = camera
 	_camera_anchor = anchor
-	_roster_framed = false
-	_saved_limits = [camera.limit_left, camera.limit_top, camera.limit_right, camera.limit_bottom]
-	# Start the fight from what the player was already looking at: the clamped centre.
-	camera.offset = _clamped_center(anchor.global_position) - anchor.global_position
-	camera.limit_left = -10000000
-	camera.limit_top = -10000000
-	camera.limit_right = 10000000
-	camera.limit_bottom = 10000000
+	# The fight starts from what the player was already looking at: the camera keeps its
+	# zoom and side limits, and only the offset is driven from here on. Its top and bottom
+	# limits grow by the HUD insets (see HUD_CLEARANCE) and return on release.
+	camera.offset = Vector2.ZERO
+	_base_limit_top = camera.limit_top
+	_base_limit_bottom = camera.limit_bottom
+	_base_limit_smoothed = camera.limit_smoothed
+	# Limits tighten again on release; smoothing keeps that from snapping the view.
+	camera.limit_smoothed = true
+	_limits_extended = true
+	_apply_hud_limits()
 
 
 ## `window` is in viewport pixels; see `_view_window`.
 func set_view_window(window: Rect2) -> void:
-	if window == _view_window:
+	if _view_window == window:
 		return
 	_view_window = window
-	# The HUD lays out after the session's first events are replayed; re-centre once it has.
-	if _roster_framed:
-		_roster_framed = false
-		_frame_roster()
+	_apply_hud_limits()
+	# The bar grows after the first beats are presented: if the framed actor now sits under
+	# the HUD, bring it back into the open window.
+	if _focused_id != &"" and is_instance_valid(_camera) and is_instance_valid(_camera_anchor):
+		var node := _node(_focused_id)
+		if is_instance_valid(node) and not _framed_rect().encloses(_body_rect(_focused_id, node)):
+			_pan_camera_to(_offset_framing(_body_rect(_focused_id, node).get_center()))
+
+
+## Camera limits that account for the strip and the bar: not a reframe (zoom, side limits
+## and the player's anchor are untouched), just room for the HUD over the room's edge.
+func _apply_hud_limits() -> void:
+	if not _limits_extended or not is_instance_valid(_camera):
+		return
+	var viewport := _camera.get_viewport_rect().size
+	var window := _window(viewport)
+	var top := window.position.y
+	var bottom := viewport.y - window.end.y
+	_camera.limit_top = _base_limit_top - int(ceilf((top + HUD_CLEARANCE) / _camera.zoom.y))
+	_camera.limit_bottom = _base_limit_bottom + int(ceilf((bottom + HUD_CLEARANCE) / _camera.zoom.y))
+
+
+func _restore_limits() -> void:
+	if not _limits_extended:
+		return
+	_limits_extended = false
+	if is_instance_valid(_camera):
+		_camera.limit_top = _base_limit_top
+		_camera.limit_bottom = _base_limit_bottom
+		_camera.limit_smoothed = _base_limit_smoothed
+
+
+## A bound body in world space: its sprite's bounds plus its cell diamond, so "framed" means
+## the whole figure and the ground it stands on, not just its feet.
+func _body_rect(id: StringName, node: Node2D) -> Rect2:
+	var feet := node.global_position
+	var rect := Rect2(feet - Vector2(32, 16), Vector2(64, 32))
+	if _ground != null:
+		var half := Vector2(_ground.tile_set.tile_size) * 0.5
+		rect = Rect2(feet - half, half * 2.0)
+	var sprite := node.get_node_or_null("Sprite2D") as Sprite2D
+	if sprite != null and sprite.texture != null:
+		rect = rect.merge(sprite.get_global_transform() * sprite.get_rect())
+	else:
+		rect = rect.merge(Rect2(feet - Vector2(FALLBACK_BODY.x * 0.5, FALLBACK_BODY.y), FALLBACK_BODY))
+	return rect
+
+
+## The open window shrunk by the clearance, in world space: where a body must lie to count
+## as clear of the HUD and the screen edges.
+func _framed_rect() -> Rect2:
+	return _view_rect().grow(-HUD_CLEARANCE * 0.5 / _camera.zoom.y)
+
+
+## A bound actor's body rect in world space, or an empty rect when it is not bound.
+func body_rect_of(id: StringName) -> Rect2:
+	var node := _node(id)
+	return _body_rect(id, node) if is_instance_valid(node) else Rect2()
+
+
+## Whether `id`'s body is framed (inside the open window with clearance).
+func is_framed(id: StringName) -> bool:
+	if not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
+		return true
+	var node := _node(id)
+	return node == null or _framed_rect().encloses(_body_rect(id, node))
+
+
+## The player may scroll with the move keys while it is their turn to act.
+func set_free_scroll(enabled: bool) -> void:
+	_free_scroll = enabled
+	set_process(enabled)
+
+
+func free_scroll_enabled() -> bool:
+	return _free_scroll
+
+
+## Reachable-cell tint is shown only while the player can act (owner 2026-11-01: show
+## what the player needs now, not a permanent stage tint).
+func set_range_visible(visible_now: bool) -> void:
+	if _range_visible == visible_now:
+		return
+	_range_visible = visible_now
+	queue_redraw()
+
+
+func range_visible() -> bool:
+	return _range_visible
+
+
+## Hex slice H3: the ring of hexes the armed command reaches, in grid steps (0 clears it). It is
+## drawn around the acting unit while the player can act, and only on hexes.
+func set_reach(steps: int) -> void:
+	steps = maxi(steps, 0)
+	if _reach_steps == steps:
+		return
+	_reach_steps = steps
+	queue_redraw()
+
+
+func reach_steps() -> int:
+	return _reach_steps
 
 
 func pans_suppressed_for(actor_id: StringName) -> bool:
 	return _suppressed.has(actor_id)
+
+
+func _process(delta: float) -> void:
+	if not _free_scroll or not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
+		return
+	var direction := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
+	if direction.is_zero_approx():
+		return
+	if _camera_tween != null and _camera_tween.is_valid():
+		_camera_tween.kill()
+	_camera_tween = null
+	var step := direction * SCROLL_PIXELS_PER_SECOND * delta / _camera.zoom
+	_camera.offset = _limited_offset(_camera.offset + step)
 
 
 func cell_at_viewport(point: Vector2) -> Vector2i:
@@ -190,6 +359,13 @@ func _exit_tree() -> void:
 ## True while bodies are in motion or presented beats are still waiting their turn. A lone
 ## beat's reading hold does not count: the result outlives motion without gating input.
 func is_animating() -> bool:
+	for id: StringName in _seat_walkers.keys():
+		var walker: Variant = _seat_walkers[id]
+		if not is_instance_valid(_field) or not is_instance_valid(walker) \
+				or not _field.is_seat_walking(walker as Node2D):
+			_seat_walkers.erase(id)
+	if not _seat_walkers.is_empty():
+		return true
 	if not _moves.is_empty() or not _flashes.is_empty() or not _queue.is_empty():
 		return true
 	for effect: Node in get_children():
@@ -204,6 +380,17 @@ func cell_center(cell: Vector2i) -> Vector2:
 
 func tile_at(cell: Vector2i) -> Dictionary:
 	return (_tiles.get(cell, {}) as Dictionary).duplicate(true)
+
+
+## Combat polish 2026-11-02: the walk of a hovered walk-in order. Empty clears it.
+func set_approach_path(cells: Array[Vector2i], affordable: bool) -> void:
+	_approach_path = cells
+	_approach_affordable = affordable
+	queue_redraw()
+
+
+func approach_path() -> Array[Vector2i]:
+	return _approach_path
 
 
 func set_pointer(selected: Variant, hovered: Variant) -> void:
@@ -241,9 +428,13 @@ func _present(event: CombatEvent) -> void:
 	if tiles is Array and not is_same(tiles, _tiles_source):
 		_tiles_source = tiles
 		_tiles.clear()
+		_charged_cells.clear()
 		for tile: Variant in tiles:
 			if tile is Dictionary:
-				_tiles[Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))] = tile
+				var tile_cell := Vector2i(int(tile.get("x", 0)), int(tile.get("y", 0)))
+				_tiles[tile_cell] = tile
+				if int((tile as Dictionary).get("charge_level", 0)) > 0:
+					_charged_cells[tile_cell] = true
 	if snapshot.has("allies") or snapshot.has("enemies"):
 		_actors.clear()
 		var roster := PackedStringArray()
@@ -272,6 +463,7 @@ func _present(event: CombatEvent) -> void:
 		&"action_resolved":
 			_active_id = event.actor_id
 			_target_id = event.target_id
+			_focus_pair(event.actor_id, event.target_id)
 		&"battle_finished":
 			_active_id = &""
 			_target_id = &""
@@ -281,7 +473,6 @@ func _present(event: CombatEvent) -> void:
 		_pending_defeats[event.target_id] = event.get_instance_id()
 	_sync_actors(event)
 	_sync_hp()
-	_frame_roster()
 	var path: Array = event.data.get("path_cells", [])
 	if animate_events and event.type == &"action_resolved" and path.is_empty():
 		_play_action(event)
@@ -303,6 +494,9 @@ func _beat_seconds(event: CombatEvent, path: Array) -> float:
 				return SpellCastScript.DURATION + BEAT_READ_SECONDS
 			if HitPulseScript.has_result(event):
 				return BEAT_READ_SECONDS
+			# A class command's flourish gets most of its beat before the next one plays.
+			if _class_flourish_for(event) != "":
+				return ClassFlourishScript.LIFETIME * 0.75
 			if not event.target_id.is_empty():
 				return DS.DUR_FAST * 2.0
 	return 0.0
@@ -343,12 +537,12 @@ func _flush_queue() -> void:
 
 
 ## The rect the player currently sees, in world space, from the camera the overlay drives.
-## Uses the intended centre (anchor + offset) rather than the smoothed one so a pan already
-## in flight is not re-decided against a half-way frame.
+## Uses the intended centre (limited anchor + offset) rather than the smoothed one so a pan
+## already in flight is not re-decided against a half-way frame.
 func _view_rect() -> Rect2:
 	var viewport := _camera.get_viewport_rect().size
 	var window := _window(viewport)
-	var center := _camera_anchor.global_position + _camera.offset
+	var center := _limited_anchor() + _camera.offset
 	return Rect2(center + (window.position - viewport * 0.5) / _camera.zoom, window.size / _camera.zoom)
 
 
@@ -356,47 +550,34 @@ func _window(viewport: Vector2) -> Rect2:
 	return _view_window if _view_window.has_area() else Rect2(Vector2.ZERO, viewport)
 
 
-## The camera offset that puts world point `point` at the centre of the open window.
+## The camera offset that puts world point `point` at the centre of the open window, kept
+## inside the camera's own limits (Camera2D does not clamp `offset` itself).
 func _offset_framing(point: Vector2) -> Vector2:
 	var viewport := _camera.get_viewport_rect().size
 	var shift := (_window(viewport).get_center() - viewport * 0.5) / _camera.zoom
-	return point - shift - _camera_anchor.global_position
+	return _limited_offset(point - shift - _limited_anchor())
 
 
-## Once per session: centre every combatant in the window, so the opening shows both sides
-## rather than wherever the room camera happened to stop.
-func _frame_roster() -> void:
-	if _roster_framed or not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
-		return
-	var bounds := Rect2()
-	var found := false
-	for id: StringName in _actors:
-		var node := _node(id)
-		if not is_instance_valid(node):
-			continue
-		bounds = bounds.expand(node.global_position) if found else Rect2(node.global_position, Vector2.ZERO)
-		found = true
-	if not found:
-		return
-	_roster_framed = true
-	var view := _view_rect()
-	# A roster wider than the window frames the lead instead; turn focus pans to the rest.
-	var focus := bounds.get_center() if view.size.x >= bounds.size.x and view.size.y >= bounds.size.y \
-		else _camera_anchor.global_position
-	_pan_camera_to(_offset_framing(focus))
-
-
-## Where the camera would sit for `center` under its own (saved) limits.
-func _clamped_center(center: Vector2) -> Vector2:
-	if _saved_limits.size() != 4:
-		return center
+## Where the camera's own limits put `center` for this viewport and zoom.
+func _limited_center(center: Vector2) -> Vector2:
 	var half := _camera.get_viewport_rect().size * 0.5 / _camera.zoom
-	var low := Vector2(_saved_limits[0], _saved_limits[1]) + half
-	var high := Vector2(_saved_limits[2], _saved_limits[3]) - half
+	var low := Vector2(_camera.limit_left, _camera.limit_top) + half
+	var high := Vector2(_camera.limit_right, _camera.limit_bottom) - half
 	return Vector2(
 		center.x if low.x > high.x else clampf(center.x, low.x, high.x),
 		center.y if low.y > high.y else clampf(center.y, low.y, high.y),
 	)
+
+
+## The camera's base centre: the anchor under the camera's limits (what `offset` adds to).
+func _limited_anchor() -> Vector2:
+	return _limited_center(_camera_anchor.global_position)
+
+
+## `offset` clamped so the resulting view never leaves the camera's limits.
+func _limited_offset(offset: Vector2) -> Vector2:
+	var base := _limited_anchor()
+	return _limited_center(base + offset) - base
 
 
 func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
@@ -405,8 +586,10 @@ func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
 	var node := _node(actor_id)
 	if not is_instance_valid(node):
 		return
+	_focused_id = actor_id
 	var view := _view_rect()
-	if view.has_point(node.global_position):
+	var body := _body_rect(actor_id, node)
+	if _framed_rect().encloses(body):
 		_suppressed.erase(actor_id)
 		return
 	if is_enemy and not view.grow_individual(
@@ -416,35 +599,50 @@ func _focus_camera(actor_id: StringName, is_enemy: bool) -> void:
 		_suppressed[actor_id] = true
 		return
 	_suppressed.erase(actor_id)
-	_pan_camera_to(_offset_framing(node.global_position))
+	_pan_camera_to(_offset_framing(body.get_center()))
+
+
+## An action beat frames both bodies: when the target is not clear of the HUD, the view
+## pans to hold attacker and target together (clamped to the camera's limits). A
+## suppressed attacker (D9) stays unframed.
+func _focus_pair(actor_id: StringName, target_id: StringName) -> void:
+	if not is_instance_valid(_camera) or not is_instance_valid(_camera_anchor):
+		return
+	if _suppressed.has(actor_id) or target_id == &"" or target_id == actor_id:
+		return
+	var actor := _node(actor_id)
+	var target := _node(target_id)
+	if not is_instance_valid(actor) or not is_instance_valid(target):
+		return
+	var pair := _body_rect(actor_id, actor).merge(_body_rect(target_id, target))
+	if _framed_rect().encloses(pair):
+		return
+	_pan_camera_to(_offset_framing(pair.get_center()))
 
 
 func _release_camera(animated: bool) -> void:
 	_suppressed.clear()
+	_focused_id = &""
+	set_free_scroll(false)
 	if not is_instance_valid(_camera):
+		_limits_extended = false
 		return
 	if animated and is_instance_valid(_camera_anchor):
-		# Pan to where the limited camera will sit, then restore the limits: no snap.
-		var anchor := _camera_anchor.global_position
-		_pan_camera_to(_clamped_center(anchor) - anchor)
+		# Pan back onto the player, then settle: no snap.
+		_pan_camera_to(Vector2.ZERO)
 		if _camera_tween != null and _camera_tween.is_valid():
-			_camera_tween.tween_callback(_restore_camera_limits)
+			_camera_tween.tween_callback(_reset_camera_offset)
 			return
 	if _camera_tween != null and _camera_tween.is_valid():
 		_camera_tween.kill()
 	_camera_tween = null
-	_restore_camera_limits()
+	_reset_camera_offset()
 
 
-func _restore_camera_limits() -> void:
+func _reset_camera_offset() -> void:
+	_restore_limits()
 	if not is_instance_valid(_camera):
 		return
-	if _saved_limits.size() == 4:
-		_camera.limit_left = _saved_limits[0]
-		_camera.limit_top = _saved_limits[1]
-		_camera.limit_right = _saved_limits[2]
-		_camera.limit_bottom = _saved_limits[3]
-		_saved_limits.clear()
 	_camera.offset = Vector2.ZERO
 	_camera.reset_smoothing()
 
@@ -493,6 +691,7 @@ func _sync_actors(event: CombatEvent) -> void:
 			and id == event.actor_id and path.size() >= 2 and not _suppressed.has(id)
 		):
 			_stop_move(id)
+			_stop_seat_walk(id, node)
 			var points := PackedVector2Array([node.global_position])
 			for index: int in range(1, path.size()):
 				if path[index] is Vector2i:
@@ -500,17 +699,32 @@ func _sync_actors(event: CombatEvent) -> void:
 			var tween := CombatMotionScript.along_path(self, points, _set_actor_position.bind(id))
 			_moves[id] = tween
 			tween.tween_callback(func() -> void: _moves.erase(id))
+			var pose := _pose(id)
+			if not pose.is_empty():
+				CombatPosesScript.step_bob(
+					pose["tween"], pose["sprite"], pose["base"], points.size() - 1,
+					DS.DUR_FAST * maxi(1, points.size() - 1)
+				)
 		elif not _moves.has(id):
-			node.global_position = _grid.cell_to_world(cell)
+			_place(id, node, _grid.cell_to_world(cell))
 		# Keep the actor's scene-authored art; facing is a presentation property only.
 		var sprite := node.find_child("Sprite2D", true, false) as Sprite2D
 		if sprite != null and actor.has("facing"):
-			sprite.flip_h = str(actor["facing"]).contains("w")
+			var flip := str(actor["facing"]).contains("w")
+			if sprite.flip_h != flip:
+				# A body already posing (walking, striking) or down just flips; one at rest turns.
+				var turning := {} if _poses.has(id) or _moves.has(id) or _slumped.has(id) else _pose(id)
+				if turning.is_empty():
+					sprite.flip_h = flip
+				else:
+					CombatPosesScript.turn(turning["tween"], turning["sprite"], turning["base"], flip)
 		if int(actor.get("hp", 1)) <= 0:
 			if not _pending_defeats.has(id):
 				_stop_flash(id)
 				_fall(id, node)
 		else:
+			if _slumped.has(id):
+				_rest_pose(id)
 			_downed.erase(id)
 			_stop_fade(id)
 			if not _flashes.has(id):
@@ -528,6 +742,12 @@ func _fall(id: StringName, node: Node2D) -> void:
 		_downed[id] = true
 		return
 	_downed[id] = true
+	var pose := _pose(id)
+	if not pose.is_empty():
+		var striker := _node(_active_id)
+		var away_x := node.global_position.x - striker.global_position.x if is_instance_valid(striker) and striker != node else 1.0
+		CombatPosesScript.slump(pose["tween"], pose["sprite"], pose["base"], away_x)
+		_slumped[id] = true
 	var fade := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_fades[id] = fade
 	fade.tween_property(node, "modulate", fallen, DS.DUR_SLOW * 2.0)
@@ -583,15 +803,31 @@ func _stop_hp(id: StringName) -> void:
 func _play_action(event: CombatEvent) -> void:
 	var attacker := _node(event.actor_id)
 	var target := _node(event.target_id)
+	var class_id := _class_flourish_for(event)
+	if not class_id.is_empty() and is_instance_valid(attacker) and not _reduced_motion():
+		var flourish := ClassFlourishScript.new()
+		flourish.name = "ClassFlourish"
+		if flourish.setup(class_id, _result_anchor.bind(event.actor_id), FIELD_EFFECT_SCALE):
+			add_child(flourish)
+		else:
+			flourish.free()
 	if is_instance_valid(attacker) and SpellCastScript.is_cast(event):
 		var targets: Array[Callable] = []
 		for cell: Vector2i in FireField.cells_from_data(event.data.get("cells", [])):
 			targets.append(cell_center.bind(cell))
 		if targets.is_empty():
 			targets.append(_result_anchor.bind(event.target_id if is_instance_valid(target) else event.actor_id))
+		var lift := _pose(event.actor_id)
+		if not lift.is_empty():
+			var palette := SpellCastScript.palette_for(event)
+			var glow: Color = palette[0]["glow"] if not palette.is_empty() else DS.PARCHMENT
+			CombatPosesScript.cast_lift(
+				lift["tween"], lift["sprite"], lift["base"], glow,
+				SpellCastScript.WINDUP + SpellCastScript.TRAVEL
+			)
 		var spell := SpellCastScript.new()
 		spell.name = "SpellCast"
-		spell.setup(event, _result_anchor.bind(event.actor_id), targets, 1.0)
+		spell.setup(event, _result_anchor.bind(event.actor_id), targets, FIELD_EFFECT_SCALE)
 		spell.impact_reached.connect(_present_action_result.bind(event), CONNECT_ONE_SHOT)
 		add_child(spell)
 		return
@@ -608,6 +844,9 @@ func _play_action(event: CombatEvent) -> void:
 		lunge.tween_method(_set_actor_position.bind(event.actor_id), attacker.global_position, toward, DS.DUR_FAST)
 		lunge.tween_method(_set_actor_position.bind(event.actor_id), toward, home, DS.DUR_FAST)
 		lunge.tween_callback(func() -> void: _moves.erase(event.actor_id))
+		var lean := _pose(event.actor_id)
+		if not lean.is_empty():
+			CombatPosesScript.lunge(lean["tween"], lean["sprite"], lean["base"], target.global_position.x - home.x)
 	_present_action_result(event)
 
 
@@ -627,6 +866,14 @@ func _present_action_result(event: CombatEvent) -> void:
 		_stop_flash(event.target_id)
 		# A defeated target keeps its fallen opacity; feedback must not revive its tint.
 		if int((_actors.get(event.target_id, {}) as Dictionary).get("hp", 1)) > 0:
+			var struck := _pose(event.target_id)
+			if not struck.is_empty():
+				var striker := _node(event.actor_id)
+				var away := (
+					target.global_position - striker.global_position
+					if is_instance_valid(striker) and striker != target else Vector2.ZERO
+				)
+				CombatPosesScript.recoil(struck["tween"], struck["sprite"], struck["base"], away)
 			var color: Color = _original_colors.get(target, Color.WHITE)
 			var flash := create_tween()
 			_flashes[event.target_id] = flash
@@ -671,6 +918,51 @@ func _result_anchor(id: StringName) -> Variant:
 	return to_local(target.global_position) + Vector2(0, -DS.SPACE_8) if is_instance_valid(target) else null
 
 
+## Puts a body on its cell. The first time this session, a body away from its cell walks there
+## (hex slice H3: nobody jumps at the fight's start), through FieldMap's seat walk. A body still on
+## that walk keeps walking, toward wherever its cell now is. Seat walks are the field's present
+## motion, not a beat, so the replay that runs when the HUD binds does not cut them short; only
+## reduced motion does (`FieldMap.walk_to_seat` places at once then). Later syncs place a body at
+## once, as before.
+func _place(id: StringName, node: Node2D, target: Vector2) -> void:
+	var field_walks := is_instance_valid(_field)
+	if field_walks and _field.is_seat_walking(node):
+		_placed[id] = true
+		_seat_walkers[id] = node
+		_field.walk_to_seat(node, target)
+		return
+	var first := not _placed.has(id)
+	_placed[id] = true
+	var distance := node.global_position.distance_to(target)
+	if not first or distance < 0.5 or _reduced_motion() or not is_inside_tree():
+		node.global_position = target
+		return
+	if field_walks:
+		_field.walk_to_seat(node, target)
+		_seat_walkers[id] = node
+		return
+	if not animate_events:
+		node.global_position = target
+		return
+	var seconds := clampf(distance / SEAT_WALK_SPEED, DS.DUR_FAST, DS.DUR_SLOW * 2.0)
+	var walk := create_tween()
+	walk.tween_method(_set_actor_position.bind(id), node.global_position, target, seconds)
+	walk.tween_callback(_end_seat_walk.bind(id, walk))
+	_moves[id] = walk
+
+
+func _end_seat_walk(id: StringName, walk: Tween) -> void:
+	if _moves.get(id) == walk:
+		_moves.erase(id)
+	queue_redraw()
+
+
+func _stop_seat_walk(id: StringName, node: Node2D) -> void:
+	_seat_walkers.erase(id)
+	if is_instance_valid(_field) and is_instance_valid(node):
+		_field.stop_seat_walk(node)
+
+
 func _set_actor_position(value: Vector2, id: StringName) -> void:
 	var node := _node(id)
 	if is_instance_valid(node):
@@ -684,6 +976,9 @@ func _reduced_motion() -> bool:
 
 func _on_setting_changed(section: String, key: String, value: Variant) -> void:
 	if section == "accessibility" and key == "reduced_motion" and bool(value):
+		if is_instance_valid(_field):
+			_field.finish_seat_walks()
+		_seat_walkers.clear()
 		_settle_motion()
 		for effect: Node in get_children():
 			if effect.get_script() == HitPulseScript:
@@ -693,6 +988,9 @@ func _on_setting_changed(section: String, key: String, value: Variant) -> void:
 func _settle_motion() -> void:
 	for id: StringName in _moves.keys():
 		_stop_move(id)
+	# Seat walks are the field's and outlive a replay; reduced motion ends them (below).
+	for id: Variant in _poses.keys() + _slumped.keys():
+		_rest_pose(id)
 	for id: StringName in _flashes.keys():
 		_stop_flash(id)
 	for id: StringName in _fades.keys():
@@ -712,6 +1010,62 @@ func _stop_move(id: StringName) -> void:
 	if tween != null and tween.is_valid():
 		tween.kill()
 	_moves.erase(id)
+
+
+## The class whose flourish `event` plays: a class command (KitGate) by an actor whose class
+## resource names a patron. Empty for everything else (strikes, tone casts, moves, enemies).
+func _class_flourish_for(event: CombatEvent) -> String:
+	if event.type != &"action_resolved":
+		return ""
+	var action := CombatActionCatalog.by_id(StringName(str(event.data.get("action_id", ""))))
+	if action == null or not KitGate.is_class_command(action):
+		return ""
+	var actor: Dictionary = _actors.get(event.actor_id, {})
+	var resource: Variant = actor.get("class_resource", {})
+	var patron := str((resource as Dictionary).get("patron_id", "")) if resource is Dictionary else ""
+	if patron.is_empty():
+		return ""
+	return str(ClassCatalog.class_for_patron_value(patron).get("id", ""))
+
+
+## A fresh pose for `id` on its Sprite2D, as {tween, sprite, base}; empty when motion is off or
+## the body has no sprite. Any running pose stops and the sprite returns to rest first.
+func _pose(id: StringName) -> Dictionary:
+	if not animate_events or _reduced_motion() or not is_inside_tree():
+		return {}
+	var node := _node(id)
+	var sprite := node.find_child("Sprite2D", true, false) as Sprite2D if is_instance_valid(node) else null
+	if sprite == null:
+		return {}
+	_stop_pose(id)
+	if not _sprite_base.has(id):
+		_sprite_base[id] = CombatPosesScript.capture(sprite)
+	var base: Dictionary = _sprite_base[id]
+	CombatPosesScript.restore(sprite, base)
+	var tween := create_tween()
+	_poses[id] = tween
+	tween.finished.connect(func() -> void:
+		if _poses.get(id) == tween:
+			_poses.erase(id)
+	)
+	return {"tween": tween, "sprite": sprite, "base": base}
+
+
+func _stop_pose(id: StringName) -> void:
+	var tween := _poses.get(id) as Tween
+	if tween != null and tween.is_valid():
+		tween.kill()
+	_poses.erase(id)
+
+
+## Back to the resting transform, standing (a revive, reduced motion, or the fight's end).
+func _rest_pose(id: StringName) -> void:
+	_stop_pose(id)
+	_slumped.erase(id)
+	var node := _node(id)
+	var sprite := node.find_child("Sprite2D", true, false) as Sprite2D if is_instance_valid(node) else null
+	if sprite != null and _sprite_base.has(id):
+		CombatPosesScript.restore(sprite, _sprite_base[id])
 
 
 func _stop_flash(id: StringName) -> void:
@@ -735,13 +1089,36 @@ func _actor_cell(actor: Dictionary) -> Variant:
 	return null
 
 
-func _diamond(cell: Vector2i) -> PackedVector2Array:
-	var center := _ground.map_to_local(cell)
-	var half := Vector2(_ground.tile_set.tile_size) * 0.5
+## A cell's outline in this overlay's space: the iso diamond, or the hex (hex slice H3).
+func _cell_shape(cell: Vector2i) -> PackedVector2Array:
 	var points := PackedVector2Array()
-	for offset: Vector2 in [Vector2(0, -half.y), Vector2(half.x, 0), Vector2(0, half.y), Vector2(-half.x, 0)]:
-		points.append(to_local(_ground.to_global(center + offset)))
+	for point: Vector2 in _grid.cell_outline(cell):
+		points.append(to_local(point))
 	return points
+
+
+## The rim drawn around an acting unit or its target: the cell's outline, twice a hex on hexes.
+func _rim_shape(cell: Vector2i) -> PackedVector2Array:
+	var points := _cell_shape(cell)
+	if not _grid.hex_mode:
+		return points
+	var center := cell_center(cell)
+	for index: int in points.size():
+		points[index] = center + (points[index] - center) * HEX_RIM_SCALE
+	return points
+
+
+## The edges where a set of hexes ends, as segment pairs for `draw_multiline` (a reach ring).
+func _hex_boundary(cells: Dictionary) -> PackedVector2Array:
+	var segments := PackedVector2Array()
+	for cell: Vector2i in cells:
+		var outline := _cell_shape(cell)
+		for edge: int in outline.size():
+			if cells.has(cell + HexMath.DIRECTIONS[HexLayout.EDGE_NEIGHBOR[edge]]):
+				continue
+			segments.append(outline[edge])
+			segments.append(outline[(edge + 1) % outline.size()])
+	return segments
 
 
 func _read_fields(snapshot: Dictionary) -> void:
@@ -767,29 +1144,41 @@ func _read_fields(snapshot: Dictionary) -> void:
 		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
 		if not (center is Vector2i):
 			continue
-		var radius := int((field as Dictionary).get("radius", 0))
-		for dy: int in range(-radius, radius + 1):
-			for dx: int in range(-radius, radius + 1):
-				_light_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+		var radius := GridMetric.radius(int((field as Dictionary).get("radius", 0)))
+		for cell: Vector2i in GridMetric.within(center as Vector2i, radius):
+			_light_cells[cell] = true
 	for field: Variant in light.get("shrouds", []):
 		if not (field is Dictionary):
 			continue
 		var center: Variant = LightField.cell_from_data((field as Dictionary).get("center", {}))
 		if not (center is Vector2i):
 			continue
-		var radius := int((field as Dictionary).get("radius", 0))
-		for dy: int in range(-radius, radius + 1):
-			for dx: int in range(-radius, radius + 1):
-				_shroud_cells[(center as Vector2i) + Vector2i(dx, dy)] = true
+		var radius := GridMetric.radius(int((field as Dictionary).get("radius", 0)))
+		for cell: Vector2i in GridMetric.within(center as Vector2i, radius):
+			_shroud_cells[cell] = true
 
 
 func _draw() -> void:
 	if _grid == null or not is_instance_valid(_ground):
 		return
-	for cell: Vector2i in _tiles:
+	# Only cells something marks are visited: a hex field has tens of thousands of tiles.
+	var marked: Dictionary = {}
+	for layer: Dictionary in [
+		_reachable if _range_visible else {}, _shroud_cells, _light_cells, _fire_cells,
+		_mark_cells, _charged_cells,
+	]:
+		marked.merge(layer)
+	for cell: Vector2i in _approach_path:
+		marked[cell] = true
+	for pointer: Variant in [_selected, _hovered]:
+		if pointer is Vector2i:
+			marked[pointer] = true
+	for cell: Vector2i in marked:
+		if not _tiles.has(cell):
+			continue
 		var tile: Dictionary = _tiles[cell]
-		var diamond := _diamond(cell)
-		if _reachable.has(cell):
+		var diamond := _cell_shape(cell)
+		if _range_visible and _reachable.has(cell):
 			draw_colored_polygon(diamond, Color(DS.TILE_SELECT_RIM, 0.12))
 		if _shroud_cells.has(cell):
 			draw_colored_polygon(diamond, Color(0.22, 0.16, 0.36, 0.30))
@@ -803,9 +1192,17 @@ func _draw() -> void:
 		if charge > 0:
 			var element_color := Color(str(tile.get("element_color", DS.MOTE_3.to_html())))
 			draw_colored_polygon(diamond, DS.charge_tint(element_color, charge))
+		if _approach_path.has(cell):
+			var walk_tint := DS.TILE_SELECT_RIM if _approach_affordable else DS.CINDER_3
+			draw_colored_polygon(diamond, Color(walk_tint, 0.26))
+			if cell == _approach_path.back():
+				var rim := diamond.duplicate()
+				rim.append(rim[0])
+				draw_polyline(rim, walk_tint, 2.0)
 		if cell == _selected or cell == _hovered:
 			diamond.append(diamond[0])
 			draw_polyline(diamond, DS.TILE_SELECT_RIM, 2.0)
+	_draw_reach_ring()
 	# #281 G2: everything attached to a combatant is drawn at its body, so it travels with a
 	# move slide or lunge instead of waiting at the destination cell.
 	for id: StringName in _actors:
@@ -826,12 +1223,27 @@ func _draw() -> void:
 			continue
 		var cell: Variant = _actor_cell(_actors[id])
 		if cell != null:
-			var diamond := _diamond(cell)
+			var diamond := _rim_shape(cell)
 			diamond.append(diamond[0])
 			var shift := _body_anchor(id, cell) - cell_center(cell)
 			for index: int in diamond.size():
 				diamond[index] += shift
 			draw_polyline(diamond, DS.BRONZE_3 if id == _active_id else DS.CINDER_3, 3.0)
+
+
+## Hex slice H3: the armed command's reach around the acting unit, on the player's turn.
+func _draw_reach_ring() -> void:
+	if not _grid.hex_mode or not _range_visible or _reach_steps <= 0 or not _actors.has(_active_id):
+		return
+	var center: Variant = _actor_cell(_actors[_active_id])
+	if not (center is Vector2i):
+		return
+	var inside: Dictionary = {}
+	for cell: Vector2i in GridMetric.within(center as Vector2i, _reach_steps):
+		inside[cell] = true
+	var segments := _hex_boundary(inside)
+	if segments.size() >= 2:
+		draw_multiline(segments, Color(DS.TILE_SELECT_RIM, 0.7), 1.5)
 
 
 ## Where a combatant's body stands now: its bound node (mid-slide or mid-lunge), else its cell.

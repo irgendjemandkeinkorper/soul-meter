@@ -1,0 +1,497 @@
+{
+ "timers": {
+  "snapshot": {
+   "calls": 130,
+   "total_ms": 1626.8,
+   "mean_ms": 12.514,
+   "max_ms": 118.17
+  },
+  "drive.resolve_enemy_actor": {
+   "calls": 104,
+   "total_ms": 1415.55,
+   "mean_ms": 13.611,
+   "max_ms": 19.16
+  },
+  "end_turn": {
+   "calls": 9,
+   "total_ms": 1036.68,
+   "mean_ms": 115.187,
+   "max_ms": 169.6
+  },
+  "snap.movement": {
+   "calls": 130,
+   "total_ms": 861.64,
+   "mean_ms": 6.628,
+   "max_ms": 54.03
+  },
+  "drive.ally_turn_started_event": {
+   "calls": 9,
+   "total_ms": 502.42,
+   "mean_ms": 55.824,
+   "max_ms": 59.18
+  },
+  "snap.enemies": {
+   "calls": 130,
+   "total_ms": 493.88,
+   "mean_ms": 3.799,
+   "max_ms": 6.29
+  },
+  "snap.tiles": {
+   "calls": 130,
+   "total_ms": 177.35,
+   "mean_ms": 1.364,
+   "max_ms": 61.24
+  },
+  "emit.listeners.turn_ended": {
+   "calls": 6,
+   "total_ms": 48.91,
+   "mean_ms": 8.152,
+   "max_ms": 21.83
+  },
+  "emit.listeners.action_resolved": {
+   "calls": 107,
+   "total_ms": 33.88,
+   "mean_ms": 0.317,
+   "max_ms": 1.12
+  },
+  "snap.turn_order": {
+   "calls": 130,
+   "total_ms": 33.53,
+   "mean_ms": 0.258,
+   "max_ms": 0.58
+  },
+  "snap.allies": {
+   "calls": 130,
+   "total_ms": 24.6,
+   "mean_ms": 0.189,
+   "max_ms": 0.69
+  },
+  "snap.scheduler_mode": {
+   "calls": 130,
+   "total_ms": 23.23,
+   "mean_ms": 0.179,
+   "max_ms": 0.41
+  },
+  "drive.extras": {
+   "calls": 113,
+   "total_ms": 19.54,
+   "mean_ms": 0.173,
+   "max_ms": 16.91
+  },
+  "drive.enemy_turn_started_event": {
+   "calls": 104,
+   "total_ms": 19.13,
+   "mean_ms": 0.184,
+   "max_ms": 6.92
+  },
+  "emit.after_listeners.action_resolved": {
+   "calls": 107,
+   "total_ms": 18.15,
+   "mean_ms": 0.17,
+   "max_ms": 0.33
+  },
+  "emit.listeners.turn_started": {
+   "calls": 9,
+   "total_ms": 16.84,
+   "mean_ms": 1.871,
+   "max_ms": 3.27
+  },
+  "drive.advance": {
+   "calls": 113,
+   "total_ms": 11.17,
+   "mean_ms": 0.099,
+   "max_ms": 0.7
+  },
+  "drive.enemy_turn_start_hooks": {
+   "calls": 104,
+   "total_ms": 9.66,
+   "mean_ms": 0.093,
+   "max_ms": 0.16
+  },
+  "emit.listeners.action_refused": {
+   "calls": 3,
+   "total_ms": 6.56,
+   "mean_ms": 2.186,
+   "max_ms": 3.93
+  },
+  "emit.listeners.measure_started": {
+   "calls": 1,
+   "total_ms": 4.25,
+   "mean_ms": 4.25,
+   "max_ms": 4.25
+  },
+  "drive.check_holds": {
+   "calls": 113,
+   "total_ms": 4.21,
+   "mean_ms": 0.037,
+   "max_ms": 0.12
+  },
+  "snap.active_actor_id": {
+   "calls": 130,
+   "total_ms": 3.31,
+   "mean_ms": 0.025,
+   "max_ms": 0.25
+  },
+  "snap.weather": {
+   "calls": 130,
+   "total_ms": 3.19,
+   "mean_ms": 0.025,
+   "max_ms": 0.07
+  },
+  "emit.listeners.enemy_turn_started": {
+   "calls": 3,
+   "total_ms": 2.88,
+   "mean_ms": 0.962,
+   "max_ms": 2.29
+  },
+  "drive.hold_upkeep": {
+   "calls": 113,
+   "total_ms": 2.02,
+   "mean_ms": 0.018,
+   "max_ms": 0.05
+  },
+  "snap.light": {
+   "calls": 130,
+   "total_ms": 0.9,
+   "mean_ms": 0.007,
+   "max_ms": 0.02
+  },
+  "snap.fire": {
+   "calls": 130,
+   "total_ms": 0.75,
+   "mean_ms": 0.006,
+   "max_ms": 0.01
+  },
+  "emit.listeners.weather_applied": {
+   "calls": 1,
+   "total_ms": 0.74,
+   "mean_ms": 0.739,
+   "max_ms": 0.74
+  },
+  "snap.encounter_id": {
+   "calls": 130,
+   "total_ms": 0.66,
+   "mean_ms": 0.005,
+   "max_ms": 0.01
+  },
+  "drive.can_act": {
+   "calls": 113,
+   "total_ms": 0.64,
+   "mean_ms": 0.006,
+   "max_ms": 0.01
+  },
+  "snap.materials": {
+   "calls": 130,
+   "total_ms": 0.51,
+   "mean_ms": 0.004,
+   "max_ms": 0.01
+  },
+  "snap.deferred": {
+   "calls": 130,
+   "total_ms": 0.47,
+   "mean_ms": 0.004,
+   "max_ms": 0.01
+  },
+  "drive.release_accord": {
+   "calls": 113,
+   "total_ms": 0.32,
+   "mean_ms": 0.003,
+   "max_ms": 0.03
+  },
+  "snap.fight_seed": {
+   "calls": 130,
+   "total_ms": 0.28,
+   "mean_ms": 0.002,
+   "max_ms": 0.01
+  },
+  "snap.holds": {
+   "calls": 130,
+   "total_ms": 0.28,
+   "mean_ms": 0.002,
+   "max_ms": 0.0
+  },
+  "snap.revealed_until_round": {
+   "calls": 130,
+   "total_ms": 0.24,
+   "mean_ms": 0.002,
+   "max_ms": 0.03
+  },
+  "snap.balance": {
+   "calls": 130,
+   "total_ms": 0.24,
+   "mean_ms": 0.002,
+   "max_ms": 0.0
+  },
+  "snap.balance_band_id": {
+   "calls": 130,
+   "total_ms": 0.23,
+   "mean_ms": 0.002,
+   "max_ms": 0.0
+  },
+  "snap.round": {
+   "calls": 130,
+   "total_ms": 0.23,
+   "mean_ms": 0.002,
+   "max_ms": 0.0
+  },
+  "snap.balance_lock_until_round": {
+   "calls": 130,
+   "total_ms": 0.22,
+   "mean_ms": 0.002,
+   "max_ms": 0.0
+  },
+  "snap.zone_boundaries_open_until_round": {
+   "calls": 130,
+   "total_ms": 0.21,
+   "mean_ms": 0.002,
+   "max_ms": 0.0
+  },
+  "snap.concealed_until_round": {
+   "calls": 130,
+   "total_ms": 0.21,
+   "mean_ms": 0.002,
+   "max_ms": 0.0
+  },
+  "snap.state": {
+   "calls": 130,
+   "total_ms": 0.19,
+   "mean_ms": 0.001,
+   "max_ms": 0.01
+  },
+  "snap.threshold_effects_suppressed": {
+   "calls": 130,
+   "total_ms": 0.18,
+   "mean_ms": 0.001,
+   "max_ms": 0.0
+  },
+  "drive.deferred": {
+   "calls": 113,
+   "total_ms": 0.15,
+   "mean_ms": 0.001,
+   "max_ms": 0.0
+  },
+  "drive.ally_turn_start_hooks": {
+   "calls": 9,
+   "total_ms": 0.11,
+   "mean_ms": 0.012,
+   "max_ms": 0.01
+  },
+  "emit.after_listeners.turn_started": {
+   "calls": 9,
+   "total_ms": 0.05,
+   "mean_ms": 0.005,
+   "max_ms": 0.01
+  },
+  "emit.after_listeners.turn_ended": {
+   "calls": 6,
+   "total_ms": 0.03,
+   "mean_ms": 0.005,
+   "max_ms": 0.01
+  },
+  "emit.after_listeners.action_refused": {
+   "calls": 3,
+   "total_ms": 0.02,
+   "mean_ms": 0.006,
+   "max_ms": 0.01
+  },
+  "emit.after_listeners.weather_applied": {
+   "calls": 1,
+   "total_ms": 0.02,
+   "mean_ms": 0.017,
+   "max_ms": 0.02
+  },
+  "emit.after_listeners.enemy_turn_started": {
+   "calls": 3,
+   "total_ms": 0.01,
+   "mean_ms": 0.005,
+   "max_ms": 0.01
+  },
+  "emit.after_listeners.measure_started": {
+   "calls": 1,
+   "total_ms": 0.01,
+   "mean_ms": 0.005,
+   "max_ms": 0.01
+  }
+ },
+ "ally_turns": [
+  {
+   "ally_action": "yield",
+   "decision_ms": [],
+   "decisions": 0,
+   "living_enemies": 99,
+   "ticks_elapsed": 0,
+   "total_ms": 128.838
+  },
+  {
+   "ally_action": "yield",
+   "decision_ms": [],
+   "decisions": 0,
+   "living_enemies": 99,
+   "ticks_elapsed": 0,
+   "total_ms": 120.541
+  },
+  {
+   "ally_action": "yield",
+   "decision_ms": [
+    94.709
+   ],
+   "decisions": 1,
+   "living_enemies": 99,
+   "ticks_elapsed": 10,
+   "total_ms": 149.922
+  },
+  {
+   "ally_action": "yield",
+   "decision_ms": [],
+   "decisions": 0,
+   "living_enemies": 99,
+   "ticks_elapsed": 0,
+   "total_ms": 169.609
+  },
+  {
+   "ally_action": "yield",
+   "decision_ms": [],
+   "decisions": 0,
+   "living_enemies": 99,
+   "ticks_elapsed": 0,
+   "total_ms": 118.193
+  },
+  {
+   "ally_action": "yield",
+   "decision_ms": [
+    42.012,
+    14.084
+   ],
+   "decisions": 2,
+   "living_enemies": 100,
+   "ticks_elapsed": 10,
+   "total_ms": 111.344
+  },
+  {
+   "ally_action": "guard",
+   "decision_ms": [],
+   "decisions": 0,
+   "living_enemies": 100,
+   "ticks_elapsed": 0,
+   "total_ms": 205.707
+  },
+  {
+   "ally_action": "guard",
+   "decision_ms": [],
+   "decisions": 0,
+   "living_enemies": 100,
+   "ticks_elapsed": 0,
+   "total_ms": 139.267
+  },
+  {
+   "ally_action": "guard",
+   "decision_ms": [
+    102.061,
+    9.925,
+    12.674,
+    11.127,
+    10.908,
+    12.844,
+    11.336,
+    14.141,
+    10.783,
+    10.241,
+    9.477,
+    13.18,
+    14.125,
+    14.496,
+    10.679,
+    7.851,
+    12.712,
+    10.884,
+    11.625,
+    15.52,
+    14.782,
+    16.836,
+    12.72,
+    9.037,
+    10.815,
+    10.692,
+    11.778,
+    13.023,
+    14.099,
+    16.532,
+    14.836,
+    12.416,
+    10.781,
+    9.999,
+    11.516,
+    13.728,
+    12.955,
+    13.922,
+    10.909,
+    12.003,
+    13.65,
+    13.308,
+    13.577,
+    14.664,
+    13.67,
+    14.374,
+    15.236,
+    16.827,
+    14.002,
+    11.92,
+    12.526,
+    10.402,
+    12.796,
+    11.494,
+    15.728,
+    18.236,
+    15.987,
+    15.544,
+    14.122,
+    16.292,
+    14.144,
+    14.636,
+    12.15,
+    12.149,
+    14.562,
+    11.311,
+    13.226,
+    15.65,
+    14.831,
+    17.187,
+    14.883,
+    15.042,
+    13.504,
+    17.207,
+    15.073,
+    14.493,
+    15.823,
+    15.821,
+    14.297,
+    16.698,
+    13.492,
+    12.458,
+    14.694,
+    16.672,
+    15.003,
+    17.454,
+    18.126,
+    16.074,
+    17.257,
+    17.661,
+    17.676,
+    16.415,
+    19.372,
+    17.017,
+    14.784,
+    17.503,
+    17.292,
+    16.076,
+    17.023,
+    14.171,
+    11.72
+   ],
+   "decisions": 101,
+   "living_enemies": 100,
+   "ticks_elapsed": 6,
+   "total_ms": 1550.87
+  }
+ ]
+}

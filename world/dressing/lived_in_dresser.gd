@@ -278,6 +278,9 @@ static func _place_ground(state: Dictionary, id: String, at: Vector2, road: bool
 	var layout: Dictionary = state["layout"]
 	if not (layout["playable"] as Rect2).has_point(at):
 		return
+	# A walk-in building's floor (item 35) is furnished by the building, never dressed.
+	if (layout.get("no_dress", {}) as Dictionary).has(cell_at(layout["origin"], at)):
+		return
 	var rng: RandomNumberGenerator = state["rng"]
 	var row: Dictionary = (state["by_id"] as Dictionary)[id]
 	var kind := "strip" if id.begins_with("kf-road") or id.begins_with("kf-ruts") else \

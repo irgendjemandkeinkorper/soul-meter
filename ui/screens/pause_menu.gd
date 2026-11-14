@@ -17,7 +17,7 @@ func _build() -> void:
 	_menu_button(
 		vbox, "Inventory", func() -> void: UIManager.open(load("res://ui/screens/inventory.tscn"))
 	)
-	_menu_button(vbox, "Party", func() -> void: UIManager.open(load("res://ui/screens/party.tscn")))
+	_menu_button(vbox, "Party", func() -> void: UIManager.open(UIManager.PARTY))
 	_menu_button(vbox, "Journal", func() -> void: UIManager.open(UIManager.JOURNAL))
 	var region_map_button := _menu_button(
 		vbox, "Region Map", func() -> void: UIManager.open(UIManager.REGION_MAP)

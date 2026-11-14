@@ -4,6 +4,9 @@ extends GdUnitTestSuite
 
 var _saved_state: Dictionary
 var _boot_visible := true
+## Canvas items _isolate() hid, restored after each test.
+var _hidden: Array[CanvasItem] = []
+var _hidden_layers: Array[CanvasLayer] = []
 
 
 func before_test() -> void:
@@ -24,9 +27,41 @@ func after_test() -> void:
 	Battle._release_field_grid()
 	UIManager.close_all()
 	GameState.from_dict(_saved_state)
+	for item: CanvasItem in _hidden:
+		if is_instance_valid(item):
+			item.show()
+	for layer: CanvasLayer in _hidden_layers:
+		if is_instance_valid(layer):
+			layer.show()
+	_hidden.clear()
+	_hidden_layers.clear()
 	var boot := get_tree().current_scene as CanvasItem
 	if boot != null:
 		boot.visible = _boot_visible
+
+
+## The harness leaves the boot menu (and whatever else it mounted) in the tree; production
+## frees it on travel. CanvasLayers do not inherit a hidden parent's visibility, so hide
+## them too. Shows `target` alone; with `keep`, every layer but `keep` is hidden, the
+## target's own layers included (the live-field shot keeps only the field HUD).
+func _isolate(target: Node, keep: CanvasLayer = null) -> void:
+	for child: Node in get_tree().root.get_children():
+		if child == target or child.is_ancestor_of(target):
+			continue
+		if child is CanvasItem and (child as CanvasItem).visible:
+			(child as CanvasItem).hide()
+			_hidden.append(child as CanvasItem)
+	for node: Node in get_tree().root.find_children("*", "CanvasLayer", true, false):
+		var layer := node as CanvasLayer
+		var shown := layer == keep or layer.is_ancestor_of(target)
+		if keep != null:
+			shown = shown or keep.is_ancestor_of(layer)
+		else:
+			shown = shown or target.is_ancestor_of(layer)
+		if shown or not layer.visible:
+			continue
+		layer.hide()
+		_hidden_layers.append(layer)
 
 
 func _capture(name: String) -> void:
@@ -43,7 +78,8 @@ func _capture(name: String) -> void:
 
 func test_populated_inventory() -> void:
 	GameState.inventory.clear()
-	GameState.equipped_slots.clear()
+	for member: PartyMember in GameState.party:
+		member.equipped_slots.clear()
 	var grid := GameState.inventory.get_constraint(GridConstraint)
 	if grid != null:
 		grid.free()
@@ -54,6 +90,7 @@ func test_populated_inventory() -> void:
 	screen.theme = ThemeBuilder.build()
 	await runner.simulate_frames(4)
 	screen._on_item_selected(GameState.inventory.get_items()[0])
+	_isolate(screen)
 	await runner.simulate_frames(2)
 	await _capture("inventory-followup")
 
@@ -63,33 +100,32 @@ func test_live_field_battle() -> void:
 	var root := runner.scene() as Node2D
 	await runner.simulate_frames(3)
 	var field := root.find_child("FieldMap", true, false) as FieldMap
-	var hostile := load("res://actors/hostile/hostile.tscn").instantiate() as Hostile
-	hostile.name = "ArtCaptureWight"
-	hostile.unit_id = &"bog-wight"
+	# The Wilds' authored Bog Wight stands on the battlefield; a fixed spawn cell does not
+	# survive edits to the room's ground.
+	GameState.set_flag("defeated_bog_wight", false)
+	var hostile := root.find_child("BogWight", true, false) as Hostile
+	assert_object(hostile).override_failure_message("test_room must author BogWight").is_not_null()
 	hostile.alert_radius = 0.0
-	root.add_child(hostile)
-	hostile.global_position = field.iso_grid().cell_to_world(Vector2i(30, 30))
 	hostile.sync_cell()
 	var opened := Battle.start_session(field, hostile)
 	assert_bool(opened.get("allowed", false)).override_failure_message(str(opened)).is_true()
-	# Production presents combat above the field; keep the field's actual camera.
-	for layer: Node in root.find_children("*", "CanvasLayer", true, false):
-		(layer as CanvasLayer).hide()
-	var hud := CanvasLayer.new()
-	hud.layer = 10
-	root.add_child(hud)
-	var screen := load("res://ui/screens/battle.tscn").instantiate() as Screen
-	screen.theme = ThemeBuilder.build()
-	hud.add_child(screen)
+	# One bar, both modes (owner 2026-11-01): on a live field the field's own HUD grows its
+	# combat parts, as GameFlow._on_battle_entered() does; no full-screen battle screen opens.
+	var field_hud := field.field_hud()
+	field.set_combat_mode(true)
+	field_hud.enter_combat(field)
+	_isolate(root, field_hud)
 	var camera := field.player().get_node("Camera2D") as Camera2D
 	camera.enabled = true
 	camera.make_current()
 	camera.reset_smoothing()
 	await runner.simulate_frames(5)
-	assert_object(screen.get("_stage")).is_null()
+	assert_bool(field_hud.combat_active()).is_true()
+	assert_object(field_hud.combat_bar).is_not_null()
 	assert_object(field.combat_overlay()).is_not_null()
 	await _capture("battle-live-followup")
-	screen.free()
+	field_hud.exit_combat()
+	field.set_combat_mode(false)
 	Battle._end_session(null)
 
 

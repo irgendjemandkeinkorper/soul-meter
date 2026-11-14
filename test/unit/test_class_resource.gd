@@ -2,6 +2,19 @@ extends GdUnitTestSuite
 ## #223 — the ClassResource seam: registry, null resource, the Ironbrand Scars example,
 ## controller dispatch at the real commit points, and the additive save round-trip.
 
+## Written in square cells and square distances on a made-up board, so it pins the square grid
+## (hex slice H3b; test/helpers/grid_mode.gd names the hex counterparts).
+const GridMode := preload("res://test/helpers/grid_mode.gd")
+var _grid_before: Variant
+
+
+func before() -> void:
+	_grid_before = GridMode.use_squares()
+
+
+func after() -> void:
+	GridMode.restore(_grid_before)
+
 
 class HookSpy:
 	extends ClassResource

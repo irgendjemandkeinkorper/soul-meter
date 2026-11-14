@@ -7,7 +7,6 @@ var _state_before: Dictionary
 func before_test() -> void:
 	_state_before = GameState.to_dict().duplicate(true)
 	GameState.inventory.clear()
-	GameState.equipped_slots.clear()
 	var vex := PartyMember.new()
 	vex.id = GameState.PROTAGONIST_ID
 	vex.display_name = "Vex"

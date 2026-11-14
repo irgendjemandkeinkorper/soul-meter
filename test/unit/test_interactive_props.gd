@@ -3,13 +3,17 @@ extends GdUnitTestSuite
 const CHEST_SCENE := preload("res://actors/chest/chest.tscn")
 const PICKUP_SCENE := preload("res://actors/pickup/pickup.tscn")
 const SWITCH_SCENE := preload("res://actors/switch/switch.tscn")
+const INTERACTABLE_SCENE := preload("res://actors/interactable/interactable.tscn")
 const LOOT_ID := "materials/loamroot_sprig"
 
 var _game_state_before: Dictionary
+var _locale_before: String
+var _field_translation: Translation
 
 
 func before_test() -> void:
 	_game_state_before = GameState.to_dict()
+	_locale_before = TranslationServer.get_locale()
 	if GameState.flag_changed.is_connected(QuestRegistry._on_flag_changed):
 		GameState.flag_changed.disconnect(QuestRegistry._on_flag_changed)
 	if GameState.inventory_changed.is_connected(QuestRegistry._on_inventory_changed):
@@ -19,7 +23,69 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	if _field_translation != null:
+		TranslationServer.remove_translation(_field_translation)
+		_field_translation = null
+	TranslationServer.set_locale(_locale_before)
 	GameState.from_dict(_game_state_before)
+
+
+func _translate_field_feedback(prop: SMInteractable) -> void:
+	_field_translation = Translation.new()
+	_field_translation.locale = "eo"
+	var messages: Dictionary = {
+		"field-name": "nomo", "field-prompt": "legi", "field-done": "legita",
+		"field-locked": "fermita", "field-failed": "malsukcesis",
+	}
+	for source: String in messages:
+		_field_translation.add_message(source, String(messages[source]))
+	TranslationServer.add_translation(_field_translation)
+	TranslationServer.set_locale("eo")
+	prop.display_name = "field-name"
+	prop.prompt_text = "field-prompt"
+	prop.interaction_text = "field-done"
+	prop.locked_message = "field-locked"
+	prop.lock_failed_message = "field-failed"
+	prop.lock_skill = "vantage"
+	prop.lock_id = "translated-field-object"
+
+
+func test_object_check_translates_feedback_before_composing_prompts() -> void:
+	var prop: SMInteractable = auto_free(INTERACTABLE_SCENE.instantiate())
+	_translate_field_feedback(prop)
+	prop.interaction_flag = "unit_translated_object_read"
+	add_child(prop)
+	assert_str(prop.get_node("Sign").text).is_equal("nomo")
+	assert_str(prop.get_node("Prompt").text).is_equal("LOCKED — VANTAGE — fermita")
+	GameState.set_flag(prop.lock_failed_flag(), true)
+	prop._refresh_prompt()
+	assert_str(prop.get_node("Prompt").text).is_equal("LOCKED — malsukcesis")
+	GameState.flags.erase(prop.lock_failed_flag())
+	GameState.set_flag(prop.lock_picked_flag(), true)
+	prop._refresh_prompt()
+	assert_str(prop.get_node("Prompt").text).is_equal("E — legi")
+	prop._player_in_range = true
+	var event := InputEventAction.new()
+	event.action = &"interact"
+	event.pressed = true
+	prop._unhandled_input(event)
+	assert_bool(GameState.flag_is_true(prop.interaction_flag)).is_true()
+	assert_str(prop.get_node("Prompt").text).is_equal("legita")
+	prop._unhandled_input(event)
+	assert_str(prop.get_node("Prompt").text).is_equal("legita")
+
+
+func test_chest_override_translates_exported_lock_and_open_prompts() -> void:
+	var chest: Chest = auto_free(CHEST_SCENE.instantiate())
+	_translate_field_feedback(chest)
+	chest.container_id = "unit-translated-chest"
+	chest.loot = [{"item_id": LOOT_ID, "quantity": 1}]
+	add_child(chest)
+	assert_str(chest.get_node("Sign").text).is_equal("nomo")
+	assert_str(chest.get_node("Prompt").text).is_equal("LOCKED — fermita")
+	GameState.set_flag(chest.lock_picked_flag(), true)
+	chest._refresh_prompt()
+	assert_str(chest.get_node("Prompt").text).is_equal("E — legi")
 
 
 func test_chest_opens_persistent_container_without_granting_everything() -> void:

@@ -16,9 +16,10 @@ extends RefCounted
 ## container's contents exactly once, so a rolled table is frozen at first
 ## contact and survives save/load without a second roll.
 ##
-## PROVISIONAL: every weight, roll count and difficulty here is tuning, and #284
-## hands numeric values to DeepSeek. The SHAPE — weighted rows, optional
-## skill-gated rows, one frozen roll per container — is the decision.
+## The original road-cache / wight-hoard tuning remains PROVISIONAL (#284).
+## The six regional tables implement the 2026-10-31 item/loot packet accepted
+## by the owner on 2026-11-01. All tables retain the same shape: weighted rows,
+## optional skill-gated rows, and one frozen roll per container.
 ##
 ## Note for #349 (AccordZone): `sounding` and `unweave`, which gate the two
 ## hardest rows below, are both `LoomSensitivity.FULL`. When `loom_penalty()`
@@ -85,6 +86,108 @@ const _TABLES: Dictionary = {
 				"quantity": 1,
 				"skill": "unweave",
 				"modifier": -20.0,
+			},
+		],
+	},
+	&"dom-workshop-stores":
+	{
+		"rolls": 2,
+		"rows":
+		[
+			{"item_id": "materials/forge_coal", "quantity": 1, "weight": 30},
+			{"item_id": "materials/leather_offcuts", "quantity": 1, "weight": 25},
+			{"item_id": "materials/iron_rivets", "quantity": 1, "weight": 20},
+			{"item_id": "materials/lamp_oil", "quantity": 1, "weight": 15},
+			{
+				"item_id": "tools/rivet_punch",
+				"quantity": 1,
+				"skill": "sounding",
+				"modifier": -10.0,
+			},
+		],
+	},
+	&"ashlaren-mill-stores":
+	{
+		"rolls": 2,
+		"rows":
+		[
+			{"item_id": "materials/grain_meal", "quantity": 1, "weight": 30},
+			{"item_id": "materials/sackcloth", "quantity": 1, "weight": 25},
+			{"item_id": "consumables/hearthloaf", "quantity": 1, "weight": 20},
+			{"item_id": "materials/scribes_vellum", "quantity": 1, "weight": 15},
+			{
+				"item_id": "tools/grain_scoop",
+				"quantity": 1,
+				"skill": "sounding",
+				"modifier": -10.0,
+			},
+		],
+	},
+	&"kesselford-ferry-stores":
+	{
+		"rolls": 2,
+		"rows":
+		[
+			{"item_id": "materials/ferry_line", "quantity": 1, "weight": 30},
+			{"item_id": "materials/lamp_wicks", "quantity": 1, "weight": 25},
+			{"item_id": "materials/lamp_oil", "quantity": 1, "weight": 20},
+			{"item_id": "consumables/salted_riverfish", "quantity": 1, "weight": 15},
+			{
+				"item_id": "materials/stopper_wax",
+				"quantity": 1,
+				"skill": "sounding",
+				"modifier": -10.0,
+			},
+		],
+	},
+	&"verge-march-kit":
+	{
+		"rolls": 2,
+		"rows":
+		[
+			{"item_id": "consumables/road_crusts", "quantity": 1, "weight": 30},
+			{"item_id": "tools/tent_pegs", "quantity": 1, "weight": 25},
+			{"item_id": "consumables/loam_smoked_eel", "quantity": 1, "weight": 20},
+			{"item_id": "materials/binding_thread", "quantity": 1, "weight": 15},
+			{
+				"item_id": "tools/map_case",
+				"quantity": 1,
+				"skill": "sounding",
+				"modifier": -10.0,
+			},
+		],
+	},
+	&"hollowmere-reed-kit":
+	{
+		"rolls": 2,
+		"rows":
+		[
+			{"item_id": "materials/cut_reeds", "quantity": 1, "weight": 30},
+			{"item_id": "materials/net_cord", "quantity": 1, "weight": 25},
+			{"item_id": "materials/scribes_vellum", "quantity": 1, "weight": 20},
+			{"item_id": "materials/lamp_oil", "quantity": 1, "weight": 15},
+			{
+				"item_id": "tools/netting_needle",
+				"quantity": 1,
+				"skill": "sounding",
+				"modifier": -10.0,
+			},
+		],
+	},
+	&"wilds-repair-cache":
+	{
+		"rolls": 2,
+		"rows":
+		[
+			{"item_id": "materials/repair_splints", "quantity": 1, "weight": 30},
+			{"item_id": "consumables/cloth_bandage", "quantity": 1, "weight": 25},
+			{"item_id": "consumables/bitterleaf_poultice", "quantity": 1, "weight": 20},
+			{"item_id": "materials/binding_thread", "quantity": 1, "weight": 15},
+			{
+				"item_id": "tools/stitching_thimble",
+				"quantity": 1,
+				"skill": "sounding",
+				"modifier": -10.0,
 			},
 		],
 	},

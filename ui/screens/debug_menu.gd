@@ -35,7 +35,7 @@ func _refresh() -> void:
 		GameState.earn_gp(500)
 		_refresh())
 	_menu_button(state_row, "Soul → 50", func() -> void:
-		GameState.set_soul_meter(50.0)
+		GameState.set_soul_meter_with_cause(50.0, "debug_menu")
 		_refresh())
 	_menu_button(state_row, "Renown +10", func() -> void:
 		Renown.gain_reputation("player", 10.0, "Playtest grant", "debug")

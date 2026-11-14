@@ -1,67 +1,101 @@
-# Session Plan — Blank Combat Stage: Grid by Default
+# Session Plan — Two-week roadmap: re-evaluate, 15 questions, file it
 
-**Created:** 2026-08-29
-**Intent Contract:** See .claude/session-intent.md
-**Goal (verbatim):** "combat screen is still just blank"
+**Created:** 2026-11-08
+**Intent Contract:** See `.claude/session-intent.md`
+**Window:** 2026-11-09 → 2026-11-22
 
-## What You'll End Up With
+## What you'll end up with
 
-Real battles that render and play on the tactical grid: terrain tiles, unit sprites,
-hover AP quotes, click-to-move, LOS/cover/flank — the Wave P layer, reachable in
-actual play instead of only in tests. Verified by a regression test, a screenshot,
-a green suite, and a codex delivery gate.
+1. **A re-evaluation table.** Every open issue and PR is put in one of four buckets: lands with
+   the chain, live, owner lane, or stale. Each row has one line of evidence.
+2. **15 answered design questions.** They target the systems the next two weeks build: Phase 1
+   close-out, Phase 2 Soul and the start of Phase 3 enemies. Each question has best guesses and
+   one distinct random option. The answers are recorded in `docs/owner-decisions.md`.
+3. **`docs/roadmap-2026-11-08.md`.** A dated two-week sequence built on the 2026-10-30 roadmap,
+   with your answers applied. It ships as a docs PR.
+4. **Filed GitHub issues.** One per bounded task, with scope, acceptance checks, lane label,
+   `Blocked by` links and a milestone per slice with a due date.
+5. **A stale-items list for you.** Issues to close or retitle; you click.
 
-## Root cause (diagnosed, not speculative)
+## How we'll get there
 
-All 12 authored encounters lack `grid` → `Battle._battlefield_for_definition()`
-returns the ZONE model → the six-region stage draws only grid battles (zone
-snapshots carry no tiles) and the legacy zone presentation is gone from the unified
-screen → blank center. Confirmed against `data/generated/encounters.json` (0 of 12
-with grid) and the screenshot (all six regions render; stage empty).
+### Phase weights
 
-## How We'll Get There
+- **Discover: 15%** — Bucket the 19 issues and ~26 PRs. Read roadmap §4–§6 against `main`
+  plus the chain. Find the unruled system choices the next two weeks hit.
+- **Define: 35%** — Draft 15 questions. Each one names its system, why it is open, and what it
+  blocks, with 2–3 grounded guesses plus a random option. Ask them in four rounds (4/4/4/3),
+  then record the answers.
+- **Develop: 25%** — Write the roadmap doc. Draft the issue bodies. Create the milestones. File
+  the issues and the docs PR.
+- **Deliver: 25%** — Check every issue against the definition of ready: scope, acceptance,
+  lane, dependencies, "do not decide". Check the dependency order. Confirm nothing ratified was
+  reopened and no canon was invented.
 
-### Phase Weights
-- Discover: 5% — DONE (root cause pinned this session; no further research).
-- Define: 10% — default-grid sizing rule (PROVISIONAL): derive dimensions from
-  combatant counts (e.g. max(6, needed) × max(4, rows)), authored `grid.dimensions`
-  always wins; decide where the synthesis lives (extend
-  `_battlefield_for_definition`'s existing else-branch — the TileMapLayer synthesis
-  code is already there for authored grids).
-- Develop: 55% — implement default-grid synthesis in `globals/battle.gd`; keep zone
-  reachable for tests/fallback (a `use_zone` escape hatch in the definition, or the
-  invalid-grid warning paths keep returning zones); regression test (encounter with
-  no authored grid → snapshot tiles non-empty → stage `rendered_tile_count() > 0`);
-  check the enemy-AI/deployment interplay on synthesized grids.
-- Deliver: 30% — full suite; xvfb screenshot of a real battle; strict-audit
-  reporting run; codex delivery gate (REVISE-loop to PROCEED); push + delivery-log
-  note under Wave P ("grid by default" follow-up ruling).
+The formula weights were 18/18/28/36. Define is raised because the 15 questions are the core
+of this pass.
 
-### Execution Commands
-To execute this plan, run:
+### 🐙 Debate checkpoints (High stakes)
+
+- 🔸 **After Define:** "Do the 15 answers contradict each other or ratified design, and is any
+  save-format or core-loop choice left implicit?" 1-round adversarial.
+- 🔸 **After Develop:** "Is every issue agent-ready, and does the two-week order hold up against
+  20 owner-hours/week and the landing chain?" 1-round collaborative.
+
+### Execution commands
+
 ```bash
-/octo:embrace "make real battles run on the tactical grid by default so the combat stage renders (see .claude/session-intent.md)"
+/octo:embrace "Re-evaluate Soul Meter's open issues/PRs and the 2026-10-30 roadmap, ask the owner 15 game-system design questions (best guesses + a distinct random option each), write docs/roadmap-2026-11-08.md, and file the next two weeks as GitHub issues with milestones, dependencies and existing lane labels"
 ```
-Or (session's established pattern) Claude dispatches a bounded tangle for Develop
-and a manual codex gate for Deliver.
 
-## Provider Requirements
+Or by phase: `/octo:discover` → `/octo:define` → `/octo:debate` → `/octo:develop` →
+`/octo:debate` → `/octo:deliver`.
+
+## Provider availability (measured 2026-11-08)
+
 🔴 Codex CLI: Available ✓
 🟡 Gemini CLI: Available ✓
 🧭 Antigravity CLI: Not installed ✗
 🟤 OpenCode: Not installed ✗
 🟢 Copilot CLI: Available ✓
-🟠 Qwen CLI: Not installed ✗
-⚫ Ollama: Not installed ✗
+🟠 Qwen CLI: Available ✓
+⚫ Ollama: Available ✓
 🔵 Claude: Available ✓
 🟣 Perplexity: Not configured ✗
 
-## Success Criteria
-(From intent contract) 1. tiles+units render in any authored encounter, pointer
-moves work; 2. regression test for the no-authored-grid path; 3. suite green +
-screenshot + gate PROCEED + pushed.
+Notes:
+- On 2026-10-31 Gemini failed at dispatch and Qwen failed. Codex and Copilot carry any gate.
+- The plugin's banner script checks the literal string `need` instead of `$1`. That bug makes
+  every CLI read "Not installed". These values come from the corrected check.
 
-## Next Steps
-1. Review this plan
-2. Adjust if needed (re-run /octo:plan)
-3. Execute when ready
+## Success criteria (from the intent contract)
+
+1. Every open issue and PR is bucketed with evidence.
+2. 15 questions are asked with best guesses plus a distinct random option, and answers are
+   recorded with date and wording.
+3. The two-week roadmap doc is written with PROVISIONAL numbers kept.
+4. Issues are filed agent-ready, with milestones, dependencies and existing labels only.
+5. Stale-item proposals are listed for the owner, and nothing is closed by an agent.
+
+## Your involvement
+
+Four question rounds, about 15 minutes in total. Then one look at the filed list in the
+final report.
+
+## Time estimate
+
+About 2 hours of agent time:
+
+| Phase | Agent time |
+|---|---|
+| Discover | 20 min |
+| Define | 30 min, plus your answers |
+| Develop | 45 min |
+| Deliver | 20 min |
+| Each debate gate, if run | +15 min |
+
+## Next steps
+
+1. Review this plan.
+2. Adjust if needed (re-run `/octo:plan`).
+3. Execute with `/octo:embrace` when ready.

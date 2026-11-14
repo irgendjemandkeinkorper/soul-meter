@@ -1,0 +1,30 @@
+# PROVISIONAL — CANON REVIEW REQUIRED: the Lower Trial Hall's rooms (2026-11-04), owner list item 9.
+~ trial_store_door
+Store Door: A storeroom door, barred on the far side by a drop latch. Through the gap, something large stands very still.
+- "Lift the latch through the gap, quietly." [#tag=SLIP] [if not GameState.get_flag("trial_store_door_open") and not GameState.get_flag("trial_store_pick_failed") and check("slip", 40) /]
+	do SkillCheck.resolve("slip")
+	if SkillCheck.last_check_succeeded()
+		do GameState.set_flag("trial_store_door_open", true)
+		Store Door: The latch rises without a sound and the door swings in. Nothing inside stirs.
+		=> END
+	else
+		do GameState.set_flag("trial_store_pick_failed", true)
+		Store Door: The latch drops back and jams. It will not lift that way again.
+		=> END
+- "Put your shoulder to it." [if not GameState.get_flag("trial_store_door_open") /]
+	do GameState.set_flag("trial_store_alarm", true)
+	do GameState.set_flag("trial_store_door_open", true)
+	Store Door: The bar splits and the door bangs open. In the store, two heavy shapes turn toward the noise.
+	=> END
+- "Leave it."
+	=> END
+
+~ trial_blast_seam
+Blast Seam: A stone door with a seam cut down its middle, packed with old char where a charge was set before. Only another charge will open it.
+- "Set the blasting charge in the seam and light the cord." [if GameState.item_count("tools/blasting_charge") > 0 and not GameState.get_flag("trial_blast_charge_set") /]
+	do GameState.remove_items("tools/blasting_charge", 1)
+	do GameState.set_flag("trial_blast_charge_set", true)
+	Blast Seam: The cord catches and hisses. Get clear.
+	=> END
+- "Leave it."
+	=> END

@@ -190,7 +190,7 @@
     "minimum_fame_tier": "",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "Spend 1 Clarity to read an enemy: its next target, aim and odds are shown, and it is held to them.",
+    "blurb": "Spend 1 Clarity to scan an enemy: its target, aim, weakness, resistance and odds are shown, and it is held to them.",
     "effect_op": "sacred_clarity",
     "effect_value": 1,
     "vault_id": ""
@@ -218,7 +218,7 @@
     "minimum_fame_tier": "Known",
     "minimum_karma_tier": "",
     "maximum_karma_tier": "",
-    "blurb": "While your reveal is armed, allies' spell forecasts this round show their true terms too.",
+    "blurb": "While Reveal is prepared, allies' spell forecasts show their true terms this round.",
     "effect_op": "read_aloud",
     "effect_value": 1,
     "vault_id": ""

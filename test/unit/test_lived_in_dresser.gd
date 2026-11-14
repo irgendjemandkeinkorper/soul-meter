@@ -52,6 +52,26 @@ func test_solid_pieces_block_their_cell_and_walkable_decor_blocks_nothing() -> v
 		assert_bool(blocked.has(cell)).override_failure_message("cover stands on a blocked cell").is_true()
 
 
+## A walk-in building's floor (`no_dress`, item 35) takes no ground decal, even one whose
+## jitter would carry it in from a neighbouring cell.
+func test_no_ground_decal_lands_on_a_no_dress_cell() -> void:
+	var layout := _layout()
+	var no_dress := {}
+	for y: int in range(10, 20):
+		for x: int in range(10, 20):
+			no_dress[Vector2i(x, y)] = true
+			(layout["cells"] as Dictionary).erase(Vector2i(x, y))
+	layout["no_dress"] = no_dress
+	var result := DresserScript.dress(layout, _catalog(), 5)
+	var ground := 0
+	for row: Dictionary in result["placements"]:
+		var cell := DresserScript.cell_at(layout["origin"], row["position"])
+		assert_bool(no_dress.has(cell)).override_failure_message("%s on a floor at %s" % [row["id"], cell]).is_false()
+		if row["layer"] == "ground":
+			ground += 1
+	assert_int(ground).is_greater(20)
+
+
 func test_wall_base_clusters_sit_in_front_of_the_building() -> void:
 	var layout := _layout()
 	var result := DresserScript.dress(layout, _catalog(), 5)

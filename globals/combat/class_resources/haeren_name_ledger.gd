@@ -94,7 +94,8 @@ func on_any_action(
 		var write: Dictionary = raw as Dictionary
 		var kind := StringName(str(write.get("kind", "")))
 		var target_id := String(write.get("target_id", ""))
-		if int(write.get("after", 1)) <= 0 and kind in [&"hp", &"dot"] and target_id in recorded_actor_ids:
+		# Kind first: other writes carry non-numeric `after` values (a cast's tone name).
+		if kind in [&"hp", &"dot"] and target_id in recorded_actor_ids and int(write.get("after", 1)) <= 0:
 			_refund_actor(StringName(target_id), true)
 	if host != null and not host.has_living_enemies():
 		for actor_id: String in recorded_actor_ids:

@@ -72,6 +72,35 @@ func test_an_npc_without_a_pocket_id_cannot_be_robbed() -> void:
 	assert_str(str(result["reason"])).is_equal("no_pocket")
 
 
+func test_spawner_pocket_settings_reach_the_existing_npc_verb() -> void:
+	var spawner: TownNpcSpawner = auto_free(TownNpcSpawner.new())
+	spawner.npc_pockets = {"existing": {
+		"pocket_id": "test-generated-pocket", "pocket_skill": "tread",
+		"pocket_modifier": -10.0, "pocket_gp": POCKET_GP, "pocket_faction": "rennen",
+	}}
+	var npc := _npc_with_pocket("")
+	spawner._configure_pocket(npc, "existing")
+	assert_str(npc.pocket_skill).is_equal("tread")
+	assert_float(npc.pocket_modifier).is_equal(-10.0)
+	assert_str(npc.pocket_faction).is_equal("rennen")
+	assert_str(npc._prompt_text()).contains("F — Steal")
+	var before := GameState.gp
+	assert_bool(npc.attempt_pickpocket(_certain_success())["success"]).is_true()
+	assert_int(GameState.gp).is_equal(before + POCKET_GP)
+	assert_bool(npc.attempt_pickpocket(_certain_success())["attempted"]).is_false()
+	assert_int(GameState.gp).is_equal(before + POCKET_GP)
+
+
+func test_spawner_only_configures_an_explicit_durable_pocket() -> void:
+	var spawner: TownNpcSpawner = auto_free(TownNpcSpawner.new())
+	spawner.npc_pockets = {"empty": {"pocket_gp": POCKET_GP}, "invalid": false}
+	for id: String in ["absent", "empty", "invalid"]:
+		var npc := _npc_with_pocket("")
+		spawner._configure_pocket(npc, id)
+		assert_bool(npc.has_pocket()).is_false()
+		assert_str(npc._prompt_text()).not_contains("Steal")
+
+
 func test_a_successful_lift_grants_the_pocket_and_closes_it() -> void:
 	var npc := _npc_with_pocket("test-pocket-success")
 	var before := GameState.gp

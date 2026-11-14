@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://ui/flow/game_flow.gd" id="1_flow"]
 [ext_resource type="Script" path="res://addons/godot_state_charts/state_chart.gd" id="2_chart"]
@@ -11,6 +11,10 @@
 [sub_resource type="Resource" id="ExpressionGuard_garrison"]
 script = ExtResource("6_expression_guard")
 expression = "garrison_access_granted"
+
+[sub_resource type="Resource" id="ExpressionGuard_dev_room"]
+script = ExtResource("6_expression_guard")
+expression = "dev_room_available"
 
 [sub_resource type="Resource" id="NotGuard_garrison"]
 script = ExtResource("7_not_guard")
@@ -43,6 +47,7 @@ script = ExtResource("1_flow")
 script = ExtResource("2_chart")
 initial_expression_properties = {
 "can_fight_here": false,
+"dev_room_available": false,
 "editor_open": false,
 "garrison_access_granted": false,
 "rep_iron_companies": 0.0,
@@ -77,6 +82,25 @@ event = &"new_game"
 script = ExtResource("5_transition")
 to = NodePath("../../CharacterCreation")
 event = &"start_chargen"
+
+[node name="ToDevRoom" type="Node" parent="StateChart/Root/Menus/Title"]
+script = ExtResource("5_transition")
+to = NodePath("../../DevRoom")
+event = &"dev_room"
+guard = SubResource("ExpressionGuard_dev_room")
+
+[node name="DevRoom" type="Node" parent="StateChart/Root/Menus"]
+script = ExtResource("4_atomic")
+
+[node name="ToPlaying" type="Node" parent="StateChart/Root/Menus/DevRoom"]
+script = ExtResource("5_transition")
+to = NodePath("../../../Playing")
+event = &"travel"
+
+[node name="ToTitle" type="Node" parent="StateChart/Root/Menus/DevRoom"]
+script = ExtResource("5_transition")
+to = NodePath("../../Title")
+event = &"dev_room_failed"
 
 [node name="CharacterCreation" type="Node" parent="StateChart/Root/Menus"]
 script = ExtResource("4_atomic")

@@ -743,98 +743,6 @@
       "transition": null
     },
     {
-      "id": "kesselford_chandlery",
-      "display_name": "Ford Chandlery",
-      "epithet": "",
-      "patron": "",
-      "agreement": "",
-      "vault_id": "",
-      "definition_path": "res://world/locations/interiors/kesselford_chandlery.tres",
-      "scene_path": "res://world/interiors/kesselford_chandlery.tscn",
-      "no_combat_zone": true,
-      "world_map": null,
-      "fast_travel": null,
-      "transition": {
-        "building_id": "kesselford_chandlery",
-        "building_name": "Ford Chandlery",
-        "source_scene": "res://world/kesselford.tscn",
-        "source_anchor": "ChandleryDoor",
-        "source_position": [
-          1900.0,
-          700.0
-        ],
-        "prompt_text": "E — Enter",
-        "spawn_id": "entry",
-        "destination_spawn_position": [
-          960.0,
-          1098.6
-        ],
-        "required_flag": "",
-        "reputation_faction": "",
-        "minimum_reputation_band": "",
-        "locked_message": "This door is locked.",
-        "exit": {
-          "source_anchor": "Room/ExitDoor",
-          "source_position": [
-            960.0,
-            1200.0
-          ],
-          "spawn_id": "from_kesselford_chandlery",
-          "destination_spawn_position": [
-            1900.0,
-            790.0
-          ],
-          "prompt_text": "E — RETURN"
-        }
-      }
-    },
-    {
-      "id": "kesselford_wayhouse",
-      "display_name": "Ferry Bell Wayhouse",
-      "epithet": "",
-      "patron": "",
-      "agreement": "",
-      "vault_id": "",
-      "definition_path": "res://world/locations/interiors/kesselford_wayhouse.tres",
-      "scene_path": "res://world/interiors/kesselford_wayhouse.tscn",
-      "no_combat_zone": true,
-      "world_map": null,
-      "fast_travel": null,
-      "transition": {
-        "building_id": "kesselford_wayhouse",
-        "building_name": "Ferry Bell Wayhouse",
-        "source_scene": "res://world/kesselford.tscn",
-        "source_anchor": "WayhouseDoor",
-        "source_position": [
-          1150.0,
-          700.0
-        ],
-        "prompt_text": "E — Enter",
-        "spawn_id": "entry",
-        "destination_spawn_position": [
-          960.0,
-          1098.6
-        ],
-        "required_flag": "",
-        "reputation_faction": "",
-        "minimum_reputation_band": "",
-        "locked_message": "This door is locked.",
-        "exit": {
-          "source_anchor": "Room/ExitDoor",
-          "source_position": [
-            960.0,
-            1200.0
-          ],
-          "spawn_id": "from_kesselford_wayhouse",
-          "destination_spawn_position": [
-            1150.0,
-            790.0
-          ],
-          "prompt_text": "E — RETURN"
-        }
-      }
-    },
-    {
       "id": "lefren",
       "display_name": "Lefren",
       "epithet": "",
@@ -890,7 +798,7 @@
       "vault_id": "",
       "definition_path": "res://world/locations/interiors/lower_trial_hall.tres",
       "scene_path": "res://world/interiors/lower_trial_hall.tscn",
-      "no_combat_zone": true,
+      "no_combat_zone": false,
       "world_map": null,
       "fast_travel": null,
       "transition": {
@@ -905,8 +813,8 @@
         "prompt_text": "E — Enter",
         "spawn_id": "entry",
         "destination_spawn_position": [
-          960.0,
-          1098.6
+          928.0,
+          960.0
         ],
         "required_flag": "deep_trial_open",
         "reputation_faction": "",

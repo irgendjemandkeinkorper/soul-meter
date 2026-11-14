@@ -1,0 +1,215 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Chargen mockup</title>
+<style>
+@font-face{font-family:Cinzel;src:url("../../../assets/fonts/soul-meter/Cinzel.ttf")}
+@font-face{font-family:Cormorant;src:url("../../../assets/fonts/soul-meter/CormorantGaramond.ttf")}
+@font-face{font-family:CormorantI;src:url("../../../assets/fonts/soul-meter/CormorantGaramond-Italic.ttf")}
+@font-face{font-family:Fira;src:url("../../../assets/fonts/soul-meter/FiraCode.ttf")}
+:root{--void0:#07080B;--void1:#0C0E12;--stone0:#12151B;--stone1:#1B1F27;--stone2:#232833;--stone3:#2C323F;
+--iron0:#2A303A;--iron1:#3A414D;--iron2:#4E5665;--iron3:#6B7484;--br1:#946B2D;--br2:#B8860B;--br3:#D9AB45;--br4:#F0D089;
+--v3:#A855F7;--v4:#C99BFF;--cinder:#EF4444;--parch:#E2E8F0;--ash:#94A3B8;--ashdim:#64748B;--ashfaint:#475569}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1920px;height:1080px;background:var(--stone0);color:var(--parch);font-family:Cormorant;font-size:19px;overflow:hidden;position:relative}
+.cap{font-family:Cinzel;letter-spacing:.06em;text-transform:uppercase}
+.mono{font-family:Fira;font-size:14px;letter-spacing:.04em}
+.eyebrow{font-family:Cinzel;font-size:13px;letter-spacing:.12em;color:var(--ash);text-transform:uppercase}
+.muted{color:var(--ash)}
+.dim{color:var(--ashdim)}
+header{position:absolute;left:28px;right:28px;top:20px;height:64px;display:flex;align-items:center;gap:24px}
+header h1{font-family:Cinzel;font-weight:400;font-size:32px;letter-spacing:.05em}
+header .sp{flex:1}
+.btn{font-family:Cinzel;font-size:15px;letter-spacing:.08em;text-transform:uppercase;padding:9px 22px;border:1px solid var(--iron2);background:var(--stone1);color:var(--parch);clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px)}
+.btn.bronze{background:linear-gradient(#B8860B,#946B2D);border-color:var(--br3);color:#1a1206}
+.btn.ghost{color:var(--ash)}
+.rule{position:absolute;left:28px;right:28px;top:92px;height:1px;background:var(--iron1)}
+/* left: the entry */
+.entry{position:absolute;left:28px;top:112px;width:440px;bottom:96px;background:var(--stone1);border:1px solid var(--br1);padding:20px;display:flex;flex-direction:column;gap:14px}
+.plate{height:330px;background:#000 center/cover no-repeat;border:1px solid var(--iron1);position:relative}
+.plate .roll{position:absolute;right:8px;bottom:8px}
+.namebox{border-bottom:1px solid var(--br1);padding:4px 2px;font-family:Cinzel;font-size:26px;display:flex;justify-content:space-between;align-items:baseline}
+.namebox .hint{font-family:CormorantI;font-size:16px;color:var(--ashdim);text-transform:none;letter-spacing:0}
+.idline{font-family:CormorantI;font-size:20px;color:var(--br4)}
+.vitals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.vit{background:var(--stone2);padding:8px 10px}
+.vit b{display:block;font-family:Fira;font-weight:400;font-size:20px;color:var(--parch)}
+.mini{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.mini div{height:44px;background:var(--stone2);border:1px solid var(--iron1);position:relative;display:flex;align-items:center;justify-content:center}
+.mini div img{width:28px;height:28px;opacity:.9}
+.mini div i{position:absolute;left:3px;top:1px;font-style:normal;font-family:Fira;font-size:11px;color:var(--br3)}
+.mini div span{font-family:Cinzel;font-size:11px;color:var(--ash)}
+.measures{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.measures div{background:var(--stone2);padding:6px 0}
+.measures b{display:block;font-family:Fira;font-weight:400;font-size:18px}
+/* tabs */
+.main{position:absolute;left:492px;right:28px;top:112px;bottom:96px}
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tab{font-family:Cinzel;letter-spacing:.08em;font-size:17px;padding:12px 30px;background:var(--stone1);border:1px solid var(--iron1);color:var(--ash);text-transform:uppercase;position:relative}
+.tab.on{background:#232833;border-color:var(--v3);color:var(--parch);box-shadow:inset 0 -2px 0 var(--v3)}
+.tab small{font-family:Fira;font-size:12px;color:var(--br3);margin-left:8px}
+.tab .dot{position:absolute;right:8px;top:8px;width:7px;height:7px;border-radius:50%;background:var(--br3)}
+.tabroll{margin-left:auto;align-self:center}
+.panel{background:var(--stone1);border:1px solid var(--iron1);padding:18px 20px}
+.classes{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;margin-bottom:14px}
+.cls{background:var(--stone2);border:1px solid var(--iron1);padding:10px 6px 8px;text-align:center;height:104px}
+.cls img{width:36px;height:36px;filter:invert(.75) sepia(.4)}
+.cls .n{font-family:Cinzel;font-size:13px;margin-top:6px;letter-spacing:.03em}
+.cls .r{font-family:CormorantI;font-size:14px;color:var(--ashdim)}
+.cls.on{border-color:var(--v3);background:#262036;box-shadow:0 0 0 1px var(--v3)}
+.detail{display:grid;grid-template-columns:1fr 1.25fr;gap:20px}
+.kv{margin-bottom:12px}
+.kv .eyebrow{margin-bottom:3px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:Cinzel;font-size:13px;letter-spacing:.06em;padding:6px 14px;border:1px solid var(--iron2);background:var(--stone2);color:var(--ash)}
+.chip.on{border-color:var(--v3);color:var(--parch);background:#262036}
+.chip img{width:16px;height:16px;vertical-align:-3px;margin-right:6px;filter:invert(.8)}
+.group{margin-bottom:12px}
+.group .eyebrow{margin-bottom:6px;color:var(--br3)}
+.tiles{display:flex;gap:8px;flex-wrap:wrap}
+.tile{width:92px;height:92px;background:var(--stone2);border:1px solid var(--iron1);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
+.tile img{width:30px;height:30px}
+.tile img.el{filter:invert(.8)}
+.tile .t{font-family:Cinzel;font-size:11px;line-height:1.15;padding:0 4px;letter-spacing:.02em}
+.tile .ap{position:absolute;right:4px;top:3px;font-family:Fira;font-size:11px;color:var(--br3)}
+.tile.cls-own{border-color:var(--br2)}
+.tile.locked{opacity:.38}
+.tile.hover{border-color:var(--v4);box-shadow:0 0 0 1px var(--v4)}
+.small .tile{width:76px;height:64px}
+.small .tile img{width:22px;height:22px}
+.small .tile .t{font-size:10px}
+.card{position:absolute;width:330px;background:var(--void1);border:1px solid var(--v4);padding:14px 16px;box-shadow:0 8px 24px #000a;z-index:5}
+.card h3{font-family:Cinzel;font-weight:400;font-size:18px;letter-spacing:.05em}
+.card .row{display:flex;gap:14px;margin:6px 0 8px;flex-wrap:wrap}
+.card .row span{font-family:Fira;font-size:13px;color:var(--ash)}
+.card .row span b{color:var(--parch);font-weight:400}
+.card p{font-family:CormorantI;font-size:17px;color:var(--ash)}
+footer{position:absolute;left:28px;right:28px;bottom:20px;height:56px;display:flex;align-items:center;gap:14px;border-top:2px solid var(--br1);padding-top:10px}
+.gauge{width:260px}
+.gauge .bar{height:12px;border:1px solid #2f9e44;margin-top:4px;background:linear-gradient(90deg,#7C6A2E,#E0C878 50%,transparent 50%)}
+.note{position:absolute;font-family:Fira;font-size:12px;color:#000;background:#F0D089;padding:3px 7px;border-radius:2px;z-index:9}
+.note::before{content:"";position:absolute;left:-14px;top:50%;width:12px;height:1px;background:#F0D089}
+</style></head>
+<body>
+<header>
+  <h1>The Register of Persons</h1>
+  <span class="eyebrow">Form 7, in triplicate · entry ready</span>
+  <span class="sp"></span>
+  <span class="btn ghost">Randomize all</span>
+  <span class="btn ghost">Quick start</span>
+  <span class="btn bronze">Begin</span>
+</header>
+<div class="rule"></div>
+
+<section class="entry">
+  <div class="plate" style="background-image:url('../../../assets/generated/portraits/player/likeness_02.png')"></div>
+  <div class="namebox cap">Name this person<span class="hint">type a name — the one thing never rolled</span></div>
+  <div class="idline">Vael · Ironbrand of Kero · Chordblade · Dom Storm-Coast</div>
+  <div class="vitals">
+    <div class="vit"><span class="eyebrow">HP</span><b>30</b></div>
+    <div class="vit"><span class="eyebrow">Breath</span><b>18</b></div>
+    <div class="vit"><span class="eyebrow">Scars</span><b>0 / 3</b></div>
+  </div>
+  <div>
+    <div class="eyebrow" style="margin-bottom:6px">The seven measures</div>
+    <div class="measures">
+      <div><span class="eyebrow">Doc</span><b>2</b></div><div><span class="eyebrow">Rea</span><b>3</b></div><div><span class="eyebrow">Ala</span><b>3</b></div><div><span class="eyebrow">Mus</span><b>4</b></div><div><span class="eyebrow">Gri</span><b>4</b></div><div><span class="eyebrow">Int</span><b>2</b></div><div><span class="eyebrow">Dec</span><b>2</b></div>
+    </div>
+  </div>
+  <div>
+    <div class="eyebrow" style="margin-bottom:6px">In a fight · the hotbar this entry starts with</div>
+    <div class="mini">
+      <div><i>1</i><img src="../../../assets/icons/png/64/commands/strike.png"></div>
+      <div><i>2</i><img src="../../../assets/icons/png/64/commands/guard.png"></div>
+      <div><i>3</i><span>SCAR</span></div>
+      <div><i>4</i><span>DEBT</span></div>
+      <div><i>5</i><img style="filter:invert(.8)" src="../../../assets/icons/src/elements/khash.svg"></div>
+      <div><i>6</i><img style="filter:invert(.8)" src="../../../assets/icons/src/elements/khash.svg"></div>
+      <div><i>7</i><img style="filter:invert(.8)" src="../../../assets/icons/src/elements/mozh.svg"></div>
+      <div><i>8</i><img src="../../../assets/icons/png/64/commands/focus.png"></div>
+    </div>
+  </div>
+</section>
+
+<section class="main">
+  <div class="tabs">
+    <span class="tab">Origin</span>
+    <span class="tab on">Calling</span>
+    <span class="tab">Measures<small>2 skill pts</small><span class="dot"></span></span>
+    <span class="tab">Name<span class="dot"></span></span>
+    <span class="btn ghost tabroll">Roll this tab</span>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow" style="margin-bottom:8px">Patron · class</div>
+    <div class="classes">
+      <div class="cls"><img src="../../../assets/icons/src/elements/vekh.svg"><div class="n">Mirrorblade</div><div class="r">Duelist</div></div>
+      <div class="cls"><img src="../../../assets/icons/src/elements/luth.svg"><div class="n">River-Mother</div><div class="r">Support</div></div>
+      <div class="cls on"><img src="../../../assets/icons/src/elements/khash.svg"><div class="n">Ironbrand</div><div class="r">Berserker</div></div>
+      <div class="cls"><img src="../../../assets/icons/src/elements/sul.svg"><div class="n">Lensbearer</div><div class="r">Buffer</div></div>
+      <div class="cls"><img src="../../../assets/icons/src/elements/mozh.svg"><div class="n">Husk-bearer</div><div class="r">DoT control</div></div>
+      <div class="cls"><img src="../../../assets/icons/src/elements/tham.svg"><div class="n">Flamebinder</div><div class="r">Artificer</div></div>
+      <div class="cls"><img src="../../../assets/icons/src/elements/zhur.svg"><div class="n">Stormbearer</div><div class="r">Skirmisher</div></div>
+      <div class="cls"><img src="../../../assets/icons/src/elements/zhem.svg"><div class="n">Oathclock</div><div class="r">Controller</div></div>
+      <div class="cls"><div style="height:36px;font-family:Cinzel;font-size:26px;color:#6B7484">—</div><div class="n">Locksmirk</div><div class="r">Trickster</div></div>
+      <div class="cls"><img src="../../../assets/icons/src/elements/vekh.svg"><div class="n">Threadwalker</div><div class="r">Summoner</div></div>
+    </div>
+
+    <div class="detail">
+      <div>
+        <h2 class="cap" style="font-weight:400;font-size:24px">Ironbrand <span class="muted" style="font-size:16px">· patron Kero · Berserker</span></h2>
+        <div class="kv" style="margin-top:10px"><div class="eyebrow">Kit · trains one Arms skill</div>
+          <div class="chips"><span class="chip on">Greatsword · Heft</span><span class="chip">Spiked gauntlet · Grip</span></div></div>
+        <div class="kv"><div class="eyebrow">Resource · Scars</div><p>Taking damage banks a Scar, up to three. Spend one to guarantee the hit roll of your next resolved attack or cast; spells can still fizzle.</p></div>
+        <div class="kv"><div class="eyebrow">Signature · Debt of Arms</div><p>Pay 6 HP (never below 1): you or an ally deal 6 more damage with the next attack.</p></div>
+        <div class="kv"><div class="eyebrow">Tones · begin Trained</div>
+          <div class="chips"><span class="chip on"><img src="../../../assets/icons/src/elements/khash.svg">Major Khash</span><span class="chip on"><img src="../../../assets/icons/src/elements/mozh.svg">Minor Mozh</span><span class="chip">Change on the wheel…</span></div></div>
+        <div class="kv"><div class="eyebrow">Discipline · how the body moves</div>
+          <div class="chips"><span class="chip on">Chordblade</span><span class="chip">Thamshaper</span><span class="chip">Hushwarden</span></div>
+          <p class="muted" style="font-size:16px;margin-top:4px">Advance, feint, close — reach and rhythm over weight.</p></div>
+      </div>
+
+      <div style="position:relative">
+        <div class="group"><div class="eyebrow">What Ironbrand adds</div>
+          <div class="tiles">
+            <div class="tile cls-own"><span class="ap">1 AP</span><img src="../../../assets/icons/png/64/commands/definition.png"><div class="t">Spend Scars</div></div>
+            <div class="tile cls-own"><span class="ap">1 AP</span><img src="../../../assets/icons/png/64/commands/paradox.png"><div class="t">Debt of Arms</div></div>
+          </div></div>
+        <div class="group"><div class="eyebrow">Your tones · Khash and Mozh</div>
+          <div class="tiles">
+            <div class="tile"><span class="ap">2 AP</span><img class="el" src="../../../assets/icons/src/elements/khash.svg"><div class="t">Kindle</div></div>
+            <div class="tile"><span class="ap">4 AP</span><img class="el" src="../../../assets/icons/src/elements/khash.svg"><div class="t">Firebreak</div></div>
+            <div class="tile hover"><span class="ap">4 AP</span><img class="el" src="../../../assets/icons/src/elements/khash.svg"><div class="t">Crown of Embers</div></div>
+            <div class="tile"><span class="ap">3 AP</span><img class="el" src="../../../assets/icons/src/elements/mozh.svg"><div class="t">Reclaim</div></div>
+            <div class="tile"><span class="ap">4 AP</span><img class="el" src="../../../assets/icons/src/elements/mozh.svg"><div class="t">Rot the Brace</div></div>
+            <div class="tile"><span class="t muted">+14 in other tones</span></div>
+          </div></div>
+        <div class="group small"><div class="eyebrow">Every body can</div>
+          <div class="tiles">
+            <div class="tile"><img src="../../../assets/icons/png/64/commands/strike.png"><div class="t">Strike</div></div>
+            <div class="tile"><img src="../../../assets/icons/png/64/commands/guard.png"><div class="t">Guard</div></div>
+            <div class="tile"><img src="../../../assets/icons/png/64/commands/focus.png"><div class="t">Focus</div></div>
+            <div class="tile"><img src="../../../assets/icons/png/64/commands/stabilize.png"><div class="t">Stabilize</div></div>
+            <div class="tile"><img src="../../../assets/icons/png/64/commands/strike.png"><div class="t">Thrust</div></div>
+            <div class="tile"><img src="../../../assets/icons/png/64/commands/target.png"><div class="t">Blinding Throw</div></div>
+            <div class="tile"><img src="../../../assets/icons/png/64/commands/cast.png"><div class="t">Cast</div></div>
+            <div class="tile"><span class="t muted">+12 more</span></div>
+          </div></div>
+        <div class="card" style="left:120px;top:96px">
+          <h3>Crown of Embers</h3>
+          <div class="row"><span><b>4</b> AP</span><span>target <b>cells</b></span><span>area <b>single</b></span><span>tone <b>Khash</b></span></div>
+          <p>[effect line, read from the action's data; no copy is written for the mockup]</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="btn ghost">Cancel entry</span>
+  <span class="sp" style="flex:1"></span>
+  <span class="eyebrow" style="color:var(--br3)">Name the entry to begin · 2 skill points unspent — they carry into play</span>
+  <span class="sp" style="flex:1"></span>
+  <div class="gauge"><span class="eyebrow">Soul gauge · whole</span><span class="mono" style="float:right">50%</span><div class="bar"></div></div>
+</footer>
+
+<span class="note" style="left:478px;top:330px;display:none"></span>
+</body></html>

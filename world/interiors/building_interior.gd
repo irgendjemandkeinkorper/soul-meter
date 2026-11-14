@@ -37,8 +37,8 @@ const VENDORS_BY_INTERIOR := {
 	],
 	"res://world/interiors/players_house.tscn": [VendorIdsData.WAYFARERS_MEASURE],
 	"res://world/interiors/river_shrine.tscn": [VendorIdsData.HELD_FLAME_SHRINE],
-	# Kesselford (hub 2, C1 / #238).
-	"res://world/interiors/kesselford_chandlery.tscn": [VendorIdsData.FORD_CHANDLERY],
+	# Kesselford (hub 2, C1 / #238) keeps shop in walk-in buildings on its map (item 35): the
+	# Ford Chandlery is `WalkInBuilding.vendor_ids` in `world/kesselford.tscn`.
 	# Ashlaren (hub 3, C2 / #239).
 	"res://world/interiors/ashlaren_millhouse.tscn": [VendorIdsData.FLAT_BELL_PROVISIONS],
 	"res://world/interiors/town_hall.tscn": [VendorIdsData.ASHLINE_SCRIPTORIUM],
@@ -161,19 +161,28 @@ func _populate_vendors() -> void:
 	var vendor_ids: Array = values
 	for index: int in vendor_ids.size():
 		var vendor_id := str(vendor_ids[index])
-		var row := VendorData.vendor(vendor_id)
-		if row.is_empty():
-			push_error("Indoor vendor '%s' has no generated vendor row." % vendor_id)
+		var npc := vendor_npc(vendor_id, INTERIOR_INTERACTION_RADIUS)
+		if npc == null:
 			continue
-		var npc := NpcScene.instantiate() as NPC
-		npc.name = ("vendor_" + vendor_id).to_pascal_case()
-		npc.npc_id = str(row.get("npc_id", ""))
-		npc.npc_name = str(row.get("display_name", vendor_id))
-		npc.vendor_id = vendor_id
-		npc.interaction_radius = INTERIOR_INTERACTION_RADIUS
 		npc.position = vendor_spot.position + _vendor_offset(index, vendor_ids.size())
-		npc.add_to_group(&"indoor_vendor")
 		add_child(npc)
+
+
+## A vendor's NPC, named and keyed from its generated row and in the `indoor_vendor` group; null
+## (with an error) when the row is missing. Walk-in buildings on a map use it too.
+static func vendor_npc(vendor_id: String, radius: float) -> NPC:
+	var row := VendorData.vendor(vendor_id)
+	if row.is_empty():
+		push_error("Indoor vendor '%s' has no generated vendor row." % vendor_id)
+		return null
+	var npc := NpcScene.instantiate() as NPC
+	npc.name = ("vendor_" + vendor_id).to_pascal_case()
+	npc.npc_id = str(row.get("npc_id", ""))
+	npc.npc_name = str(row.get("display_name", vendor_id))
+	npc.vendor_id = vendor_id
+	npc.interaction_radius = radius
+	npc.add_to_group(&"indoor_vendor")
+	return npc
 
 
 static func _placement_offset(value: Variant) -> Vector2:

@@ -156,6 +156,21 @@ func test_player_moves_right_when_holding_move_right() -> void:
 frames (physics included) and must be `await`ed. `find_child(name, recursive, owned)` — pass
 `owned: false`, or nodes created at runtime in code (not part of the `.tscn`) won't be found.
 
+### Which grid a test runs on (hexes since H3b)
+
+The game walks and fights on hexes (`soul_meter/grid/hex = true` in `project.godot`, owner item
+34). The square grid is still a supported mode. Choose by what the test is written in:
+
+- **A real map, with authored cells** (test_room, Kesselford, a painted Blocking cell): run on
+  whichever grid the game uses. Convert each authored ground cell with
+  `iso_grid.cell_at_square(cell)` before handing it to the grid, and read a body's cell with
+  `iso_grid.world_to_cell()` rather than the ground layer. On squares both are the cell itself.
+- **A made-up board in square cells and square distances** (most class-kit and model suites):
+  pin squares for the suite with `test/helpers/grid_mode.gd` (`use_squares()` in `before()`,
+  `restore()` in `after()`). Give each rule such a suite covers a hex counterpart in a hex suite
+  (`test_iso_grid_hex`, `test_grid_battlefield_hex`, `test_hex_rules`, `test_hex_combat`).
+- **A hex rule:** call `GridMode.use_hexes()` in `before_test()` and restore it after.
+
 ### Filesystem-I/O exception: save rotation tests
 
 Most unit tests instantiate a fresh autoload script and avoid filesystem I/O. Save rotation and

@@ -146,7 +146,7 @@ func test_v9_world_map_ids_migrate_in_both_plan_endpoints_and_discovery_flags() 
 			var before: Dictionary = payload.duplicate(true)
 			var prepared: Dictionary = SaveMigrations.prepare(payload)
 			assert_bool(prepared["ok"]).is_true()
-			assert_int(prepared["payload"]["schema_version"]).is_equal(10)
+			assert_int(prepared["payload"]["schema_version"]).is_equal(SaveMigrations.CURRENT_SCHEMA_VERSION)
 			var state: Dictionary = prepared["payload"]["game_state"]
 			var expected_plan: Dictionary = plan.duplicate(true)
 			expected_plan[endpoint] = renames[old_id]

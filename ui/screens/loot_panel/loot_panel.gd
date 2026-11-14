@@ -17,17 +17,29 @@ var _status: Label
 var _dismissed_emitted := false
 
 
+func _uses_ledger_style() -> bool:
+	return true
+
+
 func _build() -> void:
+	# Opaque, like every other panel: over a battle the spoils must not mix with the HUD.
+	_add_opaque_backdrop()
 	var content := _make_shell_window(_source_name)
 	_status = Label.new()
 	_status.name = "LootStatus"
 	_status.theme_type_variation = "MutedLabel"
 	content.add_child(_status)
+	# The ledger shell does not scroll; a long haul of spoils does.
+	var scroll := ScrollContainer.new()
+	scroll.name = "LootScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(scroll)
 	_rows = VBoxContainer.new()
 	_rows.name = "LootRows"
 	_rows.theme_type_variation = "ScreenContentColumn"
 	_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_child(_rows)
+	scroll.add_child(_rows)
 	var actions := HBoxContainer.new()
 	actions.name = "LootActions"
 	content.add_child(actions)

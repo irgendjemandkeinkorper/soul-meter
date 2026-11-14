@@ -1,6 +1,6 @@
 # Game identity — playstyle and function
 
-Status: RATIFIED 2026-09-02 (owner, ten-question pass). Sits above `soul-meter-crpg-design-doc.md`
+Status: RATIFIED 2026-09-02 (owner, ten-question pass); addendum of three extensions RATIFIED 2026-10-31 (owner, item 27). Sits above `soul-meter-crpg-design-doc.md`
 and `docs/prd-chapter-one.md`; where an older doc conflicts, this file wins until that doc is
 revised. Each ruling names its target: **identity**, **function**, or **design**.
 
@@ -18,6 +18,21 @@ revised. Each ruling names its target: **identity**, **function**, or **design**
 | 8 | function | **Class = identity, DRAMGID = what you can DO.** Patron class grants unique abilities and functions; DRAMGID attributes + the 22 skills decide what you do with them. A warrior may invest in academic skills and keep weaker class abilities. DRAMGID (Doctrine, Reason, Alacrity, Muster, Grit, Intuition, Decorum) replaces SPECIAL and the old six-stat build; source: dramgid-mono RFC-0001 + `04-world/systems/character-creation.md`, Yothmeru Karma/Fame. |
 | 9 | design | **Progression = XP levels + skill points + class perks.** Fallout skeleton: skill points into the 22 skills, a perk every N levels from patron-class lists, attributes fixed at creation (22-point buy) except rare story boosts. A few perks gate on Karma/Fame bands. |
 | 10 | identity | **Tone: elegiac and wry.** Dying world, gallows humor from companions, Soul spend felt as loss rather than punished as failure. Grounded, consequential violence. |
+
+## Addendum 2026-10-31 — three ratified extensions
+
+Ratified 2026-10-31 (owner, owner-list item 27) from `docs/game-identity-addendum-2026-10-31.md`
+§1. Each extends a ruling above; none replaces one.
+
+| # | Extends | Extension |
+|---|---|---|
+| A1 | 4 | **The chapter's first proven combat moment is C:** a same-map fight in which alerted mobs stream into the CT order, with a grounded companion reaction sharing the beat. A companion turning hostile is not part of this ruling; any such beat needs an owner-approved cause. |
+| A2 | 5, 6 | **Three unavoidable set-pieces, and no other mandatory combat.** Exactly three Chapter 1 combats may be unavoidable, each carrying the consequence of one main-quest ruling. Every other authored combat has a qualifying talk, Tread or Soul-payment resolution; physical skirting and fleeing do not count, and Tread needs an explicit pre-alert check with a legible telegraph and a quest-resolution result. No separate Stealth stat. |
+| A3 | 2, 3 | **Playable Hollow with forceful, legible reasons to recover.** A run remains playable at Soul 0 for as long as the player chooses, but the active Hollow state imposes strong, legible negatives and points to an Agreement-based route back above zero. “UnHollowed” means the first positive Soul write ended the active state; it does not erase the permanent scar. No passive recovery: rest and consumables never restore Soul. |
+
+The addendum's §2 (proof location, encounter mapping, ceiling ratio, negatives package, recovery
+mechanism) is implementation governed by roadmap rulings R13–R15, answered 2026-10-31 in
+`docs/owner-decisions.md` §5, not by this table.
 
 ## What this changes in the build (owner-visible consequences)
 
@@ -41,6 +56,10 @@ revised. Each ruling names its target: **identity**, **function**, or **design**
   > `loom_penalty` out of F4 (#284) and makes it a consumer of E6.1 (#349); the field verbs
   > themselves stay in #284 and are unblocked. `DramgidSchema.SKILLS` already carries the
   > per-skill `loom` field (5 skills FULL, 5 PARTIAL), so only the zone read is missing.
+  >
+  > *Status 2026-10-30:* `loom_penalty` is live and reads `FieldMap.zone_delta()`; locks,
+  > loot-table rows and pickpockets subtract it from their situational modifier through
+  > `FieldMap.zone_delta_for(self)`. Dialogue checks do not read a zone.
 - **Progression (ruling 9).** XP source is combat + quests; perk lists per patron class are new
   Pandora data.
   > **Owner ruling, 2026-09-08 — kill-XP is in, and this supersedes #98 D3.** Asked directly
@@ -57,6 +76,10 @@ revised. Each ruling names its target: **identity**, **function**, or **design**
   > `PartyMember.xp` is declared, serialized and migrated with **zero writers** today. The write
   > paths are `Battle._apply_victory()` (which already guards re-entry via `already_resolved`, so
   > a re-fought encounter cannot double-pay) and `QuestRegistry.resolve_side_quest()`. See #285.
+  >
+  > **SR10 (owner, 2026-11-08):** getting past a fight by talk, stealth or Soul pays the same
+  > kill XP as winning it, once. The award call is `Battle.award_bypass_xp()`; see
+  > `docs/sr10-bypass-xp-audit.md`.
 - **Hollowing (ruling 2)** is a Soul band with its own dialogue conditions and companion barks.
   Soul income (ruling 3) is the quest system's job: `acts of Agreement` become a tagged quest
   outcome that credits the gauge.
@@ -68,8 +91,10 @@ revised. Each ruling names its target: **identity**, **function**, or **design**
 - ~~Chapter 1 level cap~~ — **ruled 2026-10-09, revised 2026-10-22** (owner): cap **6** plus kill XP
   scaled by level gap, so wild farming cannot outrun the campaign; suspended stubs pay no quest XP.
   Numbers in `docs/progression-bound-packet.md`.
-- Enemy stat variation in the wild (#412): band, which stats vary, whether it is visible, and
-  whether named enemies vary. Recommendations with fitted numbers are on #412 and **await a
-  ruling**.
-- Which of the 22 skills the Chapter 1 content actually checks (minimum viable set).
-- Loot density target for a Fallout-full field game in a world with a Mirror Shop.
+- ~~Enemy stat variation in the wild (#412)~~ — **ruled 2026-10-31** (owner, roadmap R5):
+  `approve, five` — #412 variation, one packet ability per archetype, all five balance bands.
+- ~~Which of the 22 skills the Chapter 1 content actually checks~~ — **ruled 2026-10-31** (owner,
+  roadmap R7): at least 15 of 22 checked at least once in Chapter 1, including Bellow, with at
+  least 5 instances per field verb.
+- ~~Loot density target~~ — **ruled 2026-10-31** (owner, roadmap R7): per hub at least 4 locks,
+  3 pockets and 4 containers, measured by the Phase 1 density audit.

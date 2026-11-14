@@ -41,7 +41,7 @@ func _ready() -> void:
 	_used = not interaction_flag.is_empty() and GameState.flag_is_true(interaction_flag)
 	_prompt = $Prompt
 	_sign = $Sign
-	_sign.text = display_name
+	_sign.text = tr(display_name)
 	$Marker.color = marker_color
 	_prompt.visible = false
 	_refresh_prompt()
@@ -74,23 +74,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		# A flag gate outranks a skill lock: do not spend the one attempt on a
 		# container the player is not yet allowed to be opening at all.
 		if not required_flag.is_empty() and not GameState.flag_is_true(required_flag):
-			_prompt.text = "LOCKED — " + locked_message
+			_prompt.text = "LOCKED — " + tr(locked_message)
 			return
 		var attempt := attempt_skill_lock()
 		if not bool(attempt.get("success", false)):
-			_prompt.text = "LOCKED — " + lock_failed_message
+			_prompt.text = "LOCKED — " + tr(lock_failed_message)
 			return
 		_refresh_prompt()
 	if not _is_unlocked():
-		_prompt.text = "LOCKED — " + locked_message
+		_prompt.text = "LOCKED — " + tr(locked_message)
 		return
 	if _used and not repeatable:
-		_prompt.text = interaction_text
+		_prompt.text = tr(interaction_text)
 		return
 	_apply_interaction()
 	if not repeatable:
 		_used = true
-	_prompt.text = interaction_text
+	_prompt.text = tr(interaction_text)
 	SaveGame.request_autosave(
 		("save-point-" if save_point else "town-event-") + name.to_snake_case()
 	)
@@ -116,13 +116,13 @@ func _refresh_prompt() -> void:
 		return
 	if _skill_lock_is_live():
 		var message := (
-			lock_failed_message
+			tr(lock_failed_message)
 			if GameState.flag_is_true(lock_failed_flag())
-			else "%s — %s" % [DramgidSchema.skill_label(lock_skill).to_upper(), locked_message]
+			else "%s — %s" % [DramgidSchema.skill_label(lock_skill).to_upper(), tr(locked_message)]
 		)
 		_prompt.text = "LOCKED — " + message
 		return
-	_prompt.text = "E — " + prompt_text if _is_unlocked() else "LOCKED — " + locked_message
+	_prompt.text = "E — " + tr(prompt_text) if _is_unlocked() else "LOCKED — " + tr(locked_message)
 
 
 func _is_unlocked() -> bool:
@@ -173,8 +173,12 @@ func attempt_skill_lock() -> Dictionary:
 		)
 		GameState.set_flag(lock_picked_flag(), true)
 		return {"attempted": false, "success": true}
+	# Hush/Waning pressure at the lock (ruling 2026-09-08: the zone IS the AccordZone under it).
 	var check: Dictionary = SkillCheck.resolve(
-		lock_skill, null, lock_modifier, "lock-%s" % lock_id
+		lock_skill,
+		null,
+		lock_modifier - SkillCheck.loom_penalty(lock_skill, FieldMap.zone_delta_for(self)),
+		"lock-%s" % lock_id
 	)
 	var succeeded := bool(check.get("success", false))
 	GameState.set_flag(lock_picked_flag() if succeeded else lock_failed_flag(), true)

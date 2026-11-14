@@ -25,6 +25,9 @@ extends Node
 ##         resume · to_main_menu · enter_battle · enter_set_piece · battle_end · travel
 
 const MAIN_MENU_SCENE := "res://ui/screens/main_menu.tscn"
+## Strings only: the guarded debug route must not pull excluded assets into exports.
+const DEV_ROOM_SCENE := "res://dev/dev_room.tscn"
+const DEV_ROOM_BOOTSTRAP := "res://dev/dev_room_bootstrap.gd"
 const QUEST_AUDIT_SCRIPT := "res://tools/quest_audit.gd"
 ## The starting town (Dom) — the first gameplay scene loaded on a new game.
 const TOWN_SCENE := "res://world/starting_town.tscn"
@@ -37,6 +40,14 @@ const WILDS_SCENE := "res://world/test_room.tscn"
 const DORTHKOR_SCENE := "res://world/dorthkor_road.tscn"
 const WOUND_LIP_SCENE := "res://world/wound_lip.tscn"
 const TAVERN_SCENE := "res://world/interiors/dom_tavern.tscn"
+## The 5v5 class demo's arena (debug builds only): Kesselford's open ground. An exterior,
+## because only exteriors carry PartyFollowers (an interior gives four of the five no body),
+## and one with no authored hostiles; its spawn slot is left empty for the demo.
+const CLASS_DEMO_SCENE := "res://world/kesselford.tscn"
+## The open square outside the wayhouse, with room for two lines of five.
+const CLASS_DEMO_SPAWN := &"from_kesselford_wayhouse"
+const KESSELFORD_WALK_SCENE := "res://world/kesselford.tscn"
+const KESSELFORD_WALK_SPAWN := &"from_kesselford_wayhouse"
 ## Authored reputation-gated doorways → the chart expression property whose
 ## guard decides them. Keyed by the authored definition itself, so the id,
 ## destination and band requirement are all READ from the .tres rather than
@@ -64,8 +75,9 @@ const PAUSE_MENU := preload("res://ui/screens/pause_menu.tscn")
 const CHARACTER_CREATION_SCREEN := preload("res://ui/screens/character_creation.tscn")
 const INTRO_NARRATION_SCREEN := preload("res://ui/screens/intro_narration.tscn")
 const DEPLOYMENT_SCREEN := preload("res://ui/screens/deployment/deployment.tscn")
-## One field HUD shell: BattleInterface (including tactical data), command dock,
-## audio, and outcome controls. CombatOverlay renders the fight on the field.
+## Standalone combat shell for a fight with no field (tools and tests): hosts a FieldHUD in
+## combat over a backdrop. On a live field the field's own HUD grows its combat parts
+## instead (owner 2026-11-01); CombatOverlay renders the fight on the field.
 const BATTLE_HUD := preload("res://ui/screens/battle.tscn")
 const CHAPTER_COMPLETE_SCREEN := preload("res://ui/screens/chapter_complete.tscn")
 
@@ -90,7 +102,22 @@ var _pending_area_scene := ""
 var _pending_area_spawn: StringName = &"default"
 var _area_access_result := -1
 var _skip_next_breath_refill := false
+## SR7: the hub a lost ambient fight wakes the party at, held from `battle_ended` until the
+## battle state exits (the player has dismissed the outcome).
+var _pending_defeat_wake: StringName = &""
+## SR7: the defeat's one checkpoint, requested once the wake hub's level is ready.
+var _wake_checkpoint_pending := false
+const WAKE_CHECKPOINT_DETAIL := "session-defeat"
 var travel_plan: TravelPlan = null
+## The runtime state from before the class demo, restored when the flow returns to the title.
+## Non-empty exactly while the demo owns the sandbox.
+var _class_demo_snapshot: Dictionary = {}
+var _class_demo_pending := false
+## Open dialogue balloons (each one reports its open and close). A fight a conversation asks
+## for waits in `_after_conversation` until the last one closes and the tree is unpaused.
+var _open_conversations := 0
+var _after_conversation: Array[Callable] = []
+var _dev_room_session: Node
 
 @onready var chart: StateChart = $StateChart
 
@@ -117,6 +144,8 @@ func _ready() -> void:
 	_restore_travel_plan()
 	if not Battle.battle_ended.is_connected(_on_journey_battle_ended):
 		Battle.battle_ended.connect(_on_journey_battle_ended)
+	if not Battle.battle_ended.is_connected(_on_defeat_wake_battle_ended):
+		Battle.battle_ended.connect(_on_defeat_wake_battle_ended)
 	# Local visual-regression captures can launch a gameplay scene directly
 	# without the Boot state immediately replacing it with the title screen.
 	if OS.get_cmdline_user_args().has("capture-scene"):
@@ -138,6 +167,7 @@ func _ready() -> void:
 	_sync_battle_guard()
 
 	$StateChart/Root/Menus/Title.state_entered.connect(_on_title_entered)
+	$StateChart/Root/Menus/DevRoom.state_entered.connect(_on_dev_room_entered)
 	$StateChart/Root/Menus/CharacterCreation.state_entered.connect(_on_character_creation_entered)
 	$StateChart/Root/Menus/CharacterCreation.state_exited.connect(_on_character_creation_exited)
 	$StateChart/Root/Menus/IntroNarration.state_entered.connect(_on_intro_narration_entered)
@@ -197,6 +227,10 @@ static func _is_quest_audit_cli(arguments: PackedStringArray) -> bool:
 ## The single entry point UI code uses to talk to the chart.
 func send_event(event: StringName) -> void:
 	_sync_battle_guard()
+	chart.set_expression_property(&"dev_room_available", OS.is_debug_build()
+		and ResourceLoader.exists(DEV_ROOM_BOOTSTRAP)
+		and ResourceLoader.exists(DEV_ROOM_SCENE)
+		and not SaveGame.runtime_sandbox_is_armed())
 	chart.send_event(event)
 
 
@@ -644,7 +678,112 @@ func load_destination(destination: LoadDestination) -> bool:
 	return true
 
 
+## Debug builds only (owner 2026-11-02: "a demo of 5 v 5 battle with 1 of each class"; "you
+## lead 5, AI runs 5"). From the title: snapshot the runtime state, open the save sandbox, seat
+## the ClassDemo party, load the arena, and open the AI five as a set-piece there once the
+## level is ready. Returning to the title restores the snapshot and closes the sandbox, so the
+## demo never reaches the player's save or their live party.
+func start_class_demo() -> bool:
+	if not _open_debug_sandbox():
+		return false
+	if not ClassDemo.prepare():
+		_end_class_demo()
+		return false
+	_class_demo_pending = true
+	_start_debug_visit(CLASS_DEMO_SCENE, CLASS_DEMO_SPAWN)
+	return true
+
+
+## Debug builds only (owner 2026-11-02: a shortcut to playtest the lived-in Kesselford, which
+## a new game reaches only after the trial and Marshal Coiljaw's commission). From the title:
+## the class demo's sandbox and its player five, Kesselford at the wayhouse, and no fight.
+## Returning to the title restores the snapshot and closes the sandbox, as for the demo.
+func start_kesselford_walk() -> bool:
+	if not _open_debug_sandbox():
+		return false
+	ClassDemo.seat_player_side()
+	_start_debug_visit(KESSELFORD_WALK_SCENE, KESSELFORD_WALK_SPAWN)
+	return true
+
+
+## True while a debug sandbox (the class demo or the Kesselford walk) is open.
+func class_demo_active() -> bool:
+	return not _class_demo_snapshot.is_empty()
+
+
+func _open_debug_sandbox() -> bool:
+	if not OS.is_debug_build() or class_demo_active() or SaveGame.runtime_sandbox_is_armed():
+		return false
+	if not ($StateChart/Root/Menus/Title as StateChartState).active:
+		return false
+	_class_demo_snapshot = SaveGame.capture_runtime_state()
+	SaveGame.begin_runtime_sandbox()
+	return true
+
+
+func _start_debug_visit(scene: String, spawn: StringName) -> void:
+	_target_scene = scene
+	_target_spawn_id = spawn
+	SaveGame.pending_spawn_id = spawn
+	SaveGame.has_pending_player_position = false
+	send_event("new_game")
+
+
+func _open_class_demo() -> void:
+	var field: FieldMap = Battle._current_field_map()
+	var opened := Battle.start_set_piece(field, ClassDemo.ENCOUNTER_ID)
+	if not bool(opened.get("allowed", false)):
+		# Stays in the sandbox at Kesselford; returning to the title ends the demo as usual.
+		push_error("Class demo cannot open here: %s" % opened.get("message", ""))
+		return
+	# Owner 2026-11-02 (item 33): fights on a map start in place, with no deployment screens.
+	send_event("enter_battle")
+
+
+func _end_class_demo() -> void:
+	_class_demo_pending = false
+	EncounterCatalog.clear_debug_encounter(ClassDemo.ENCOUNTER_ID)
+	if class_demo_active():
+		SaveGame.restore_runtime_state(_class_demo_snapshot)
+	_class_demo_snapshot = {}
+	SaveGame.end_runtime_sandbox()
+
+
+func notify_dialogue_opened() -> void:
+	_open_conversations += 1
+
+
 func notify_dialogue_closed() -> void:
+	_open_conversations = maxi(0, _open_conversations - 1)
+	if _open_conversations == 0 and not _after_conversation.is_empty():
+		var actions := _after_conversation.duplicate()
+		_after_conversation.clear()
+		_run_after_conversation.call_deferred(actions)
+	_check_chapter_complete()
+
+
+func conversation_open() -> bool:
+	return _open_conversations > 0
+
+
+## Runs `action` now, or once the open conversation closes. A conversation that asks for a
+## fight ("Fight me, then.") must not open it under the balloon: the balloon pauses the tree
+## and the battle HUD covers it, so its last line could never be dismissed (owner playtest
+## 2026-11-02, the Trial Keeper).
+func after_conversation(action: Callable) -> void:
+	if conversation_open():
+		_after_conversation.append(action)
+	else:
+		action.call()
+
+
+func _run_after_conversation(actions: Array[Callable]) -> void:
+	for action: Callable in actions:
+		if action.is_valid():
+			action.call()
+
+
+func _check_chapter_complete() -> void:
 	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
 		send_event.call_deferred("chapter_complete")
 
@@ -654,10 +793,37 @@ func notify_dialogue_closed() -> void:
 
 func _on_title_entered() -> void:
 	UIManager.close_all()
+	if class_demo_active():
+		_end_class_demo()
+	if is_instance_valid(_dev_room_session):
+		_dev_room_session.call("finish")
+		_dev_room_session.queue_free()
+		_dev_room_session = null
+		_restore_travel_plan()
+		_target_scene = TOWN_SCENE
 	MusicDirector.play_context("title")
 	var cur := get_tree().current_scene
 	if cur == null or cur.scene_file_path != MAIN_MENU_SCENE:
 		SceneLoader.load_scene(MAIN_MENU_SCENE)
+
+
+func _on_dev_room_entered() -> void:
+	# The chart owns availability; retain a release guard at the dynamic-load boundary.
+	if not OS.is_debug_build():
+		send_event("dev_room_failed")
+		return
+	var bootstrap := load(DEV_ROOM_BOOTSTRAP) as Script
+	if bootstrap == null:
+		send_event("dev_room_failed")
+		return
+	_dev_room_session = bootstrap.new() as Node
+	add_child(_dev_room_session)
+	if not bool(_dev_room_session.call("begin", DEV_ROOM_SCENE)):
+		send_event("dev_room_failed")
+		return
+	_restore_travel_plan()
+	if not travel(DEV_ROOM_SCENE):
+		send_event("dev_room_failed")
 
 
 func _on_character_creation_entered() -> void:
@@ -713,6 +879,8 @@ func _complete_scene_load() -> void:
 	_waiting_for_level = false
 	_loading_fallback_scene = ""
 	var current := get_tree().current_scene
+	# SR7: the field the beaten party left is gone, and with it the foes the wake was refusing.
+	_pending_defeat_wake = &""
 	if _recovering_from_failure:
 		# We're only back at the fallback scene after a failed load, not a
 		# genuine arrival — skip apply_pending_location/hub discovery and just
@@ -724,7 +892,9 @@ func _complete_scene_load() -> void:
 			UIManager.open(UIManager.REGION_MAP)
 		return
 	SaveGame.apply_pending_location(current)
-	SaveGame.populate_spawn_slots(current)
+	if not (_class_demo_pending and _target_scene == CLASS_DEMO_SCENE):
+		# The class demo is the only fight on its field: a slot spawn would join it.
+		SaveGame.populate_spawn_slots(current)
 	var hub := FastTravelRegistry.by_scene(_target_scene)
 	if not hub.is_empty():
 		GameState.discover_fast_travel_hub(StringName(hub["id"]))
@@ -737,9 +907,15 @@ func _complete_scene_load() -> void:
 	send_event("level_ready")
 	MusicDirector.play_context("field")
 	watch_field_hostiles()
+	if _class_demo_pending:
+		_class_demo_pending = false
+		if _target_scene == CLASS_DEMO_SCENE:
+			_open_class_demo.call_deferred()
+	if _wake_checkpoint_pending:
+		_wake_checkpoint_pending = false
+		SaveGame.request_checkpoint(SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, WAKE_CHECKPOINT_DETAIL)
 	SaveGame.flush_pending_autosave.call_deferred()
-	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.COMPLETE:
-		notify_dialogue_closed()
+	_check_chapter_complete()
 
 
 ## F1 (#281): the first accepted alert on a field opens the ambient session. Battle only
@@ -758,6 +934,11 @@ func watch_field_hostiles() -> void:
 func _on_field_hostile_alerted(hostile: Hostile) -> void:
 	if Battle.session_active:
 		return  # Battle is connected to the same signal and admits into the live session.
+	if _pending_defeat_wake != &"":
+		# SR7: the beaten party is leaving for a hub. A foe still standing beside it must not
+		# open a second fight while the outcome is on screen.
+		hostile.refuse_alert()
+		return
 	var field: FieldMap = Battle._current_field_map()
 	var opened: Dictionary = Battle.start_session(field, hostile)
 	if not bool(opened.get("allowed", false)):
@@ -825,6 +1006,12 @@ func _on_battle_entered() -> void:
 		field.set_combat_mode(true)
 	if not resuming:
 		MusicDirector.push_context("battle")
+	# One bar, both modes: the field HUD stays up and grows its combat parts. No full-screen
+	# HUD layer opens over a live field; the shell is only for fights without one.
+	var hud: FieldHUD = field.field_hud() if field != null else null
+	if hud != null:
+		hud.enter_combat(field)
+		return
 	UIManager.open(BATTLE_HUD, false, true)
 
 
@@ -836,9 +1023,47 @@ func _on_battle_exited() -> void:
 		return
 	var field: FieldMap = Battle._current_field_map()
 	if field != null:
+		var hud: FieldHUD = field.field_hud()
+		if hud != null:
+			hud.exit_combat()
 		field.set_combat_mode(false)
 	MusicDirector.pop_context()
+	if _pending_defeat_wake != &"":
+		# SR7: the session's checkpoint stays staged and flushes on `level_ready` at the hub,
+		# so a reload never puts the beaten party back on the field it lost.
+		# The latch stays set until the hub loads, so the field's standing foes stay refused.
+		_wake_at_hub.call_deferred(_pending_defeat_wake)
+		return
 	SaveGame.flush_pending_autosave.call_deferred()
+
+
+## Latched only while the chart is in Battle: the wake runs when that state exits, so a
+## result from a fight the chart never entered (a tool or a test driving Battle directly)
+## must not send the next, unrelated battle exit to a hub.
+func _on_defeat_wake_battle_ended(result: BattleResult) -> void:
+	if result == null or result.state != BattleResult.State.DEFEAT or result.wake_hub_id == &"":
+		return
+	if not ($StateChart/Root/Playing/Battle as StateChartState).active:
+		return
+	_pending_defeat_wake = result.wake_hub_id
+
+
+## SR7 (owner, 2026-11-08): the party comes to at the nearest discovered hub. The trip is free:
+## it is the consequence, not a purchase, so it goes through `travel()`, not `fast_travel()`.
+func _wake_at_hub(hub_id: StringName) -> bool:
+	var hub := FastTravelRegistry.by_id(hub_id)
+	if hub.is_empty():
+		_pending_defeat_wake = &""
+		SaveGame.request_checkpoint(SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, WAKE_CHECKPOINT_DETAIL)
+		return false
+	if get_tree().paused:
+		send_event("resume")
+	if not travel(str(hub["scene_path"])):
+		_pending_defeat_wake = &""
+		SaveGame.request_checkpoint(SaveGame.Checkpoint.ENCOUNTER_RESOLUTION, WAKE_CHECKPOINT_DETAIL)
+		return false
+	_wake_checkpoint_pending = true
+	return true
 
 
 func _on_chapter_complete_entered() -> void:

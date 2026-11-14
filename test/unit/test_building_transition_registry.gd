@@ -23,9 +23,8 @@ const BUILDING_IDS: Array[StringName] = [
 	&"chefs_pantry",
 	&"players_loft",
 	&"lower_trial_hall",
-	# Kesselford (hub 2, C1 / #238).
-	&"kesselford_wayhouse",
-	&"kesselford_chandlery",
+	# Kesselford (hub 2, C1 / #238) has none: its Wayhouse (2026-11-03) and Chandlery (2026-11-04)
+	# are walk-in buildings with no door pair since item 35.
 	# Ashlaren (hub 3, C2 / #239).
 	&"ashlaren_weighing_hall",
 	&"ashlaren_millhouse",
@@ -108,7 +107,7 @@ func test_every_interior_location_resolves_its_entry_spawn() -> void:
 func test_generated_transitions_match_every_original_export_and_resource_header() -> void:
 	var fixture: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(VALUE_FIXTURE))
 	var resources: Array = fixture["resources"]
-	assert_int(resources.size()).is_equal(48)
+	assert_int(resources.size()).is_equal(44)
 	var paths: Array[String] = []
 	for row: Dictionary in resources:
 		var path: String = row["path"]
@@ -139,9 +138,10 @@ func test_generated_transitions_match_every_original_export_and_resource_header(
 
 
 func test_registry_lists_come_from_the_index_and_share_the_preloaded_instances() -> void:
-	assert_int(BuildingTransitionRegistry.ENTRIES.size()).is_equal(24)
-	assert_int(BuildingTransitionRegistry.EXITS.size()).is_equal(24)
-	assert_int(BuildingTransitionRegistry.ALL.size()).is_equal(48)
+	# Twenty-two doors since Kesselford's Wayhouse and Chandlery became walk-in (item 35).
+	assert_int(BuildingTransitionRegistry.ENTRIES.size()).is_equal(22)
+	assert_int(BuildingTransitionRegistry.EXITS.size()).is_equal(22)
+	assert_int(BuildingTransitionRegistry.ALL.size()).is_equal(44)
 	for entry: BuildingTransitionDefinition in BuildingTransitionRegistry.ENTRIES:
 		assert_bool(entry.is_entry()).override_failure_message(String(entry.id)).is_true()
 	for exit: BuildingTransitionDefinition in BuildingTransitionRegistry.EXITS:

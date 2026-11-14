@@ -28,6 +28,17 @@ GODOT_BIN="$HOME/.local/bin/godot" LP_NUM_THREADS=1 \
 
 Use the same command with the affected suite path. Add `SOUL_METER_HEADLESS=1` only for checks compatible with headless execution. Input-dependent and rendered suites need Xvfb/display. Some executable visual checks live under `test/manual`; their directory name alone does not make them human-only. Whole-tree runs exclude those unless explicitly selected.
 
+### Batches under a memory cap
+
+This WSL machine can run out of memory on large batches. Run batches of 5–10 suites through `scripts/test_capped.sh`, which wraps `scripts/test.sh` and kills any test process of its own run that goes over `CAP_MB`:
+
+```bash
+CAP_MB=3500 LOG=/tmp/batch1.log bash scripts/test_capped.sh \
+  res://test/unit/test_a.gd res://test/unit/test_b.gd res://test/unit/test_c.gd
+```
+
+It runs headless by default (`SOUL_METER_HEADLESS=0` runs under Xvfb), and `TIMEOUT_S` (default 900) bounds the batch. The last line it prints is `exit=… peak_rss_mb=… killed=… log=…`. It exits 137 when the watchdog killed anything. If that happens, report it rather than rerunning blindly.
+
 When a full run is required:
 
 ```bash

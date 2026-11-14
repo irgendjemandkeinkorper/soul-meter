@@ -4,6 +4,7 @@ extends Node2D
 signal impact_reached
 
 const HitPulseScript := preload("res://ui/hud/hit_pulse.gd")
+const CombatLookScript := preload("res://ui/hud/combat_look.gd")
 const WINDUP := DS.DUR_FAST
 const TRAVEL := DS.DUR_BASE
 const RELEASE := DS.DUR_SLOW
@@ -133,8 +134,15 @@ func _draw() -> void:
 			if _hit:
 				_draw_glow(destination, radius * 3.0, _palette[0]["color"], fade * 0.65)
 				_draw_seal(destination, radius * lerpf(0.65, 1.7, ease(progress, 0.5)), fade, false)
-			for index: int in _palette.size():
-				_draw_motes(destination, radius, progress, index, _hit)
+				# One look per tone (owner 2026-11-02): each tone in the cast lands its own way.
+				for entry: Dictionary in _palette:
+					CombatLookScript.draw(
+						self, CombatLookScript.tone_look(str(entry["id"])), destination, radius,
+						progress, entry["color"], entry["glow"], _visual_scale
+					)
+			else:
+				for index: int in _palette.size():
+					_draw_motes(destination, radius, progress, index, false)
 
 
 func _draw_travel(origin: Vector2, destination: Vector2, radius: float) -> void:

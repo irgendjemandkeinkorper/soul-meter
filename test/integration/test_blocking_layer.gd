@@ -31,10 +31,12 @@ func test_pathfinding_cannot_cross_a_blocking_cell() -> void:
 	var to_cell := Vector2i(27, 7)
 	assert_int(blocking.get_cell_source_id(from_cell)).is_equal(-1)
 	assert_int(blocking.get_cell_source_id(to_cell)).is_equal(-1)
-	assert_bool(grid.is_point_solid(from_cell)).is_false()
-	assert_bool(grid.is_point_solid(to_cell)).is_false()
+	# The cells are painted ground cells; the path runs on the grid's cells (hexes on hexes,
+	# hex slice H3b), each standing on one ground cell.
+	assert_bool(grid.is_point_solid(grid.cell_at_square(from_cell))).is_false()
+	assert_bool(grid.is_point_solid(grid.cell_at_square(to_cell))).is_false()
 
-	var path: PackedVector2Array = grid.path_cells(from_cell, to_cell)
+	var path: PackedVector2Array = grid.path_cells(grid.cell_at_square(from_cell), grid.cell_at_square(to_cell))
 	# A route exists (it must detour around TrialHall, not fail outright).
 	assert_int(path.size()).is_greater(0)
 
@@ -42,14 +44,14 @@ func test_pathfinding_cannot_cross_a_blocking_cell() -> void:
 	# on a cell the Blocking layer marked solid.
 	for point in path:
 		var cell := Vector2i(point)
-		assert_int(blocking.get_cell_source_id(cell)).is_equal(-1)
+		assert_int(blocking.get_cell_source_id(grid.square_cell_of(cell))).is_equal(-1)
 		assert_bool(grid.is_point_solid(cell)).is_false()
 
 	# A request straight INTO a blocking cell must refuse outright.
 	var inside_trial_hall := Vector2i(21, 6)
 	assert_int(blocking.get_cell_source_id(inside_trial_hall)).is_not_equal(-1)
-	assert_bool(grid.is_point_solid(inside_trial_hall)).is_true()
-	var refused: PackedVector2Array = grid.path_cells(from_cell, inside_trial_hall)
+	assert_bool(grid.is_point_solid(grid.cell_at_square(inside_trial_hall))).is_true()
+	var refused: PackedVector2Array = grid.path_cells(grid.cell_at_square(from_cell), grid.cell_at_square(inside_trial_hall))
 	assert_int(refused.size()).is_equal(0)
 
 
