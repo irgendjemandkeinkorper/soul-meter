@@ -1,0 +1,3535 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://world/dressing/lived_in.gd" id="1_vptw6"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-paving--moss-flags.png" id="2_ilgh8"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-paving--broken-cobbles.png" id="3_cxpm6"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-road-cobble--frayed-end.png" id="4_tddje"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-paving--cracks.png" id="5_o7cic"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-road-cobble--sinking-edge.png" id="6_u20s5"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-scatter--spilled-grain.png" id="7_slml6"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-scatter--straw.png" id="8_ktoy7"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-ground-patch--packed-earth.png" id="9_mnfu5"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-stain--damp.png" id="10_k2df7"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-scatter--leaf-litter-b.png" id="11_8e5y8"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-puddle--shallow.png" id="12_t8tsq"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-scatter--leaf-litter-a.png" id="13_shw7a"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-puddle--rain-ringed.png" id="14_sn46o"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-scatter--gravel.png" id="15_fkixs"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-scatter--ash-soot.png" id="16_g3u01"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-ground-patch--wet-mud.png" id="17_ts4ad"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-puddle--long.png" id="18_0ysdw"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-ground-patch--trampled-grass.png" id="19_gwdhi"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-scatter--grass-tufts.png" id="20_b65qf"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-trail--footprints-hooves.png" id="21_uvn2w"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-ruts--straight.png" id="22_gsh3x"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-ruts--curve.png" id="23_l5uic"]
+[ext_resource type="Script" path="res://world/dressing/dressing_shadows.gd" id="24_lapi0"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-sacks--pile.png" id="25_s3yw7"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-tools--broom-rake.png" id="26_7ew0m"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-bucket--wooden.png" id="27_7qaft"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-planks--stack.png" id="28_u7qsh"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-crate--broken-straw.png" id="29_oyuxk"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-barrel--tipped.png" id="30_js61o"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-ladder--leaning.png" id="31_erdqg"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-sack--slumped.png" id="32_r0sqj"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-crate--small.png" id="33_h5pse"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-barrel--upright.png" id="34_q3nx2"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-doorstep--boot-scraper.png" id="35_mt6xt"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-pot--herbs-cracked.png" id="36_tm82o"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-firewood--low-heap.png" id="37_hg24m"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-washtub--washboard.png" id="39_ha1xk"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-barrels--plank-pair.png" id="40_ax0vl"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-jars--clay-three.png" id="41_d68jg"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-baskets--stacked.png" id="42_hxpf1"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-bottles--cluster.png" id="43_usmy6"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-barrel--rain-downspout.png" id="44_j0bdu"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-bollard--stone.png" id="45_dt855"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-crate--turnips.png" id="46_tbfj1"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-laundry-line.png" id="47_ucuiy"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-rubble--stone-pile.png" id="48_uek1p"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-sawhorse--plank.png" id="49_kivts"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-grindstone--frame.png" id="50_bq6hb"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-hay--bale.png" id="51_8bvn2"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-notice-post--blank.png" id="52_36skw"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-drying-rack--cloth.png" id="53_pvyx0"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-hay--loose-pile.png" id="54_skkbq"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-fence--broken-segment.png" id="55_cmprv"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-anvil--stump.png" id="56_0p4q1"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-hitching-post.png" id="57_u380j"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-barrow--tipped.png" id="58_p0toh"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-fence--leaning-post.png" id="59_nelfm"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-trough--stone.png" id="60_84n4g"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-cobbles--loose.png" id="61_7loww"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-chopping-block--axe.png" id="62_jeivp"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-cartwheel--leaning.png" id="62_vptw6"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-weeds--tuft-a.png" id="63_novqb"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-weeds--tuft-b.png" id="64_k7n4n"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-fern.png" id="65_noo7k"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-weeds--tuft-c.png" id="66_17uq2"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-nettles--clump.png" id="67_ju86n"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-branch--dead.png" id="68_0y1c0"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-rag--dropped.png" id="69_quguo"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-reeds--clump.png" id="70_rfvwu"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-stump--roots.png" id="71_dfqdv"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-creeper--mound-stone.png" id="72_jhb5a"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-mushrooms--cluster.png" id="73_4icvp"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-stone--mossy.png" id="74_ue1k8"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-leaves--heap.png" id="75_0wqae"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-scrap--bronze.png" id="76_e4i4d"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-pottery--shards.png" id="77_8ikpv"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-lantern--broken.png" id="78_xda0p"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-bones--animal.png" id="79_r4m2k"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-candles--stubs-stone.png" id="80_g1ild"]
+[ext_resource type="Texture2D" path="res://assets/generated/sprites/world/kesselford-greebles-2026-11-02/kf-net--fishing-floats.png" id="81_f1u6u"]
+
+[node name="LivedIn" type="Node2D" unique_id=1572418662]
+y_sort_enabled = true
+script = ExtResource("1_vptw6")
+blocked_cells = Array[Vector2i]([Vector2i(48, 5), Vector2i(45, 6), Vector2i(47, 10), Vector2i(41, 11), Vector2i(43, 12), Vector2i(44, 12), Vector2i(51, 13), Vector2i(54, 13), Vector2i(49, 15), Vector2i(41, 17), Vector2i(41, 18), Vector2i(44, 19), Vector2i(56, 19), Vector2i(36, 22), Vector2i(49, 22), Vector2i(54, 22), Vector2i(61, 22), Vector2i(66, 23), Vector2i(28, 26), Vector2i(38, 26), Vector2i(67, 27), Vector2i(53, 28), Vector2i(51, 29), Vector2i(68, 29), Vector2i(59, 30), Vector2i(66, 30), Vector2i(41, 31), Vector2i(57, 31), Vector2i(72, 31), Vector2i(55, 32), Vector2i(66, 32), Vector2i(37, 34), Vector2i(57, 34), Vector2i(54, 35), Vector2i(65, 35), Vector2i(19, 36), Vector2i(22, 36), Vector2i(69, 36), Vector2i(28, 37), Vector2i(62, 38), Vector2i(57, 39), Vector2i(67, 39), Vector2i(69, 39), Vector2i(82, 39), Vector2i(25, 40), Vector2i(41, 41), Vector2i(81, 41), Vector2i(34, 42), Vector2i(47, 42), Vector2i(49, 42), Vector2i(30, 43), Vector2i(44, 43), Vector2i(80, 43), Vector2i(87, 43), Vector2i(17, 44), Vector2i(79, 44), Vector2i(28, 45), Vector2i(32, 45), Vector2i(65, 45), Vector2i(66, 45), Vector2i(77, 45), Vector2i(11, 46), Vector2i(29, 46), Vector2i(6, 47), Vector2i(65, 47), Vector2i(75, 47), Vector2i(58, 48), Vector2i(74, 48), Vector2i(27, 49), Vector2i(68, 49), Vector2i(71, 49), Vector2i(93, 49), Vector2i(45, 50), Vector2i(63, 50), Vector2i(7, 51), Vector2i(11, 52), Vector2i(19, 52), Vector2i(18, 53), Vector2i(72, 53), Vector2i(95, 53), Vector2i(22, 54), Vector2i(35, 54), Vector2i(36, 54), Vector2i(53, 54), Vector2i(69, 54), Vector2i(63, 56), Vector2i(12, 57), Vector2i(100, 57), Vector2i(63, 58), Vector2i(94, 58), Vector2i(99, 58), Vector2i(41, 60), Vector2i(62, 60), Vector2i(18, 61), Vector2i(50, 61), Vector2i(51, 61), Vector2i(58, 61), Vector2i(52, 62), Vector2i(93, 62), Vector2i(46, 63), Vector2i(34, 64), Vector2i(52, 64), Vector2i(58, 64), Vector2i(22, 65), Vector2i(44, 65), Vector2i(82, 65), Vector2i(84, 65), Vector2i(24, 66), Vector2i(65, 66), Vector2i(41, 67), Vector2i(50, 69), Vector2i(61, 71), Vector2i(66, 71), Vector2i(59, 72), Vector2i(78, 72), Vector2i(68, 73), Vector2i(76, 74), Vector2i(50, 75), Vector2i(82, 75), Vector2i(47, 79), Vector2i(67, 80), Vector2i(40, 81), Vector2i(53, 82), Vector2i(68, 82), Vector2i(57, 86), Vector2i(55, 87), Vector2i(48, 89), Vector2i(58, 89), Vector2i(45, 91), Vector2i(55, 92), Vector2i(57, 92), Vector2i(54, 93), Vector2i(61, 96), Vector2i(57, 99)])
+cover_cells = Array[Vector2i]([Vector2i(47, 10), Vector2i(54, 13), Vector2i(54, 22), Vector2i(61, 22), Vector2i(38, 26), Vector2i(67, 27), Vector2i(51, 29), Vector2i(59, 30), Vector2i(37, 34), Vector2i(28, 37), Vector2i(57, 39), Vector2i(82, 39), Vector2i(25, 40), Vector2i(41, 41), Vector2i(81, 41), Vector2i(34, 42), Vector2i(87, 43), Vector2i(65, 45), Vector2i(77, 45), Vector2i(27, 49), Vector2i(93, 49), Vector2i(45, 50), Vector2i(63, 50), Vector2i(18, 53), Vector2i(72, 53), Vector2i(53, 54), Vector2i(69, 54), Vector2i(63, 56), Vector2i(100, 57), Vector2i(93, 62), Vector2i(44, 65), Vector2i(65, 66), Vector2i(57, 86), Vector2i(58, 89), Vector2i(55, 92), Vector2i(57, 92), Vector2i(57, 99)])
+dressing_seed = 1114
+source_batch = "res://assets/generated/sources/kesselford-greebles-2026-11-02/batch.json"
+
+[node name="GroundDetails" type="Node2D" parent="." unique_id=347729114]
+z_index = -2
+
+[node name="paving--moss-flags-01" type="Sprite2D" parent="GroundDetails" unique_id=2065750151]
+position = Vector2(416, 888)
+scale = Vector2(0.65719295, 0.65719295)
+texture = ExtResource("2_ilgh8")
+
+[node name="paving--broken-cobbles-01" type="Sprite2D" parent="GroundDetails" unique_id=2122625594]
+position = Vector2(518, 899)
+scale = Vector2(0.625009, 0.625009)
+texture = ExtResource("3_cxpm6")
+flip_h = true
+
+[node name="road-cobble--frayed-end-01" type="Sprite2D" parent="GroundDetails" unique_id=1736819401]
+position = Vector2(600, 904)
+scale = Vector2(0.56710994, 0.56710994)
+texture = ExtResource("4_tddje")
+flip_h = true
+
+[node name="paving--cracks-01" type="Sprite2D" parent="GroundDetails" unique_id=924433124]
+position = Vector2(702, 937)
+scale = Vector2(0.66653574, 0.66653574)
+texture = ExtResource("5_o7cic")
+
+[node name="road-cobble--frayed-end-02" type="Sprite2D" parent="GroundDetails" unique_id=1683929973]
+position = Vector2(780, 920)
+scale = Vector2(0.5120177, 0.5120177)
+texture = ExtResource("4_tddje")
+flip_h = true
+
+[node name="road-cobble--frayed-end-03" type="Sprite2D" parent="GroundDetails" unique_id=793193578]
+position = Vector2(864, 910)
+scale = Vector2(0.475805, 0.475805)
+texture = ExtResource("4_tddje")
+flip_h = true
+
+[node name="paving--broken-cobbles-02" type="Sprite2D" parent="GroundDetails" unique_id=1625436912]
+position = Vector2(962, 909)
+scale = Vector2(0.50727373, 0.50727373)
+texture = ExtResource("3_cxpm6")
+
+[node name="road-cobble--sinking-edge-01" type="Sprite2D" parent="GroundDetails" unique_id=476787206]
+position = Vector2(1029, 898)
+scale = Vector2(0.55959046, 0.55959046)
+texture = ExtResource("6_u20s5")
+flip_h = true
+
+[node name="road-cobble--sinking-edge-02" type="Sprite2D" parent="GroundDetails" unique_id=450304149]
+position = Vector2(1093, 890)
+scale = Vector2(0.43360746, 0.43360746)
+texture = ExtResource("6_u20s5")
+flip_h = true
+
+[node name="road-cobble--sinking-edge-03" type="Sprite2D" parent="GroundDetails" unique_id=1219331249]
+position = Vector2(1174, 876)
+scale = Vector2(0.60765284, 0.60765284)
+texture = ExtResource("6_u20s5")
+flip_h = true
+
+[node name="paving--moss-flags-02" type="Sprite2D" parent="GroundDetails" unique_id=1897784285]
+position = Vector2(1265, 889)
+scale = Vector2(0.62365013, 0.62365013)
+texture = ExtResource("2_ilgh8")
+
+[node name="paving--broken-cobbles-03" type="Sprite2D" parent="GroundDetails" unique_id=277227117]
+position = Vector2(1367, 921)
+scale = Vector2(0.54332536, 0.54332536)
+texture = ExtResource("3_cxpm6")
+
+[node name="paving--broken-cobbles-04" type="Sprite2D" parent="GroundDetails" unique_id=1677152630]
+position = Vector2(1453, 920)
+scale = Vector2(0.6570659, 0.6570659)
+texture = ExtResource("3_cxpm6")
+flip_h = true
+
+[node name="road-cobble--sinking-edge-04" type="Sprite2D" parent="GroundDetails" unique_id=1883699659]
+position = Vector2(1510, 921)
+scale = Vector2(0.4434761, 0.4434761)
+texture = ExtResource("6_u20s5")
+flip_h = true
+
+[node name="road-cobble--sinking-edge-05" type="Sprite2D" parent="GroundDetails" unique_id=720545242]
+position = Vector2(1598, 904)
+scale = Vector2(0.48109308, 0.48109308)
+texture = ExtResource("6_u20s5")
+flip_h = true
+
+[node name="paving--moss-flags-03" type="Sprite2D" parent="GroundDetails" unique_id=658954367]
+position = Vector2(1674, 879)
+scale = Vector2(0.58010846, 0.58010846)
+texture = ExtResource("2_ilgh8")
+flip_h = true
+
+[node name="road-cobble--sinking-edge-06" type="Sprite2D" parent="GroundDetails" unique_id=1688110098]
+position = Vector2(1752, 882)
+scale = Vector2(0.4390324, 0.4390324)
+texture = ExtResource("6_u20s5")
+flip_h = true
+
+[node name="road-cobble--frayed-end-04" type="Sprite2D" parent="GroundDetails" unique_id=1371415228]
+position = Vector2(1849, 888)
+scale = Vector2(0.5470078, 0.5470078)
+texture = ExtResource("4_tddje")
+
+[node name="paving--broken-cobbles-05" type="Sprite2D" parent="GroundDetails" unique_id=1277797545]
+position = Vector2(1942, 875)
+scale = Vector2(0.51415277, 0.51415277)
+texture = ExtResource("3_cxpm6")
+flip_h = true
+
+[node name="paving--broken-cobbles-06" type="Sprite2D" parent="GroundDetails" unique_id=806829473]
+position = Vector2(2033, 878)
+scale = Vector2(0.556488, 0.556488)
+texture = ExtResource("3_cxpm6")
+flip_h = true
+
+[node name="paving--cracks-02" type="Sprite2D" parent="GroundDetails" unique_id=614382743]
+position = Vector2(2118, 875)
+scale = Vector2(0.69671875, 0.69671875)
+texture = ExtResource("5_o7cic")
+flip_h = true
+
+[node name="paving--moss-flags-04" type="Sprite2D" parent="GroundDetails" unique_id=755147891]
+position = Vector2(2234, 889)
+scale = Vector2(0.5984978, 0.5984978)
+texture = ExtResource("2_ilgh8")
+flip_h = true
+
+[node name="paving--cracks-03" type="Sprite2D" parent="GroundDetails" unique_id=1280890774]
+position = Vector2(2299, 893)
+scale = Vector2(0.5805444, 0.5805444)
+texture = ExtResource("5_o7cic")
+flip_h = true
+
+[node name="paving--broken-cobbles-07" type="Sprite2D" parent="GroundDetails" unique_id=902055404]
+position = Vector2(2402, 898)
+scale = Vector2(0.51813585, 0.51813585)
+texture = ExtResource("3_cxpm6")
+
+[node name="paving--cracks-04" type="Sprite2D" parent="GroundDetails" unique_id=607343626]
+position = Vector2(2472, 888)
+scale = Vector2(0.69015205, 0.69015205)
+texture = ExtResource("5_o7cic")
+
+[node name="paving--cracks-05" type="Sprite2D" parent="GroundDetails" unique_id=2110361186]
+position = Vector2(2566, 901)
+scale = Vector2(0.68827, 0.68827)
+texture = ExtResource("5_o7cic")
+flip_h = true
+
+[node name="paving--broken-cobbles-08" type="Sprite2D" parent="GroundDetails" unique_id=561999301]
+position = Vector2(2622, 913)
+scale = Vector2(0.55465513, 0.55465513)
+texture = ExtResource("3_cxpm6")
+flip_h = true
+
+[node name="scatter--spilled-grain-01" type="Sprite2D" parent="GroundDetails" unique_id=247262865]
+self_modulate = Color(1, 1, 1, 0.94904953)
+position = Vector2(152, 643)
+scale = Vector2(0.36323643, 0.36323643)
+texture = ExtResource("7_slml6")
+flip_h = true
+
+[node name="scatter--straw-01" type="Sprite2D" parent="GroundDetails" unique_id=118942589]
+self_modulate = Color(1, 1, 1, 0.8882682)
+position = Vector2(2801, 958)
+scale = Vector2(0.3444596, 0.3444596)
+texture = ExtResource("8_ktoy7")
+
+[node name="ground-patch--packed-earth-01" type="Sprite2D" parent="GroundDetails" unique_id=1391098092]
+self_modulate = Color(1, 1, 1, 0.41623116)
+position = Vector2(1642, 1422)
+scale = Vector2(0.5692592, 0.5692592)
+texture = ExtResource("9_mnfu5")
+
+[node name="stain--damp-01" type="Sprite2D" parent="GroundDetails" unique_id=583503823]
+self_modulate = Color(1, 1, 1, 0.8310715)
+position = Vector2(1201, 501)
+scale = Vector2(0.3941666, 0.3941666)
+texture = ExtResource("10_k2df7")
+flip_h = true
+
+[node name="scatter--leaf-litter-b-01" type="Sprite2D" parent="GroundDetails" unique_id=934149127]
+self_modulate = Color(1, 1, 1, 0.83117765)
+position = Vector2(103, 1447)
+scale = Vector2(0.32813764, 0.32813764)
+texture = ExtResource("11_8e5y8")
+flip_h = true
+
+[node name="stain--damp-02" type="Sprite2D" parent="GroundDetails" unique_id=442172527]
+self_modulate = Color(1, 1, 1, 0.8978711)
+position = Vector2(1449, 213)
+scale = Vector2(0.33217338, 0.33217338)
+texture = ExtResource("10_k2df7")
+
+[node name="puddle--shallow-01" type="Sprite2D" parent="GroundDetails" unique_id=1853163828]
+self_modulate = Color(1, 1, 1, 0.9063139)
+position = Vector2(545, 222)
+scale = Vector2(0.62447464, 0.62447464)
+texture = ExtResource("12_t8tsq")
+
+[node name="stain--damp-03" type="Sprite2D" parent="GroundDetails" unique_id=806213447]
+self_modulate = Color(1, 1, 1, 0.98840165)
+position = Vector2(1511, 925)
+scale = Vector2(0.29817003, 0.29817003)
+texture = ExtResource("10_k2df7")
+flip_h = true
+
+[node name="scatter--leaf-litter-a-01" type="Sprite2D" parent="GroundDetails" unique_id=28530504]
+self_modulate = Color(1, 1, 1, 0.9057878)
+position = Vector2(2520, 1667)
+scale = Vector2(0.3595045, 0.3595045)
+texture = ExtResource("13_shw7a")
+flip_h = true
+
+[node name="paving--moss-flags-05" type="Sprite2D" parent="GroundDetails" unique_id=1890018643]
+self_modulate = Color(1, 1, 1, 0.8532871)
+position = Vector2(1610, 1338)
+scale = Vector2(0.39153558, 0.39153558)
+texture = ExtResource("2_ilgh8")
+flip_h = true
+
+[node name="puddle--rain-ringed-01" type="Sprite2D" parent="GroundDetails" unique_id=1950993918]
+self_modulate = Color(1, 1, 1, 0.908674)
+position = Vector2(2437, 1507)
+scale = Vector2(0.6890194, 0.6890194)
+texture = ExtResource("14_sn46o")
+flip_h = true
+
+[node name="ground-patch--packed-earth-02" type="Sprite2D" parent="GroundDetails" unique_id=2011953269]
+self_modulate = Color(1, 1, 1, 0.44567692)
+position = Vector2(1505, 361)
+scale = Vector2(0.5672763, 0.5672763)
+texture = ExtResource("9_mnfu5")
+flip_h = true
+
+[node name="scatter--gravel-01" type="Sprite2D" parent="GroundDetails" unique_id=346963921]
+self_modulate = Color(1, 1, 1, 0.93557245)
+position = Vector2(1555, 677)
+scale = Vector2(0.39572364, 0.39572364)
+texture = ExtResource("15_fkixs")
+flip_h = true
+
+[node name="scatter--ash-soot-01" type="Sprite2D" parent="GroundDetails" unique_id=1275602998]
+self_modulate = Color(1, 1, 1, 0.88909537)
+position = Vector2(2161, 74)
+scale = Vector2(0.33277866, 0.33277866)
+texture = ExtResource("16_g3u01")
+
+[node name="ground-patch--wet-mud-01" type="Sprite2D" parent="GroundDetails" unique_id=1999157773]
+self_modulate = Color(1, 1, 1, 0.6671681)
+position = Vector2(2345, 1683)
+scale = Vector2(0.51301956, 0.51301956)
+texture = ExtResource("17_ts4ad")
+
+[node name="puddle--rain-ringed-02" type="Sprite2D" parent="GroundDetails" unique_id=1118384908]
+self_modulate = Color(1, 1, 1, 0.9351604)
+position = Vector2(578, 1706)
+scale = Vector2(0.5517097, 0.5517097)
+texture = ExtResource("14_sn46o")
+flip_h = true
+
+[node name="scatter--leaf-litter-b-02" type="Sprite2D" parent="GroundDetails" unique_id=2033180392]
+self_modulate = Color(1, 1, 1, 0.82177234)
+position = Vector2(1715, 372)
+scale = Vector2(0.36356542, 0.36356542)
+texture = ExtResource("11_8e5y8")
+
+[node name="scatter--leaf-litter-a-02" type="Sprite2D" parent="GroundDetails" unique_id=637326793]
+self_modulate = Color(1, 1, 1, 0.8740286)
+position = Vector2(2694, 309)
+scale = Vector2(0.29776704, 0.29776704)
+texture = ExtResource("13_shw7a")
+flip_h = true
+
+[node name="scatter--ash-soot-02" type="Sprite2D" parent="GroundDetails" unique_id=1717140052]
+self_modulate = Color(1, 1, 1, 0.83865166)
+position = Vector2(1884, 687)
+scale = Vector2(0.28875953, 0.28875953)
+texture = ExtResource("16_g3u01")
+flip_h = true
+
+[node name="scatter--leaf-litter-b-03" type="Sprite2D" parent="GroundDetails" unique_id=816850387]
+self_modulate = Color(1, 1, 1, 0.7678863)
+position = Vector2(2034, 228)
+scale = Vector2(0.32483163, 0.32483163)
+texture = ExtResource("11_8e5y8")
+flip_h = true
+
+[node name="scatter--straw-02" type="Sprite2D" parent="GroundDetails" unique_id=885168900]
+self_modulate = Color(1, 1, 1, 0.8531101)
+position = Vector2(2536, 1227)
+scale = Vector2(0.3556256, 0.3556256)
+texture = ExtResource("8_ktoy7")
+
+[node name="paving--broken-cobbles-09" type="Sprite2D" parent="GroundDetails" unique_id=1106826345]
+self_modulate = Color(1, 1, 1, 0.8898368)
+position = Vector2(2706, 1361)
+scale = Vector2(0.36466792, 0.36466792)
+texture = ExtResource("3_cxpm6")
+
+[node name="puddle--shallow-02" type="Sprite2D" parent="GroundDetails" unique_id=1102746622]
+self_modulate = Color(1, 1, 1, 0.82115793)
+position = Vector2(1380, 749)
+scale = Vector2(0.69018334, 0.69018334)
+texture = ExtResource("12_t8tsq")
+
+[node name="ground-patch--wet-mud-02" type="Sprite2D" parent="GroundDetails" unique_id=1728384205]
+self_modulate = Color(1, 1, 1, 0.48978996)
+position = Vector2(2053, 978)
+scale = Vector2(0.5029284, 0.5029284)
+texture = ExtResource("17_ts4ad")
+
+[node name="ground-patch--packed-earth-03" type="Sprite2D" parent="GroundDetails" unique_id=1548546883]
+self_modulate = Color(1, 1, 1, 0.5591042)
+position = Vector2(745, 449)
+scale = Vector2(0.5467878, 0.5467878)
+texture = ExtResource("9_mnfu5")
+flip_h = true
+
+[node name="puddle--shallow-03" type="Sprite2D" parent="GroundDetails" unique_id=857803833]
+self_modulate = Color(1, 1, 1, 0.8837925)
+position = Vector2(1498, 88)
+scale = Vector2(0.52612215, 0.52612215)
+texture = ExtResource("12_t8tsq")
+flip_h = true
+
+[node name="ground-patch--wet-mud-03" type="Sprite2D" parent="GroundDetails" unique_id=1777864766]
+self_modulate = Color(1, 1, 1, 0.42051783)
+position = Vector2(1052, 388)
+scale = Vector2(0.5323142, 0.5323142)
+texture = ExtResource("17_ts4ad")
+flip_h = true
+
+[node name="scatter--leaf-litter-b-04" type="Sprite2D" parent="GroundDetails" unique_id=1405100765]
+self_modulate = Color(1, 1, 1, 0.8390289)
+position = Vector2(2039, 1096)
+scale = Vector2(0.35220313, 0.35220313)
+texture = ExtResource("11_8e5y8")
+flip_h = true
+
+[node name="paving--broken-cobbles-10" type="Sprite2D" parent="GroundDetails" unique_id=250924930]
+self_modulate = Color(1, 1, 1, 0.8037988)
+position = Vector2(2897, 406)
+scale = Vector2(0.38661852, 0.38661852)
+texture = ExtResource("3_cxpm6")
+
+[node name="scatter--ash-soot-03" type="Sprite2D" parent="GroundDetails" unique_id=2120401137]
+self_modulate = Color(1, 1, 1, 0.80085486)
+position = Vector2(2182, 1338)
+scale = Vector2(0.38659158, 0.38659158)
+texture = ExtResource("16_g3u01")
+flip_h = true
+
+[node name="stain--damp-04" type="Sprite2D" parent="GroundDetails" unique_id=546171796]
+self_modulate = Color(1, 1, 1, 0.8563637)
+position = Vector2(1915, 1389)
+scale = Vector2(0.28392544, 0.28392544)
+texture = ExtResource("10_k2df7")
+
+[node name="scatter--ash-soot-04" type="Sprite2D" parent="GroundDetails" unique_id=1576522004]
+self_modulate = Color(1, 1, 1, 0.8564506)
+position = Vector2(1251, 1603)
+scale = Vector2(0.35701075, 0.35701075)
+texture = ExtResource("16_g3u01")
+
+[node name="puddle--rain-ringed-03" type="Sprite2D" parent="GroundDetails" unique_id=822447955]
+self_modulate = Color(1, 1, 1, 0.8854586)
+position = Vector2(543, 696)
+scale = Vector2(0.63807625, 0.63807625)
+texture = ExtResource("14_sn46o")
+flip_h = true
+
+[node name="scatter--ash-soot-05" type="Sprite2D" parent="GroundDetails" unique_id=1253167174]
+self_modulate = Color(1, 1, 1, 0.8566247)
+position = Vector2(505, 1322)
+scale = Vector2(0.39022768, 0.39022768)
+texture = ExtResource("16_g3u01")
+
+[node name="stain--damp-05" type="Sprite2D" parent="GroundDetails" unique_id=1247875343]
+self_modulate = Color(1, 1, 1, 0.7710453)
+position = Vector2(344, 1159)
+scale = Vector2(0.37735224, 0.37735224)
+texture = ExtResource("10_k2df7")
+flip_h = true
+
+[node name="stain--damp-06" type="Sprite2D" parent="GroundDetails" unique_id=1203845082]
+self_modulate = Color(1, 1, 1, 0.8102954)
+position = Vector2(1214, 1196)
+scale = Vector2(0.37565672, 0.37565672)
+texture = ExtResource("10_k2df7")
+
+[node name="stain--damp-07" type="Sprite2D" parent="GroundDetails" unique_id=912079598]
+self_modulate = Color(1, 1, 1, 0.84306324)
+position = Vector2(1662, 1562)
+scale = Vector2(0.38708845, 0.38708845)
+texture = ExtResource("10_k2df7")
+
+[node name="paving--broken-cobbles-11" type="Sprite2D" parent="GroundDetails" unique_id=867823808]
+self_modulate = Color(1, 1, 1, 0.8728813)
+position = Vector2(2543, 340)
+scale = Vector2(0.28700495, 0.28700495)
+texture = ExtResource("3_cxpm6")
+
+[node name="ground-patch--wet-mud-04" type="Sprite2D" parent="GroundDetails" unique_id=599131790]
+self_modulate = Color(1, 1, 1, 0.5767716)
+position = Vector2(504, 595)
+scale = Vector2(0.658699, 0.658699)
+texture = ExtResource("17_ts4ad")
+
+[node name="paving--broken-cobbles-12" type="Sprite2D" parent="GroundDetails" unique_id=1986839470]
+self_modulate = Color(1, 1, 1, 0.8346747)
+position = Vector2(254, 752)
+scale = Vector2(0.3179146, 0.3179146)
+texture = ExtResource("3_cxpm6")
+
+[node name="paving--moss-flags-06" type="Sprite2D" parent="GroundDetails" unique_id=621773146]
+self_modulate = Color(1, 1, 1, 0.8312865)
+position = Vector2(2601, 582)
+scale = Vector2(0.36149392, 0.36149392)
+texture = ExtResource("2_ilgh8")
+flip_h = true
+
+[node name="paving--cracks-06" type="Sprite2D" parent="GroundDetails" unique_id=1277488448]
+self_modulate = Color(1, 1, 1, 0.8079347)
+position = Vector2(778, 900)
+scale = Vector2(0.39583758, 0.39583758)
+texture = ExtResource("5_o7cic")
+flip_h = true
+
+[node name="scatter--gravel-02" type="Sprite2D" parent="GroundDetails" unique_id=1180663742]
+self_modulate = Color(1, 1, 1, 0.9568173)
+position = Vector2(1804, 291)
+scale = Vector2(0.35146952, 0.35146952)
+texture = ExtResource("15_fkixs")
+
+[node name="stain--damp-08" type="Sprite2D" parent="GroundDetails" unique_id=1564819202]
+self_modulate = Color(1, 1, 1, 0.9262477)
+position = Vector2(1826, 160)
+scale = Vector2(0.3759501, 0.3759501)
+texture = ExtResource("10_k2df7")
+flip_h = true
+
+[node name="puddle--long-01" type="Sprite2D" parent="GroundDetails" unique_id=1177975036]
+self_modulate = Color(1, 1, 1, 0.87605643)
+position = Vector2(2571, 933)
+scale = Vector2(0.6244619, 0.6244619)
+texture = ExtResource("18_0ysdw")
+flip_h = true
+
+[node name="scatter--gravel-03" type="Sprite2D" parent="GroundDetails" unique_id=1037598390]
+self_modulate = Color(1, 1, 1, 0.75565505)
+position = Vector2(988, 1152)
+scale = Vector2(0.36604893, 0.36604893)
+texture = ExtResource("15_fkixs")
+
+[node name="ground-patch--wet-mud-05" type="Sprite2D" parent="GroundDetails" unique_id=525400329]
+self_modulate = Color(1, 1, 1, 0.42976528)
+position = Vector2(843, 1548)
+scale = Vector2(0.6138785, 0.6138785)
+texture = ExtResource("17_ts4ad")
+
+[node name="ground-patch--trampled-grass-01" type="Sprite2D" parent="GroundDetails" unique_id=443119949]
+self_modulate = Color(1, 1, 1, 0.636913)
+position = Vector2(791, 1228)
+scale = Vector2(0.5718348, 0.5718348)
+texture = ExtResource("19_gwdhi")
+
+[node name="stain--damp-09" type="Sprite2D" parent="GroundDetails" unique_id=1077325516]
+self_modulate = Color(1, 1, 1, 0.96308285)
+position = Vector2(1923, 763)
+scale = Vector2(0.3752359, 0.3752359)
+texture = ExtResource("10_k2df7")
+flip_h = true
+
+[node name="ground-patch--trampled-grass-02" type="Sprite2D" parent="GroundDetails" unique_id=761903815]
+self_modulate = Color(1, 1, 1, 0.49435297)
+position = Vector2(1130, 1072)
+scale = Vector2(0.5322471, 0.5322471)
+texture = ExtResource("19_gwdhi")
+flip_h = true
+
+[node name="scatter--spilled-grain-02" type="Sprite2D" parent="GroundDetails" unique_id=1717213959]
+self_modulate = Color(1, 1, 1, 0.8552476)
+position = Vector2(2750, 1206)
+scale = Vector2(0.33640403, 0.33640403)
+texture = ExtResource("7_slml6")
+flip_h = true
+
+[node name="ground-patch--wet-mud-06" type="Sprite2D" parent="GroundDetails" unique_id=294662157]
+self_modulate = Color(1, 1, 1, 0.47051856)
+position = Vector2(714, 810)
+scale = Vector2(0.5016725, 0.5016725)
+texture = ExtResource("17_ts4ad")
+
+[node name="scatter--gravel-04" type="Sprite2D" parent="GroundDetails" unique_id=851254882]
+self_modulate = Color(1, 1, 1, 0.89980817)
+position = Vector2(718, 137)
+scale = Vector2(0.31888664, 0.31888664)
+texture = ExtResource("15_fkixs")
+
+[node name="ground-patch--packed-earth-04" type="Sprite2D" parent="GroundDetails" unique_id=715404810]
+self_modulate = Color(1, 1, 1, 0.5775299)
+position = Vector2(1319, 1711)
+scale = Vector2(0.5404355, 0.5404355)
+texture = ExtResource("9_mnfu5")
+flip_h = true
+
+[node name="scatter--leaf-litter-b-05" type="Sprite2D" parent="GroundDetails" unique_id=160223138]
+self_modulate = Color(1, 1, 1, 0.9879713)
+position = Vector2(1377, 1294)
+scale = Vector2(0.39650476, 0.39650476)
+texture = ExtResource("11_8e5y8")
+
+[node name="stain--damp-10" type="Sprite2D" parent="GroundDetails" unique_id=1793481076]
+self_modulate = Color(1, 1, 1, 0.87772673)
+position = Vector2(2631, 156)
+scale = Vector2(0.34989813, 0.34989813)
+texture = ExtResource("10_k2df7")
+flip_h = true
+
+[node name="scatter--straw-03" type="Sprite2D" parent="GroundDetails" unique_id=1840076358]
+self_modulate = Color(1, 1, 1, 0.7900943)
+position = Vector2(1951, 1548)
+scale = Vector2(0.3499746, 0.3499746)
+texture = ExtResource("8_ktoy7")
+flip_h = true
+
+[node name="paving--cracks-07" type="Sprite2D" parent="GroundDetails" unique_id=210672859]
+self_modulate = Color(1, 1, 1, 0.7779313)
+position = Vector2(85, 363)
+scale = Vector2(0.34632513, 0.34632513)
+texture = ExtResource("5_o7cic")
+flip_h = true
+
+[node name="scatter--straw-04" type="Sprite2D" parent="GroundDetails" unique_id=133400539]
+self_modulate = Color(1, 1, 1, 0.9362695)
+position = Vector2(171, 1029)
+scale = Vector2(0.3254453, 0.3254453)
+texture = ExtResource("8_ktoy7")
+flip_h = true
+
+[node name="scatter--spilled-grain-03" type="Sprite2D" parent="GroundDetails" unique_id=517014297]
+self_modulate = Color(1, 1, 1, 0.75787467)
+position = Vector2(342, 935)
+scale = Vector2(0.29308987, 0.29308987)
+texture = ExtResource("7_slml6")
+
+[node name="scatter--leaf-litter-a-03" type="Sprite2D" parent="GroundDetails" unique_id=798773991]
+self_modulate = Color(1, 1, 1, 0.78147435)
+position = Vector2(86, 462)
+scale = Vector2(0.34659415, 0.34659415)
+texture = ExtResource("13_shw7a")
+flip_h = true
+
+[node name="paving--cracks-08" type="Sprite2D" parent="GroundDetails" unique_id=709748020]
+self_modulate = Color(1, 1, 1, 0.8565245)
+position = Vector2(2831, 828)
+scale = Vector2(0.37518573, 0.37518573)
+texture = ExtResource("5_o7cic")
+flip_h = true
+
+[node name="ground-patch--wet-mud-07" type="Sprite2D" parent="GroundDetails" unique_id=1481096208]
+self_modulate = Color(1, 1, 1, 0.445426)
+position = Vector2(291, 396)
+scale = Vector2(0.50848025, 0.50848025)
+texture = ExtResource("17_ts4ad")
+
+[node name="puddle--long-02" type="Sprite2D" parent="GroundDetails" unique_id=1908948928]
+self_modulate = Color(1, 1, 1, 0.7548532)
+position = Vector2(841, 1661)
+scale = Vector2(0.59135246, 0.59135246)
+texture = ExtResource("18_0ysdw")
+flip_h = true
+
+[node name="scatter--grass-tufts-01" type="Sprite2D" parent="GroundDetails" unique_id=105217079]
+self_modulate = Color(1, 1, 1, 0.90044564)
+position = Vector2(2369, 1142)
+scale = Vector2(0.35017875, 0.35017875)
+texture = ExtResource("20_b65qf")
+
+[node name="scatter--leaf-litter-b-06" type="Sprite2D" parent="GroundDetails" unique_id=789471182]
+self_modulate = Color(1, 1, 1, 0.8406291)
+position = Vector2(2369, 156)
+scale = Vector2(0.36758488, 0.36758488)
+texture = ExtResource("11_8e5y8")
+flip_h = true
+
+[node name="scatter--leaf-litter-a-04" type="Sprite2D" parent="GroundDetails" unique_id=479739487]
+self_modulate = Color(1, 1, 1, 0.9950509)
+position = Vector2(1693, 570)
+scale = Vector2(0.31873906, 0.31873906)
+texture = ExtResource("13_shw7a")
+flip_h = true
+
+[node name="scatter--leaf-litter-b-07" type="Sprite2D" parent="GroundDetails" unique_id=1069339564]
+self_modulate = Color(1, 1, 1, 0.9384203)
+position = Vector2(2468, 665)
+scale = Vector2(0.35910195, 0.35910195)
+texture = ExtResource("11_8e5y8")
+flip_h = true
+
+[node name="paving--broken-cobbles-13" type="Sprite2D" parent="GroundDetails" unique_id=1039952473]
+self_modulate = Color(1, 1, 1, 0.94124794)
+position = Vector2(2421, 1054)
+scale = Vector2(0.30870983, 0.30870983)
+texture = ExtResource("3_cxpm6")
+flip_h = true
+
+[node name="paving--cracks-09" type="Sprite2D" parent="GroundDetails" unique_id=295057121]
+self_modulate = Color(1, 1, 1, 0.87788785)
+position = Vector2(1181, 891)
+scale = Vector2(0.35976145, 0.35976145)
+texture = ExtResource("5_o7cic")
+flip_h = true
+
+[node name="paving--moss-flags-07" type="Sprite2D" parent="GroundDetails" unique_id=1970409746]
+self_modulate = Color(1, 1, 1, 0.9931539)
+position = Vector2(267, 1700)
+scale = Vector2(0.29496223, 0.29496223)
+texture = ExtResource("2_ilgh8")
+
+[node name="paving--moss-flags-08" type="Sprite2D" parent="GroundDetails" unique_id=1827439886]
+self_modulate = Color(1, 1, 1, 0.8307654)
+position = Vector2(181, 906)
+scale = Vector2(0.33278316, 0.33278316)
+texture = ExtResource("2_ilgh8")
+flip_h = true
+
+[node name="scatter--grass-tufts-02" type="Sprite2D" parent="GroundDetails" unique_id=1592006290]
+self_modulate = Color(1, 1, 1, 0.89859474)
+position = Vector2(2281, 335)
+scale = Vector2(0.3101135, 0.3101135)
+texture = ExtResource("20_b65qf")
+flip_h = true
+
+[node name="scatter--straw-05" type="Sprite2D" parent="GroundDetails" unique_id=864090991]
+self_modulate = Color(1, 1, 1, 0.7810166)
+position = Vector2(77, 1208)
+scale = Vector2(0.38425952, 0.38425952)
+texture = ExtResource("8_ktoy7")
+
+[node name="scatter--grass-tufts-03" type="Sprite2D" parent="GroundDetails" unique_id=524002478]
+self_modulate = Color(1, 1, 1, 0.8290005)
+position = Vector2(2105, 1504)
+scale = Vector2(0.35936207, 0.35936207)
+texture = ExtResource("20_b65qf")
+flip_h = true
+
+[node name="ground-patch--trampled-grass-03" type="Sprite2D" parent="GroundDetails" unique_id=154123121]
+self_modulate = Color(1, 1, 1, 0.6688274)
+position = Vector2(2108, 1223)
+scale = Vector2(0.556399, 0.556399)
+texture = ExtResource("19_gwdhi")
+flip_h = true
+
+[node name="paving--cracks-10" type="Sprite2D" parent="GroundDetails" unique_id=1231688340]
+self_modulate = Color(1, 1, 1, 0.92324555)
+position = Vector2(242, 63)
+scale = Vector2(0.29043263, 0.29043263)
+texture = ExtResource("5_o7cic")
+flip_h = true
+
+[node name="scatter--leaf-litter-a-05" type="Sprite2D" parent="GroundDetails" unique_id=268270841]
+self_modulate = Color(1, 1, 1, 0.85403305)
+position = Vector2(521, 1406)
+scale = Vector2(0.28461796, 0.28461796)
+texture = ExtResource("13_shw7a")
+
+[node name="scatter--leaf-litter-b-08" type="Sprite2D" parent="GroundDetails" unique_id=270556659]
+self_modulate = Color(1, 1, 1, 0.8676034)
+position = Vector2(2926, 1094)
+scale = Vector2(0.34513357, 0.34513357)
+texture = ExtResource("11_8e5y8")
+flip_h = true
+
+[node name="scatter--gravel-05" type="Sprite2D" parent="GroundDetails" unique_id=1157485056]
+self_modulate = Color(1, 1, 1, 0.95278466)
+position = Vector2(750, 1364)
+scale = Vector2(0.28920287, 0.28920287)
+texture = ExtResource("15_fkixs")
+
+[node name="paving--cracks-11" type="Sprite2D" parent="GroundDetails" unique_id=1570031865]
+self_modulate = Color(1, 1, 1, 0.8568895)
+position = Vector2(2791, 1580)
+scale = Vector2(0.3829053, 0.3829053)
+texture = ExtResource("5_o7cic")
+flip_h = true
+
+[node name="ground-patch--wet-mud-08" type="Sprite2D" parent="GroundDetails" unique_id=1291752706]
+self_modulate = Color(1, 1, 1, 0.41118327)
+position = Vector2(1513, 1124)
+scale = Vector2(0.5355257, 0.5355257)
+texture = ExtResource("17_ts4ad")
+flip_h = true
+
+[node name="scatter--spilled-grain-04" type="Sprite2D" parent="GroundDetails" unique_id=449209550]
+self_modulate = Color(1, 1, 1, 0.7857982)
+position = Vector2(377, 202)
+scale = Vector2(0.32677355, 0.32677355)
+texture = ExtResource("7_slml6")
+flip_h = true
+
+[node name="scatter--grass-tufts-04" type="Sprite2D" parent="GroundDetails" unique_id=1610613470]
+self_modulate = Color(1, 1, 1, 0.8225872)
+position = Vector2(940, 1018)
+scale = Vector2(0.34784368, 0.34784368)
+texture = ExtResource("20_b65qf")
+flip_h = true
+
+[node name="ground-patch--trampled-grass-04" type="Sprite2D" parent="GroundDetails" unique_id=1758280756]
+self_modulate = Color(1, 1, 1, 0.629987)
+position = Vector2(2251, 617)
+scale = Vector2(0.50896305, 0.50896305)
+texture = ExtResource("19_gwdhi")
+flip_h = true
+
+[node name="scatter--grass-tufts-05" type="Sprite2D" parent="GroundDetails" unique_id=1240503056]
+self_modulate = Color(1, 1, 1, 0.7947949)
+position = Vector2(1435, 847)
+scale = Vector2(0.33833963, 0.33833963)
+texture = ExtResource("20_b65qf")
+flip_h = true
+
+[node name="puddle--long-03" type="Sprite2D" parent="GroundDetails" unique_id=406473286]
+self_modulate = Color(1, 1, 1, 0.81256694)
+position = Vector2(317, 1356)
+scale = Vector2(0.5090799, 0.5090799)
+texture = ExtResource("18_0ysdw")
+flip_h = true
+
+[node name="ground-patch--wet-mud-09" type="Sprite2D" parent="GroundDetails" unique_id=815232385]
+self_modulate = Color(1, 1, 1, 0.6537034)
+position = Vector2(945, 641)
+scale = Vector2(0.5856007, 0.5856007)
+texture = ExtResource("17_ts4ad")
+flip_h = true
+
+[node name="scatter--grass-tufts-06" type="Sprite2D" parent="GroundDetails" unique_id=169329205]
+self_modulate = Color(1, 1, 1, 0.7586735)
+position = Vector2(2126, 735)
+scale = Vector2(0.35056794, 0.35056794)
+texture = ExtResource("20_b65qf")
+
+[node name="scatter--grass-tufts-07" type="Sprite2D" parent="GroundDetails" unique_id=816599804]
+self_modulate = Color(1, 1, 1, 0.89278436)
+position = Vector2(1171, 1385)
+scale = Vector2(0.3338061, 0.3338061)
+texture = ExtResource("20_b65qf")
+flip_h = true
+
+[node name="scatter--gravel-06" type="Sprite2D" parent="GroundDetails" unique_id=1611271462]
+self_modulate = Color(1, 1, 1, 0.9170077)
+position = Vector2(2193, 168)
+scale = Vector2(0.2966602, 0.2966602)
+texture = ExtResource("15_fkixs")
+flip_h = true
+
+[node name="scatter--ash-soot-06" type="Sprite2D" parent="GroundDetails" unique_id=950006508]
+self_modulate = Color(1, 1, 1, 0.7660061)
+position = Vector2(231, 1587)
+scale = Vector2(0.33674785, 0.33674785)
+texture = ExtResource("16_g3u01")
+flip_h = true
+
+[node name="puddle--rain-ringed-04" type="Sprite2D" parent="GroundDetails" unique_id=386770051]
+self_modulate = Color(1, 1, 1, 0.9284359)
+position = Vector2(986, 923)
+scale = Vector2(0.7009142, 0.7009142)
+texture = ExtResource("14_sn46o")
+
+[node name="paving--broken-cobbles-14" type="Sprite2D" parent="GroundDetails" unique_id=1246579336]
+self_modulate = Color(1, 1, 1, 0.9143379)
+position = Vector2(2821, 228)
+scale = Vector2(0.29735562, 0.29735562)
+texture = ExtResource("3_cxpm6")
+flip_h = true
+
+[node name="puddle--shallow-04" type="Sprite2D" parent="GroundDetails" unique_id=206257379]
+self_modulate = Color(1, 1, 1, 0.8790432)
+position = Vector2(494, 72)
+scale = Vector2(0.5313083, 0.5313083)
+texture = ExtResource("12_t8tsq")
+
+[node name="ground-patch--packed-earth-05" type="Sprite2D" parent="GroundDetails" unique_id=438197582]
+self_modulate = Color(1, 1, 1, 0.45424035)
+position = Vector2(1803, 1753)
+scale = Vector2(0.5612867, 0.5612867)
+texture = ExtResource("9_mnfu5")
+
+[node name="paving--broken-cobbles-15" type="Sprite2D" parent="GroundDetails" unique_id=1770006575]
+self_modulate = Color(1, 1, 1, 0.9342731)
+position = Vector2(686, 999)
+scale = Vector2(0.35819387, 0.35819387)
+texture = ExtResource("3_cxpm6")
+
+[node name="scatter--leaf-litter-b-09" type="Sprite2D" parent="GroundDetails" unique_id=323686738]
+self_modulate = Color(1, 1, 1, 0.8325199)
+position = Vector2(2827, 522)
+scale = Vector2(0.29576078, 0.29576078)
+texture = ExtResource("11_8e5y8")
+
+[node name="paving--broken-cobbles-16" type="Sprite2D" parent="GroundDetails" unique_id=2010417488]
+self_modulate = Color(1, 1, 1, 0.87625575)
+position = Vector2(2364, 1249)
+scale = Vector2(0.35485715, 0.35485715)
+texture = ExtResource("3_cxpm6")
+flip_h = true
+
+[node name="paving--moss-flags-09" type="Sprite2D" parent="GroundDetails" unique_id=1720796388]
+self_modulate = Color(1, 1, 1, 0.9815976)
+position = Vector2(2135, 1682)
+scale = Vector2(0.3057994, 0.3057994)
+texture = ExtResource("2_ilgh8")
+flip_h = true
+
+[node name="ground-patch--packed-earth-06" type="Sprite2D" parent="GroundDetails" unique_id=941094175]
+self_modulate = Color(1, 1, 1, 0.4151585)
+position = Vector2(1381, 644)
+scale = Vector2(0.6593003, 0.6593003)
+texture = ExtResource("9_mnfu5")
+
+[node name="scatter--leaf-litter-b-10" type="Sprite2D" parent="GroundDetails" unique_id=1011088965]
+self_modulate = Color(1, 1, 1, 0.9022718)
+position = Vector2(808, 263)
+scale = Vector2(0.31316903, 0.31316903)
+texture = ExtResource("11_8e5y8")
+flip_h = true
+
+[node name="scatter--grass-tufts-08" type="Sprite2D" parent="GroundDetails" unique_id=1371199477]
+self_modulate = Color(1, 1, 1, 0.8160403)
+position = Vector2(2188, 838)
+scale = Vector2(0.33774966, 0.33774966)
+texture = ExtResource("20_b65qf")
+
+[node name="ground-patch--trampled-grass-05" type="Sprite2D" parent="GroundDetails" unique_id=1998730561]
+self_modulate = Color(1, 1, 1, 0.5727521)
+position = Vector2(1906, 1213)
+scale = Vector2(0.6132028, 0.6132028)
+texture = ExtResource("19_gwdhi")
+flip_h = true
+
+[node name="stain--damp-11" type="Sprite2D" parent="GroundDetails" unique_id=1412007006]
+self_modulate = Color(1, 1, 1, 0.8657844)
+position = Vector2(2334, 476)
+scale = Vector2(0.37169042, 0.37169042)
+texture = ExtResource("10_k2df7")
+
+[node name="puddle--long-04" type="Sprite2D" parent="GroundDetails" unique_id=602011437]
+self_modulate = Color(1, 1, 1, 0.98179674)
+position = Vector2(1125, 637)
+scale = Vector2(0.6887828, 0.6887828)
+texture = ExtResource("18_0ysdw")
+
+[node name="ground-patch--packed-earth-07" type="Sprite2D" parent="GroundDetails" unique_id=156219084]
+self_modulate = Color(1, 1, 1, 0.4266134)
+position = Vector2(2887, 1294)
+scale = Vector2(0.6495653, 0.6495653)
+texture = ExtResource("9_mnfu5")
+
+[node name="scatter--gravel-07" type="Sprite2D" parent="GroundDetails" unique_id=1997558929]
+self_modulate = Color(1, 1, 1, 0.92842245)
+position = Vector2(1489, 1590)
+scale = Vector2(0.39114657, 0.39114657)
+texture = ExtResource("15_fkixs")
+
+[node name="paving--cracks-12" type="Sprite2D" parent="GroundDetails" unique_id=199153694]
+self_modulate = Color(1, 1, 1, 0.8772554)
+position = Vector2(1767, 488)
+scale = Vector2(0.35044423, 0.35044423)
+texture = ExtResource("5_o7cic")
+flip_h = true
+
+[node name="paving--cracks-13" type="Sprite2D" parent="GroundDetails" unique_id=1333034391]
+self_modulate = Color(1, 1, 1, 0.85875607)
+position = Vector2(76, 256)
+scale = Vector2(0.33690643, 0.33690643)
+texture = ExtResource("5_o7cic")
+
+[node name="scatter--leaf-litter-a-06" type="Sprite2D" parent="GroundDetails" unique_id=1940589371]
+self_modulate = Color(1, 1, 1, 0.9911948)
+position = Vector2(355, 294)
+scale = Vector2(0.30510336, 0.30510336)
+texture = ExtResource("13_shw7a")
+
+[node name="ground-patch--trampled-grass-06" type="Sprite2D" parent="GroundDetails" unique_id=239158044]
+self_modulate = Color(1, 1, 1, 0.560365)
+position = Vector2(2173, 1426)
+scale = Vector2(0.50200933, 0.50200933)
+texture = ExtResource("19_gwdhi")
+
+[node name="puddle--shallow-05" type="Sprite2D" parent="GroundDetails" unique_id=1368395213]
+self_modulate = Color(1, 1, 1, 0.811745)
+position = Vector2(2806, 1457)
+scale = Vector2(0.55761695, 0.55761695)
+texture = ExtResource("12_t8tsq")
+
+[node name="ground-patch--packed-earth-08" type="Sprite2D" parent="GroundDetails" unique_id=811316859]
+self_modulate = Color(1, 1, 1, 0.5012429)
+position = Vector2(2385, 1342)
+scale = Vector2(0.6683276, 0.6683276)
+texture = ExtResource("9_mnfu5")
+flip_h = true
+
+[node name="ground-patch--wet-mud-10" type="Sprite2D" parent="GroundDetails" unique_id=1413722120]
+self_modulate = Color(1, 1, 1, 0.48839658)
+position = Vector2(2588, 448)
+scale = Vector2(0.63026685, 0.63026685)
+texture = ExtResource("17_ts4ad")
+
+[node name="puddle--rain-ringed-05" type="Sprite2D" parent="GroundDetails" unique_id=343440418]
+self_modulate = Color(1, 1, 1, 0.8409981)
+position = Vector2(989, 220)
+scale = Vector2(0.6943887, 0.6943887)
+texture = ExtResource("14_sn46o")
+
+[node name="scatter--ash-soot-07" type="Sprite2D" parent="GroundDetails" unique_id=1815445513]
+self_modulate = Color(1, 1, 1, 0.982942)
+position = Vector2(1917, 453)
+scale = Vector2(0.3953835, 0.3953835)
+texture = ExtResource("16_g3u01")
+
+[node name="puddle--rain-ringed-06" type="Sprite2D" parent="GroundDetails" unique_id=1432122551]
+self_modulate = Color(1, 1, 1, 0.97371304)
+position = Vector2(1715, 1073)
+scale = Vector2(0.6537631, 0.6537631)
+texture = ExtResource("14_sn46o")
+
+[node name="scatter--straw-06" type="Sprite2D" parent="GroundDetails" unique_id=46829050]
+self_modulate = Color(1, 1, 1, 0.750711)
+position = Vector2(1954, 1293)
+scale = Vector2(0.36794472, 0.36794472)
+texture = ExtResource("8_ktoy7")
+
+[node name="stain--damp-12" type="Sprite2D" parent="GroundDetails" unique_id=249299735]
+self_modulate = Color(1, 1, 1, 0.9631702)
+position = Vector2(1099, 302)
+scale = Vector2(0.29398474, 0.29398474)
+texture = ExtResource("10_k2df7")
+
+[node name="paving--broken-cobbles-17" type="Sprite2D" parent="GroundDetails" unique_id=1899445577]
+self_modulate = Color(1, 1, 1, 0.9657581)
+position = Vector2(1022, 141)
+scale = Vector2(0.32706317, 0.32706317)
+texture = ExtResource("3_cxpm6")
+
+[node name="scatter--gravel-08" type="Sprite2D" parent="GroundDetails" unique_id=2060545684]
+self_modulate = Color(1, 1, 1, 0.8391249)
+position = Vector2(666, 1545)
+scale = Vector2(0.3175487, 0.3175487)
+texture = ExtResource("15_fkixs")
+
+[node name="scatter--ash-soot-08" type="Sprite2D" parent="GroundDetails" unique_id=1178984471]
+self_modulate = Color(1, 1, 1, 0.79687136)
+position = Vector2(1165, 994)
+scale = Vector2(0.31924775, 0.31924775)
+texture = ExtResource("16_g3u01")
+
+[node name="puddle--rain-ringed-07" type="Sprite2D" parent="GroundDetails" unique_id=958290744]
+self_modulate = Color(1, 1, 1, 0.8589658)
+position = Vector2(877, 800)
+scale = Vector2(0.6582587, 0.6582587)
+texture = ExtResource("14_sn46o")
+flip_h = true
+
+[node name="puddle--long-05" type="Sprite2D" parent="GroundDetails" unique_id=799599740]
+self_modulate = Color(1, 1, 1, 0.82426226)
+position = Vector2(231, 1267)
+scale = Vector2(0.6541307, 0.6541307)
+texture = ExtResource("18_0ysdw")
+
+[node name="puddle--long-06" type="Sprite2D" parent="GroundDetails" unique_id=1418680596]
+self_modulate = Color(1, 1, 1, 0.7544173)
+position = Vector2(1243, 137)
+scale = Vector2(0.6168629, 0.6168629)
+texture = ExtResource("18_0ysdw")
+
+[node name="puddle--long-07" type="Sprite2D" parent="GroundDetails" unique_id=783374752]
+self_modulate = Color(1, 1, 1, 0.83201337)
+position = Vector2(1267, 232)
+scale = Vector2(0.62954366, 0.62954366)
+texture = ExtResource("18_0ysdw")
+flip_h = true
+
+[node name="scatter--grass-tufts-09" type="Sprite2D" parent="GroundDetails" unique_id=314744828]
+self_modulate = Color(1, 1, 1, 0.95855296)
+position = Vector2(2796, 656)
+scale = Vector2(0.38726276, 0.38726276)
+texture = ExtResource("20_b65qf")
+flip_h = true
+
+[node name="puddle--rain-ringed-08" type="Sprite2D" parent="GroundDetails" unique_id=2146439548]
+self_modulate = Color(1, 1, 1, 0.99957323)
+position = Vector2(1279, 420)
+scale = Vector2(0.6697085, 0.6697085)
+texture = ExtResource("14_sn46o")
+
+[node name="scatter--leaf-litter-b-11" type="Sprite2D" parent="GroundDetails" unique_id=41542459]
+self_modulate = Color(1, 1, 1, 0.87777793)
+position = Vector2(2806, 1707)
+scale = Vector2(0.36173826, 0.36173826)
+texture = ExtResource("11_8e5y8")
+flip_h = true
+
+[node name="puddle--long-08" type="Sprite2D" parent="GroundDetails" unique_id=1426862562]
+self_modulate = Color(1, 1, 1, 0.85420847)
+position = Vector2(1973, 343)
+scale = Vector2(0.52254117, 0.52254117)
+texture = ExtResource("18_0ysdw")
+
+[node name="ground-patch--wet-mud-11" type="Sprite2D" parent="GroundDetails" unique_id=543524314]
+self_modulate = Color(1, 1, 1, 0.5882757)
+position = Vector2(580, 483)
+scale = Vector2(0.6644917, 0.6644917)
+texture = ExtResource("17_ts4ad")
+flip_h = true
+
+[node name="scatter--straw-07" type="Sprite2D" parent="GroundDetails" unique_id=752764602]
+self_modulate = Color(1, 1, 1, 0.9119235)
+position = Vector2(1561, 1722)
+scale = Vector2(0.3713092, 0.3713092)
+texture = ExtResource("8_ktoy7")
+flip_h = true
+
+[node name="paving--cracks-14" type="Sprite2D" parent="GroundDetails" unique_id=377777923]
+self_modulate = Color(1, 1, 1, 0.87296766)
+position = Vector2(1054, 1740)
+scale = Vector2(0.34138197, 0.34138197)
+texture = ExtResource("5_o7cic")
+
+[node name="scatter--leaf-litter-a-07" type="Sprite2D" parent="GroundDetails" unique_id=920124943]
+self_modulate = Color(1, 1, 1, 0.75648046)
+position = Vector2(43, 1130)
+scale = Vector2(0.39174753, 0.39174753)
+texture = ExtResource("13_shw7a")
+
+[node name="ground-patch--wet-mud-12" type="Sprite2D" parent="GroundDetails" unique_id=1031881754]
+self_modulate = Color(1, 1, 1, 0.61529124)
+position = Vector2(2580, 805)
+scale = Vector2(0.5659677, 0.5659677)
+texture = ExtResource("17_ts4ad")
+
+[node name="puddle--rain-ringed-09" type="Sprite2D" parent="GroundDetails" unique_id=701220329]
+self_modulate = Color(1, 1, 1, 0.9995946)
+position = Vector2(559, 1149)
+scale = Vector2(0.6965342, 0.6965342)
+texture = ExtResource("14_sn46o")
+
+[node name="scatter--leaf-litter-a-08" type="Sprite2D" parent="GroundDetails" unique_id=1230562935]
+self_modulate = Color(1, 1, 1, 0.7768463)
+position = Vector2(1977, 541)
+scale = Vector2(0.30890217, 0.30890217)
+texture = ExtResource("13_shw7a")
+flip_h = true
+
+[node name="paving--cracks-15" type="Sprite2D" parent="GroundDetails" unique_id=1790129583]
+self_modulate = Color(1, 1, 1, 0.7714964)
+position = Vector2(1626, 211)
+scale = Vector2(0.3624903, 0.3624903)
+texture = ExtResource("5_o7cic")
+
+[node name="scatter--spilled-grain-05" type="Sprite2D" parent="GroundDetails" unique_id=1580245617]
+self_modulate = Color(1, 1, 1, 0.94549054)
+position = Vector2(1759, 985)
+scale = Vector2(0.38352323, 0.38352323)
+texture = ExtResource("7_slml6")
+
+[node name="stain--damp-13" type="Sprite2D" parent="GroundDetails" unique_id=1579367110]
+self_modulate = Color(1, 1, 1, 0.85315764)
+position = Vector2(563, 874)
+scale = Vector2(0.31594622, 0.31594622)
+texture = ExtResource("10_k2df7")
+
+[node name="ground-patch--packed-earth-09" type="Sprite2D" parent="GroundDetails" unique_id=1914501303]
+self_modulate = Color(1, 1, 1, 0.5171431)
+position = Vector2(990, 1342)
+scale = Vector2(0.55744, 0.55744)
+texture = ExtResource("9_mnfu5")
+
+[node name="ground-patch--trampled-grass-07" type="Sprite2D" parent="GroundDetails" unique_id=1311634544]
+self_modulate = Color(1, 1, 1, 0.51523256)
+position = Vector2(1981, 857)
+scale = Vector2(0.68570554, 0.68570554)
+texture = ExtResource("19_gwdhi")
+
+[node name="scatter--leaf-litter-a-09" type="Sprite2D" parent="GroundDetails" unique_id=732529917]
+self_modulate = Color(1, 1, 1, 0.91688186)
+position = Vector2(1363, 534)
+scale = Vector2(0.32838738, 0.32838738)
+texture = ExtResource("13_shw7a")
+flip_h = true
+
+[node name="scatter--ash-soot-09" type="Sprite2D" parent="GroundDetails" unique_id=459360269]
+self_modulate = Color(1, 1, 1, 0.9787769)
+position = Vector2(1157, 800)
+scale = Vector2(0.35250178, 0.35250178)
+texture = ExtResource("16_g3u01")
+
+[node name="ground-patch--packed-earth-10" type="Sprite2D" parent="GroundDetails" unique_id=541446867]
+self_modulate = Color(1, 1, 1, 0.51048315)
+position = Vector2(916, 1432)
+scale = Vector2(0.5393586, 0.5393586)
+texture = ExtResource("9_mnfu5")
+
+[node name="puddle--rain-ringed-10" type="Sprite2D" parent="GroundDetails" unique_id=447730944]
+self_modulate = Color(1, 1, 1, 0.8289003)
+position = Vector2(966, 494)
+scale = Vector2(0.55580705, 0.55580705)
+texture = ExtResource("14_sn46o")
+flip_h = true
+
+[node name="ground-patch--packed-earth-11" type="Sprite2D" parent="GroundDetails" unique_id=1484769172]
+self_modulate = Color(1, 1, 1, 0.6075161)
+position = Vector2(2908, 1187)
+scale = Vector2(0.5033104, 0.5033104)
+texture = ExtResource("9_mnfu5")
+
+[node name="scatter--gravel-09" type="Sprite2D" parent="GroundDetails" unique_id=2070594302]
+self_modulate = Color(1, 1, 1, 0.825301)
+position = Vector2(1172, 1516)
+scale = Vector2(0.35380396, 0.35380396)
+texture = ExtResource("15_fkixs")
+flip_h = true
+
+[node name="scatter--spilled-grain-06" type="Sprite2D" parent="GroundDetails" unique_id=1497127193]
+self_modulate = Color(1, 1, 1, 0.8281143)
+position = Vector2(2005, 150)
+scale = Vector2(0.31137076, 0.31137076)
+texture = ExtResource("7_slml6")
+flip_h = true
+
+[node name="trail--footprints-hooves-01" type="Sprite2D" parent="GroundDetails" unique_id=1771265444]
+self_modulate = Color(1, 1, 1, 0.99586153)
+position = Vector2(2172, 804)
+scale = Vector2(0.3054298, 0.3054298)
+texture = ExtResource("21_uvn2w")
+flip_h = true
+
+[node name="ruts--straight-01" type="Sprite2D" parent="GroundDetails" unique_id=691526946]
+self_modulate = Color(1, 1, 1, 0.7658029)
+position = Vector2(2204, 1364)
+scale = Vector2(0.5984425, 0.5984425)
+texture = ExtResource("22_gsh3x")
+flip_h = true
+
+[node name="ruts--curve-01" type="Sprite2D" parent="GroundDetails" unique_id=527087010]
+self_modulate = Color(1, 1, 1, 0.7815666)
+position = Vector2(1852, 1252)
+scale = Vector2(0.59000194, 0.59000194)
+texture = ExtResource("23_l5uic")
+
+[node name="ruts--straight-02" type="Sprite2D" parent="GroundDetails" unique_id=619987340]
+self_modulate = Color(1, 1, 1, 0.9718473)
+position = Vector2(1052, 1140)
+scale = Vector2(0.5497134, 0.5497134)
+texture = ExtResource("22_gsh3x")
+flip_h = true
+
+[node name="trail--footprints-hooves-02" type="Sprite2D" parent="GroundDetails" unique_id=1500356060]
+self_modulate = Color(1, 1, 1, 0.9130074)
+position = Vector2(572, 1028)
+scale = Vector2(0.32366243, 0.32366243)
+texture = ExtResource("21_uvn2w")
+flip_h = true
+
+[node name="DressingShadows" type="Node2D" parent="." unique_id=1909631930]
+z_index = -1
+script = ExtResource("24_lapi0")
+dressing_root_path = NodePath("../..")
+
+[node name="Props" type="Node2D" parent="." unique_id=506536691]
+y_sort_enabled = true
+
+[node name="sacks--pile-01" type="Sprite2D" parent="Props" unique_id=764528358]
+position = Vector2(967, 678)
+scale = Vector2(0.17998222, 0.17998222)
+texture = ExtResource("25_s3yw7")
+offset = Vector2(0, -112)
+
+[node name="tools--broom-rake-01" type="Sprite2D" parent="Props" unique_id=2120858569]
+position = Vector2(937, 694)
+scale = Vector2(0.4493082, 0.4493082)
+texture = ExtResource("26_7ew0m")
+offset = Vector2(0, -112)
+
+[node name="bucket--wooden-01" type="Sprite2D" parent="Props" unique_id=304127042]
+position = Vector2(1342, 690)
+scale = Vector2(0.11145108, 0.11145108)
+texture = ExtResource("27_7qaft")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="planks--stack-01" type="Sprite2D" parent="Props" unique_id=355651844]
+position = Vector2(916, 660)
+scale = Vector2(0.23751384, 0.23751384)
+texture = ExtResource("28_u7qsh")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="crate--broken-straw-01" type="Sprite2D" parent="Props" unique_id=118920690]
+position = Vector2(869, 661)
+scale = Vector2(0.19771968, 0.19771968)
+texture = ExtResource("29_oyuxk")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrel--tipped-01" type="Sprite2D" parent="Props" unique_id=2079971866]
+position = Vector2(1727, 691)
+scale = Vector2(0.19626251, 0.19626251)
+texture = ExtResource("30_js61o")
+offset = Vector2(0, -112)
+
+[node name="ladder--leaning-01" type="Sprite2D" parent="Props" unique_id=1628323355]
+position = Vector2(1691, 692)
+scale = Vector2(0.47696596, 0.47696596)
+texture = ExtResource("31_erdqg")
+offset = Vector2(0, -112)
+
+[node name="sack--slumped-01" type="Sprite2D" parent="Props" unique_id=878487581]
+position = Vector2(2073, 692)
+scale = Vector2(0.103002734, 0.103002734)
+texture = ExtResource("32_r0sqj")
+offset = Vector2(0, -112)
+
+[node name="crate--small-01" type="Sprite2D" parent="Props" unique_id=487553490]
+position = Vector2(1673, 666)
+scale = Vector2(0.20163026, 0.20163026)
+texture = ExtResource("33_h5pse")
+offset = Vector2(0, -112)
+
+[node name="tools--broom-rake-02" type="Sprite2D" parent="Props" unique_id=242918157]
+position = Vector2(1620, 677)
+scale = Vector2(0.4988021, 0.4988021)
+texture = ExtResource("26_7ew0m")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrel--tipped-02" type="Sprite2D" parent="Props" unique_id=1433717331]
+position = Vector2(2122, 666)
+scale = Vector2(0.21178469, 0.21178469)
+texture = ExtResource("30_js61o")
+offset = Vector2(0, -112)
+
+[node name="barrel--upright-01" type="Sprite2D" parent="Props" unique_id=1933085359]
+position = Vector2(2434, 661)
+scale = Vector2(0.32134902, 0.32134902)
+texture = ExtResource("34_q3nx2")
+offset = Vector2(0, -112)
+
+[node name="doorstep--boot-scraper-01" type="Sprite2D" parent="Props" unique_id=1681430431]
+position = Vector2(2389, 675)
+scale = Vector2(0.10866824, 0.10866824)
+texture = ExtResource("35_mt6xt")
+offset = Vector2(0, -112)
+
+[node name="planks--stack-02" type="Sprite2D" parent="Props" unique_id=765438544]
+position = Vector2(2378, 638)
+scale = Vector2(0.23816295, 0.23816295)
+texture = ExtResource("28_u7qsh")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="pot--herbs-cracked-01" type="Sprite2D" parent="Props" unique_id=1184047502]
+position = Vector2(2347, 656)
+scale = Vector2(0.11845462, 0.11845462)
+texture = ExtResource("36_tm82o")
+offset = Vector2(0, -112)
+
+[node name="washtub--washboard-01" type="Sprite2D" parent="Props" unique_id=814187599]
+position = Vector2(1448, 1135)
+scale = Vector2(0.20568027, 0.20568027)
+texture = ExtResource("39_ha1xk")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="pot--herbs-cracked-02" type="Sprite2D" parent="Props" unique_id=647668322]
+position = Vector2(1478, 1129)
+scale = Vector2(0.109783545, 0.109783545)
+texture = ExtResource("36_tm82o")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrels--plank-pair-01" type="Sprite2D" parent="Props" unique_id=195837630]
+position = Vector2(1748, 1135)
+scale = Vector2(0.29543224, 0.29543224)
+texture = ExtResource("40_ax0vl")
+offset = Vector2(0, -112)
+
+[node name="sack--slumped-02" type="Sprite2D" parent="Props" unique_id=1391046825]
+position = Vector2(1802, 1137)
+scale = Vector2(0.10722427, 0.10722427)
+texture = ExtResource("32_r0sqj")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="firewood--low-heap-01" type="Sprite2D" parent="Props" unique_id=142043307]
+position = Vector2(2219, 1016)
+scale = Vector2(0.24817601, 0.24817601)
+texture = ExtResource("37_hg24m")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="sack--slumped-03" type="Sprite2D" parent="Props" unique_id=1497160891]
+position = Vector2(2276, 1026)
+scale = Vector2(0.11760951, 0.11760951)
+texture = ExtResource("32_r0sqj")
+offset = Vector2(0, -112)
+
+[node name="doorstep--boot-scraper-02" type="Sprite2D" parent="Props" unique_id=961690529]
+position = Vector2(2250, 1011)
+scale = Vector2(0.12435452, 0.12435452)
+texture = ExtResource("35_mt6xt")
+offset = Vector2(0, -112)
+
+[node name="baskets--stacked-01" type="Sprite2D" parent="Props" unique_id=190651136]
+position = Vector2(2181, 1028)
+scale = Vector2(0.17979313, 0.17979313)
+texture = ExtResource("42_hxpf1")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="doorstep--boot-scraper-03" type="Sprite2D" parent="Props" unique_id=674525530]
+position = Vector2(2316, 1025)
+scale = Vector2(0.11642704, 0.11642704)
+texture = ExtResource("35_mt6xt")
+offset = Vector2(0, -112)
+
+[node name="barrels--plank-pair-02" type="Sprite2D" parent="Props" unique_id=235682039]
+position = Vector2(2174, 997)
+scale = Vector2(0.29426047, 0.29426047)
+texture = ExtResource("40_ax0vl")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="ladder--leaning-02" type="Sprite2D" parent="Props" unique_id=590567231]
+position = Vector2(2126, 997)
+scale = Vector2(0.45301047, 0.45301047)
+texture = ExtResource("31_erdqg")
+offset = Vector2(0, -112)
+
+[node name="firewood--low-heap-02" type="Sprite2D" parent="Props" unique_id=360613815]
+position = Vector2(2373, 1191)
+scale = Vector2(0.25597498, 0.25597498)
+texture = ExtResource("37_hg24m")
+offset = Vector2(0, -112)
+
+[node name="jars--clay-three-01" type="Sprite2D" parent="Props" unique_id=426348047]
+position = Vector2(2323, 1187)
+scale = Vector2(0.18159468, 0.18159468)
+texture = ExtResource("41_d68jg")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="crate--small-02" type="Sprite2D" parent="Props" unique_id=179669941]
+position = Vector2(2446, 1189)
+scale = Vector2(0.1909514, 0.1909514)
+texture = ExtResource("33_h5pse")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="doorstep--boot-scraper-04" type="Sprite2D" parent="Props" unique_id=364379242]
+position = Vector2(2492, 1198)
+scale = Vector2(0.11731443, 0.11731443)
+texture = ExtResource("35_mt6xt")
+offset = Vector2(0, -112)
+
+[node name="doorstep--boot-scraper-05" type="Sprite2D" parent="Props" unique_id=212141767]
+position = Vector2(2406, 1206)
+scale = Vector2(0.11986741, 0.11986741)
+texture = ExtResource("35_mt6xt")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrel--rain-downspout-01" type="Sprite2D" parent="Props" unique_id=67998957]
+position = Vector2(2550, 1193)
+scale = Vector2(0.27599916, 0.27599916)
+texture = ExtResource("44_j0bdu")
+offset = Vector2(0, -112)
+
+[node name="doorstep--boot-scraper-06" type="Sprite2D" parent="Props" unique_id=471390496]
+position = Vector2(2608, 1205)
+scale = Vector2(0.11002083, 0.11002083)
+texture = ExtResource("35_mt6xt")
+offset = Vector2(0, -112)
+
+[node name="crate--small-03" type="Sprite2D" parent="Props" unique_id=1240655909]
+position = Vector2(2647, 1192)
+scale = Vector2(0.17905, 0.17905)
+texture = ExtResource("33_h5pse")
+offset = Vector2(0, -112)
+
+[node name="baskets--stacked-02" type="Sprite2D" parent="Props" unique_id=222801627]
+position = Vector2(2681, 1190)
+scale = Vector2(0.18506481, 0.18506481)
+texture = ExtResource("42_hxpf1")
+offset = Vector2(0, -112)
+
+[node name="washtub--washboard-02" type="Sprite2D" parent="Props" unique_id=1371379016]
+position = Vector2(2712, 1194)
+scale = Vector2(0.20228052, 0.20228052)
+texture = ExtResource("39_ha1xk")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="sack--slumped-04" type="Sprite2D" parent="Props" unique_id=1178177453]
+position = Vector2(2766, 1195)
+scale = Vector2(0.11117819, 0.11117819)
+texture = ExtResource("32_r0sqj")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrel--rain-downspout-02" type="Sprite2D" parent="Props" unique_id=481990153]
+position = Vector2(2814, 1191)
+scale = Vector2(0.27864254, 0.27864254)
+texture = ExtResource("44_j0bdu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="crate--broken-straw-02" type="Sprite2D" parent="Props" unique_id=1099053565]
+position = Vector2(2860, 1205)
+scale = Vector2(0.18160425, 0.18160425)
+texture = ExtResource("29_oyuxk")
+offset = Vector2(0, -112)
+
+[node name="barrel--upright-02" type="Sprite2D" parent="Props" unique_id=1202511856]
+position = Vector2(2882, 1173)
+scale = Vector2(0.30535492, 0.30535492)
+texture = ExtResource("34_q3nx2")
+offset = Vector2(0, -112)
+
+[node name="sack--slumped-05" type="Sprite2D" parent="Props" unique_id=905696327]
+position = Vector2(2926, 1179)
+scale = Vector2(0.10662375, 0.10662375)
+texture = ExtResource("32_r0sqj")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrel--upright-03" type="Sprite2D" parent="Props" unique_id=779114715]
+position = Vector2(385, 373)
+scale = Vector2(0.29170987, 0.29170987)
+texture = ExtResource("34_q3nx2")
+offset = Vector2(0, -112)
+
+[node name="sack--slumped-06" type="Sprite2D" parent="Props" unique_id=1119676974]
+position = Vector2(334, 389)
+scale = Vector2(0.10505465, 0.10505465)
+texture = ExtResource("32_r0sqj")
+offset = Vector2(0, -112)
+
+[node name="firewood--low-heap-03" type="Sprite2D" parent="Props" unique_id=169793868]
+position = Vector2(474, 377)
+scale = Vector2(0.25708076, 0.25708076)
+texture = ExtResource("37_hg24m")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="pot--herbs-cracked-03" type="Sprite2D" parent="Props" unique_id=1521461751]
+position = Vector2(439, 393)
+scale = Vector2(0.10562516, 0.10562516)
+texture = ExtResource("36_tm82o")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="pot--herbs-cracked-04" type="Sprite2D" parent="Props" unique_id=36725720]
+position = Vector2(524, 377)
+scale = Vector2(0.104222625, 0.104222625)
+texture = ExtResource("36_tm82o")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrel--upright-04" type="Sprite2D" parent="Props" unique_id=340746966]
+position = Vector2(417, 1614)
+scale = Vector2(0.3217314, 0.3217314)
+texture = ExtResource("34_q3nx2")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="doorstep--boot-scraper-07" type="Sprite2D" parent="Props" unique_id=614501891]
+position = Vector2(445, 1615)
+scale = Vector2(0.12079885, 0.12079885)
+texture = ExtResource("35_mt6xt")
+offset = Vector2(0, -112)
+
+[node name="doorstep--boot-scraper-08" type="Sprite2D" parent="Props" unique_id=1916703217]
+position = Vector2(444, 1625)
+scale = Vector2(0.11157898, 0.11157898)
+texture = ExtResource("35_mt6xt")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrels--plank-pair-03" type="Sprite2D" parent="Props" unique_id=957221152]
+position = Vector2(356, 1590)
+scale = Vector2(0.31080887, 0.31080887)
+texture = ExtResource("40_ax0vl")
+offset = Vector2(0, -112)
+
+[node name="barrel--upright-05" type="Sprite2D" parent="Props" unique_id=22809492]
+position = Vector2(528, 1590)
+scale = Vector2(0.27852628, 0.27852628)
+texture = ExtResource("34_q3nx2")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="sack--slumped-07" type="Sprite2D" parent="Props" unique_id=2046347759]
+position = Vector2(567, 1592)
+scale = Vector2(0.11202219, 0.11202219)
+texture = ExtResource("32_r0sqj")
+offset = Vector2(0, -112)
+
+[node name="barrels--plank-pair-04" type="Sprite2D" parent="Props" unique_id=1178891304]
+position = Vector2(2866, 309)
+scale = Vector2(0.309493, 0.309493)
+texture = ExtResource("40_ax0vl")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="ladder--leaning-03" type="Sprite2D" parent="Props" unique_id=1284879154]
+position = Vector2(2920, 314)
+scale = Vector2(0.5189692, 0.5189692)
+texture = ExtResource("31_erdqg")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="ladder--leaning-04" type="Sprite2D" parent="Props" unique_id=1198214967]
+position = Vector2(2810, 319)
+scale = Vector2(0.45657164, 0.45657164)
+texture = ExtResource("31_erdqg")
+offset = Vector2(0, -112)
+
+[node name="washtub--washboard-03" type="Sprite2D" parent="Props" unique_id=1768161630]
+position = Vector2(2826, 1751)
+scale = Vector2(0.19470961, 0.19470961)
+texture = ExtResource("39_ha1xk")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="crate--broken-straw-03" type="Sprite2D" parent="Props" unique_id=854313962]
+position = Vector2(2773, 1747)
+scale = Vector2(0.20552543, 0.20552543)
+texture = ExtResource("29_oyuxk")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrels--plank-pair-05" type="Sprite2D" parent="Props" unique_id=1697780745]
+position = Vector2(2930, 1749)
+scale = Vector2(0.3130695, 0.3130695)
+texture = ExtResource("40_ax0vl")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="bottles--cluster-01" type="Sprite2D" parent="Props" unique_id=1550345772]
+position = Vector2(2082, 798)
+scale = Vector2(0.11721598, 0.11721598)
+texture = ExtResource("43_usmy6")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="anvil--stump-01" type="Sprite2D" parent="Props" unique_id=578751370]
+position = Vector2(1948, 1044)
+scale = Vector2(0.28589228, 0.28589228)
+texture = ExtResource("56_0p4q1")
+offset = Vector2(0, -112)
+
+[node name="fence--broken-segment-01" type="Sprite2D" parent="Props" unique_id=2026125280]
+position = Vector2(1532, 548)
+scale = Vector2(0.29690418, 0.29690418)
+texture = ExtResource("55_cmprv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="hay--bale-01" type="Sprite2D" parent="Props" unique_id=418266468]
+position = Vector2(2684, 1668)
+scale = Vector2(0.19080792, 0.19080792)
+texture = ExtResource("51_8bvn2")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="crate--turnips-01" type="Sprite2D" parent="Props" unique_id=1111501646]
+position = Vector2(2716, 436)
+scale = Vector2(0.1927691, 0.1927691)
+texture = ExtResource("46_tbfj1")
+offset = Vector2(0, -112)
+
+[node name="grindstone--frame-01" type="Sprite2D" parent="Props" unique_id=1557503766]
+position = Vector2(2940, 1316)
+scale = Vector2(0.2735937, 0.2735937)
+texture = ExtResource("50_bq6hb")
+offset = Vector2(0, -112)
+
+[node name="trough--stone-01" type="Sprite2D" parent="Props" unique_id=1588020819]
+position = Vector2(1180, 1012)
+scale = Vector2(0.22785468, 0.22785468)
+texture = ExtResource("60_84n4g")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="cobbles--loose-01" type="Sprite2D" parent="Props" unique_id=587769026]
+position = Vector2(2748, 1284)
+scale = Vector2(0.14164305, 0.14164305)
+texture = ExtResource("61_7loww")
+offset = Vector2(0, -112)
+
+[node name="bollard--stone-01" type="Sprite2D" parent="Props" unique_id=590862509]
+position = Vector2(92, 340)
+scale = Vector2(0.18573764, 0.18573764)
+texture = ExtResource("45_dt855")
+offset = Vector2(0, -112)
+
+[node name="hay--loose-pile-01" type="Sprite2D" parent="Props" unique_id=1326436300]
+position = Vector2(508, 1348)
+scale = Vector2(0.19838819, 0.19838819)
+texture = ExtResource("54_skkbq")
+offset = Vector2(0, -112)
+
+[node name="crate--turnips-02" type="Sprite2D" parent="Props" unique_id=1423178355]
+position = Vector2(508, 452)
+scale = Vector2(0.19468956, 0.19468956)
+texture = ExtResource("46_tbfj1")
+offset = Vector2(0, -112)
+
+[node name="laundry-line-01" type="Sprite2D" parent="Props" unique_id=157755940]
+position = Vector2(1692, 788)
+scale = Vector2(0.48911282, 0.48911282)
+texture = ExtResource("47_ucuiy")
+offset = Vector2(0, -112)
+
+[node name="bollard--stone-02" type="Sprite2D" parent="Props" unique_id=1867981858]
+position = Vector2(668, 212)
+scale = Vector2(0.19568054, 0.19568054)
+texture = ExtResource("45_dt855")
+offset = Vector2(0, -112)
+
+[node name="hitching-post-01" type="Sprite2D" parent="Props" unique_id=1825334605]
+position = Vector2(2236, 516)
+scale = Vector2(0.27851254, 0.27851254)
+texture = ExtResource("57_u380j")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="drying-rack--cloth-01" type="Sprite2D" parent="Props" unique_id=900697326]
+position = Vector2(828, 452)
+scale = Vector2(0.31650746, 0.31650746)
+texture = ExtResource("53_pvyx0")
+offset = Vector2(0, -112)
+
+[node name="rubble--stone-pile-01" type="Sprite2D" parent="Props" unique_id=2113431468]
+position = Vector2(412, 148)
+scale = Vector2(0.31102353, 0.31102353)
+texture = ExtResource("48_uek1p")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="hay--bale-02" type="Sprite2D" parent="Props" unique_id=1967815501]
+position = Vector2(2396, 372)
+scale = Vector2(0.19632453, 0.19632453)
+texture = ExtResource("51_8bvn2")
+offset = Vector2(0, -112)
+
+[node name="fence--leaning-post-01" type="Sprite2D" parent="Props" unique_id=2003295052]
+position = Vector2(156, 1588)
+scale = Vector2(0.28604344, 0.28604344)
+texture = ExtResource("59_nelfm")
+offset = Vector2(0, -112)
+
+[node name="notice-post--blank-01" type="Sprite2D" parent="Props" unique_id=2006393837]
+position = Vector2(1500, 1332)
+scale = Vector2(0.4459351, 0.4459351)
+texture = ExtResource("52_36skw")
+offset = Vector2(0, -112)
+
+[node name="hay--loose-pile-02" type="Sprite2D" parent="Props" unique_id=1345478243]
+position = Vector2(2940, 516)
+scale = Vector2(0.18696053, 0.18696053)
+texture = ExtResource("54_skkbq")
+offset = Vector2(0, -112)
+
+[node name="barrow--tipped-01" type="Sprite2D" parent="Props" unique_id=1375252702]
+position = Vector2(2844, 884)
+scale = Vector2(0.21356435, 0.21356435)
+texture = ExtResource("58_p0toh")
+offset = Vector2(0, -112)
+
+[node name="notice-post--blank-02" type="Sprite2D" parent="Props" unique_id=1362460724]
+position = Vector2(604, 1524)
+scale = Vector2(0.4580456, 0.4580456)
+texture = ExtResource("52_36skw")
+offset = Vector2(0, -112)
+
+[node name="fence--leaning-post-02" type="Sprite2D" parent="Props" unique_id=1656613416]
+position = Vector2(764, 1636)
+scale = Vector2(0.28473273, 0.28473273)
+texture = ExtResource("59_nelfm")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="hitching-post-02" type="Sprite2D" parent="Props" unique_id=776906351]
+position = Vector2(2812, 740)
+scale = Vector2(0.2875925, 0.2875925)
+texture = ExtResource("57_u380j")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrow--tipped-02" type="Sprite2D" parent="Props" unique_id=1587801309]
+position = Vector2(988, 980)
+scale = Vector2(0.18642229, 0.18642229)
+texture = ExtResource("58_p0toh")
+offset = Vector2(0, -112)
+
+[node name="barrow--tipped-03" type="Sprite2D" parent="Props" unique_id=43105751]
+position = Vector2(2300, 836)
+scale = Vector2(0.20170318, 0.20170318)
+texture = ExtResource("58_p0toh")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="hay--loose-pile-03" type="Sprite2D" parent="Props" unique_id=444551461]
+position = Vector2(1724, 1380)
+scale = Vector2(0.18151069, 0.18151069)
+texture = ExtResource("54_skkbq")
+offset = Vector2(0, -112)
+
+[node name="anvil--stump-02" type="Sprite2D" parent="Props" unique_id=1675736567]
+position = Vector2(1372, 756)
+scale = Vector2(0.30804896, 0.30804896)
+texture = ExtResource("56_0p4q1")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="notice-post--blank-03" type="Sprite2D" parent="Props" unique_id=997883388]
+position = Vector2(2556, 452)
+scale = Vector2(0.49427924, 0.49427924)
+texture = ExtResource("52_36skw")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="hay--bale-03" type="Sprite2D" parent="Props" unique_id=761415601]
+position = Vector2(2556, 132)
+scale = Vector2(0.18537925, 0.18537925)
+texture = ExtResource("51_8bvn2")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="hay--bale-04" type="Sprite2D" parent="Props" unique_id=954297266]
+position = Vector2(1116, 1332)
+scale = Vector2(0.20172055, 0.20172055)
+texture = ExtResource("51_8bvn2")
+offset = Vector2(0, -112)
+
+[node name="trough--stone-02" type="Sprite2D" parent="Props" unique_id=959051004]
+position = Vector2(220, 244)
+scale = Vector2(0.22975346, 0.22975346)
+texture = ExtResource("60_84n4g")
+offset = Vector2(0, -112)
+
+[node name="anvil--stump-03" type="Sprite2D" parent="Props" unique_id=239473683]
+position = Vector2(1916, 260)
+scale = Vector2(0.30112118, 0.30112118)
+texture = ExtResource("56_0p4q1")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="fence--broken-segment-02" type="Sprite2D" parent="Props" unique_id=103765639]
+position = Vector2(2012, 1204)
+scale = Vector2(0.31763285, 0.31763285)
+texture = ExtResource("55_cmprv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="hay--loose-pile-04" type="Sprite2D" parent="Props" unique_id=729751560]
+position = Vector2(2268, 1140)
+scale = Vector2(0.18757954, 0.18757954)
+texture = ExtResource("54_skkbq")
+offset = Vector2(0, -112)
+
+[node name="trough--stone-03" type="Sprite2D" parent="Props" unique_id=116795370]
+position = Vector2(156, 500)
+scale = Vector2(0.22709683, 0.22709683)
+texture = ExtResource("60_84n4g")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="sawhorse--plank-01" type="Sprite2D" parent="Props" unique_id=1220221409]
+position = Vector2(2524, 1716)
+scale = Vector2(0.29902312, 0.29902312)
+texture = ExtResource("49_kivts")
+offset = Vector2(0, -112)
+
+[node name="chopping-block--axe-01" type="Sprite2D" parent="Props" unique_id=257293003]
+position = Vector2(2588, 916)
+scale = Vector2(0.1826298, 0.1826298)
+texture = ExtResource("62_jeivp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="anvil--stump-04" type="Sprite2D" parent="Props" unique_id=37207153]
+position = Vector2(188, 1732)
+scale = Vector2(0.27592283, 0.27592283)
+texture = ExtResource("56_0p4q1")
+offset = Vector2(0, -112)
+
+[node name="rubble--stone-pile-02" type="Sprite2D" parent="Props" unique_id=1615738659]
+position = Vector2(220, 1428)
+scale = Vector2(0.27786267, 0.27786267)
+texture = ExtResource("48_uek1p")
+offset = Vector2(0, -112)
+
+[node name="notice-post--blank-04" type="Sprite2D" parent="Props" unique_id=1251466559]
+position = Vector2(1244, 276)
+scale = Vector2(0.44833335, 0.44833335)
+texture = ExtResource("52_36skw")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="grindstone--frame-02" type="Sprite2D" parent="Props" unique_id=971047824]
+position = Vector2(1628, 372)
+scale = Vector2(0.30144754, 0.30144754)
+texture = ExtResource("50_bq6hb")
+offset = Vector2(0, -112)
+
+[node name="grindstone--frame-03" type="Sprite2D" parent="Props" unique_id=1232589069]
+position = Vector2(1276, 452)
+scale = Vector2(0.30711588, 0.30711588)
+texture = ExtResource("50_bq6hb")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="barrow--tipped-04" type="Sprite2D" parent="Props" unique_id=2013923084]
+position = Vector2(2908, 84)
+scale = Vector2(0.20596994, 0.20596994)
+texture = ExtResource("58_p0toh")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="laundry-line-02" type="Sprite2D" parent="Props" unique_id=1563614240]
+position = Vector2(412, 1684)
+scale = Vector2(0.49041113, 0.49041113)
+texture = ExtResource("47_ucuiy")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="sawhorse--plank-02" type="Sprite2D" parent="Props" unique_id=1355151807]
+position = Vector2(2140, 1236)
+scale = Vector2(0.2994217, 0.2994217)
+texture = ExtResource("49_kivts")
+offset = Vector2(0, -112)
+
+[node name="fence--leaning-post-03" type="Sprite2D" parent="Props" unique_id=224884262]
+position = Vector2(2140, 308)
+scale = Vector2(0.28926748, 0.28926748)
+texture = ExtResource("59_nelfm")
+offset = Vector2(0, -112)
+
+[node name="laundry-line-03" type="Sprite2D" parent="Props" unique_id=1925988598]
+position = Vector2(348, 1332)
+scale = Vector2(0.5280931, 0.5280931)
+texture = ExtResource("47_ucuiy")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="cartwheel--leaning-01" type="Sprite2D" parent="Props" unique_id=1825254026]
+position = Vector2(796, 820)
+scale = Vector2(0.28735885, 0.28735885)
+texture = ExtResource("62_vptw6")
+offset = Vector2(0, -112)
+
+[node name="laundry-line-04" type="Sprite2D" parent="Props" unique_id=495523870]
+position = Vector2(828, 612)
+scale = Vector2(0.51343256, 0.51343256)
+texture = ExtResource("47_ucuiy")
+offset = Vector2(0, -112)
+
+[node name="notice-post--blank-05" type="Sprite2D" parent="Props" unique_id=26557194]
+position = Vector2(2940, 1508)
+scale = Vector2(0.47792146, 0.47792146)
+texture = ExtResource("52_36skw")
+offset = Vector2(0, -112)
+
+[node name="cartwheel--leaning-02" type="Sprite2D" parent="Props" unique_id=1516639873]
+position = Vector2(2812, 1508)
+scale = Vector2(0.289495, 0.289495)
+texture = ExtResource("62_vptw6")
+offset = Vector2(0, -112)
+
+[node name="fence--leaning-post-04" type="Sprite2D" parent="Props" unique_id=1206708975]
+position = Vector2(380, 516)
+scale = Vector2(0.26628527, 0.26628527)
+texture = ExtResource("59_nelfm")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="drying-rack--cloth-02" type="Sprite2D" parent="Props" unique_id=6478410]
+position = Vector2(2780, 564)
+scale = Vector2(0.28833795, 0.28833795)
+texture = ExtResource("53_pvyx0")
+offset = Vector2(0, -112)
+
+[node name="laundry-line-05" type="Sprite2D" parent="Props" unique_id=1033052765]
+position = Vector2(1404, 356)
+scale = Vector2(0.46822205, 0.46822205)
+texture = ExtResource("47_ucuiy")
+offset = Vector2(0, -112)
+
+[node name="cartwheel--leaning-03" type="Sprite2D" parent="Props" unique_id=2048342858]
+position = Vector2(604, 1652)
+scale = Vector2(0.27472368, 0.27472368)
+texture = ExtResource("62_vptw6")
+offset = Vector2(0, -112)
+
+[node name="trough--stone-04" type="Sprite2D" parent="Props" unique_id=825585139]
+position = Vector2(924, 852)
+scale = Vector2(0.21474953, 0.21474953)
+texture = ExtResource("60_84n4g")
+offset = Vector2(0, -112)
+
+[node name="chopping-block--axe-02" type="Sprite2D" parent="Props" unique_id=479123906]
+position = Vector2(220, 84)
+scale = Vector2(0.18955049, 0.18955049)
+texture = ExtResource("62_jeivp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="sawhorse--plank-03" type="Sprite2D" parent="Props" unique_id=606025935]
+position = Vector2(2108, 772)
+scale = Vector2(0.3108526, 0.3108526)
+texture = ExtResource("49_kivts")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="hay--bale-05" type="Sprite2D" parent="Props" unique_id=1541720628]
+position = Vector2(124, 164)
+scale = Vector2(0.18886247, 0.18886247)
+texture = ExtResource("51_8bvn2")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="chopping-block--axe-03" type="Sprite2D" parent="Props" unique_id=1989300973]
+position = Vector2(1852, 388)
+scale = Vector2(0.20554566, 0.20554566)
+texture = ExtResource("62_jeivp")
+offset = Vector2(0, -112)
+
+[node name="drying-rack--cloth-03" type="Sprite2D" parent="Props" unique_id=54937510]
+position = Vector2(860, 980)
+scale = Vector2(0.30845138, 0.30845138)
+texture = ExtResource("53_pvyx0")
+offset = Vector2(0, -112)
+
+[node name="crate--turnips-03" type="Sprite2D" parent="Props" unique_id=1468975213]
+position = Vector2(2428, 932)
+scale = Vector2(0.1795427, 0.1795427)
+texture = ExtResource("46_tbfj1")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="trough--stone-05" type="Sprite2D" parent="Props" unique_id=1095231421]
+position = Vector2(2684, 772)
+scale = Vector2(0.20294149, 0.20294149)
+texture = ExtResource("60_84n4g")
+offset = Vector2(0, -112)
+
+[node name="anvil--stump-05" type="Sprite2D" parent="Props" unique_id=61541279]
+position = Vector2(1052, 276)
+scale = Vector2(0.30920208, 0.30920208)
+texture = ExtResource("56_0p4q1")
+offset = Vector2(0, -112)
+
+[node name="barrow--tipped-05" type="Sprite2D" parent="Props" unique_id=384708164]
+position = Vector2(2108, 1028)
+scale = Vector2(0.19689304, 0.19689304)
+texture = ExtResource("58_p0toh")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="cartwheel--leaning-04" type="Sprite2D" parent="Props" unique_id=1166872982]
+position = Vector2(636, 516)
+scale = Vector2(0.28422502, 0.28422502)
+texture = ExtResource("62_vptw6")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="fence--broken-segment-03" type="Sprite2D" parent="Props" unique_id=1636696812]
+position = Vector2(2716, 148)
+scale = Vector2(0.3134076, 0.3134076)
+texture = ExtResource("55_cmprv")
+offset = Vector2(0, -112)
+
+[node name="grindstone--frame-04" type="Sprite2D" parent="Props" unique_id=570155984]
+position = Vector2(1500, 948)
+scale = Vector2(0.26772928, 0.26772928)
+texture = ExtResource("50_bq6hb")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="weeds--tuft-c-01" type="Sprite2D" parent="Props" unique_id=996020374]
+position = Vector2(2346, 763)
+scale = Vector2(0.10233535, 0.10233535)
+texture = ExtResource("66_17uq2")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="cobbles--loose-02" type="Sprite2D" parent="Props" unique_id=1055483126]
+position = Vector2(2391, 782)
+scale = Vector2(0.15239866, 0.15239866)
+texture = ExtResource("61_7loww")
+offset = Vector2(0, -112)
+
+[node name="weeds--tuft-a-01" type="Sprite2D" parent="Props" unique_id=590851962]
+position = Vector2(2200, 815)
+scale = Vector2(0.11955951, 0.11955951)
+texture = ExtResource("63_novqb")
+offset = Vector2(0, -112)
+
+[node name="cobbles--loose-03" type="Sprite2D" parent="Props" unique_id=1138226265]
+position = Vector2(1991, 861)
+scale = Vector2(0.15580676, 0.15580676)
+texture = ExtResource("61_7loww")
+offset = Vector2(0, -112)
+
+[node name="nettles--clump-01" type="Sprite2D" parent="Props" unique_id=985817976]
+position = Vector2(1927, 862)
+scale = Vector2(0.20908833, 0.20908833)
+texture = ExtResource("67_ju86n")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="branch--dead-01" type="Sprite2D" parent="Props" unique_id=112637386]
+position = Vector2(1668, 860)
+scale = Vector2(0.1609879, 0.1609879)
+texture = ExtResource("68_0y1c0")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="weeds--tuft-c-02" type="Sprite2D" parent="Props" unique_id=633675859]
+position = Vector2(2749, 1407)
+scale = Vector2(0.10599399, 0.10599399)
+texture = ExtResource("66_17uq2")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="fern-01" type="Sprite2D" parent="Props" unique_id=786258997]
+position = Vector2(1340, 738)
+scale = Vector2(0.18922162, 0.18922162)
+texture = ExtResource("65_noo7k")
+offset = Vector2(0, -112)
+
+[node name="branch--dead-02" type="Sprite2D" parent="Props" unique_id=1066174861]
+position = Vector2(1431, 792)
+scale = Vector2(0.14374317, 0.14374317)
+texture = ExtResource("68_0y1c0")
+offset = Vector2(0, -112)
+
+[node name="weeds--tuft-b-01" type="Sprite2D" parent="Props" unique_id=641995425]
+position = Vector2(1338, 770)
+scale = Vector2(0.10953721, 0.10953721)
+texture = ExtResource("64_k7n4n")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="weeds--tuft-b-02" type="Sprite2D" parent="Props" unique_id=334004677]
+position = Vector2(1567, 915)
+scale = Vector2(0.10858945, 0.10858945)
+texture = ExtResource("64_k7n4n")
+offset = Vector2(0, -112)
+
+[node name="fern-02" type="Sprite2D" parent="Props" unique_id=727723517]
+position = Vector2(1371, 916)
+scale = Vector2(0.1862991, 0.1862991)
+texture = ExtResource("65_noo7k")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="weeds--tuft-c-03" type="Sprite2D" parent="Props" unique_id=1978344970]
+position = Vector2(2131, 1297)
+scale = Vector2(0.103332214, 0.103332214)
+texture = ExtResource("66_17uq2")
+offset = Vector2(0, -112)
+
+[node name="cobbles--loose-04" type="Sprite2D" parent="Props" unique_id=1643030029]
+position = Vector2(1315, 911)
+scale = Vector2(0.14421998, 0.14421998)
+texture = ExtResource("61_7loww")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="weeds--tuft-c-04" type="Sprite2D" parent="Props" unique_id=1110976614]
+position = Vector2(1232, 911)
+scale = Vector2(0.10040554, 0.10040554)
+texture = ExtResource("66_17uq2")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="branch--dead-03" type="Sprite2D" parent="Props" unique_id=1842026220]
+position = Vector2(1869, 1240)
+scale = Vector2(0.14920346, 0.14920346)
+texture = ExtResource("68_0y1c0")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="fern-03" type="Sprite2D" parent="Props" unique_id=814260364]
+position = Vector2(1195, 908)
+scale = Vector2(0.19853672, 0.19853672)
+texture = ExtResource("65_noo7k")
+offset = Vector2(0, -112)
+
+[node name="weeds--tuft-c-05" type="Sprite2D" parent="Props" unique_id=1836803406]
+position = Vector2(1021, 868)
+scale = Vector2(0.11549412, 0.11549412)
+texture = ExtResource("66_17uq2")
+offset = Vector2(0, -112)
+
+[node name="weeds--tuft-b-03" type="Sprite2D" parent="Props" unique_id=824890486]
+position = Vector2(1713, 1218)
+scale = Vector2(0.11641074, 0.11641074)
+texture = ExtResource("64_k7n4n")
+offset = Vector2(0, -112)
+
+[node name="weeds--tuft-b-04" type="Sprite2D" parent="Props" unique_id=2026074030]
+position = Vector2(1975, 1346)
+scale = Vector2(0.10574947, 0.10574947)
+texture = ExtResource("64_k7n4n")
+offset = Vector2(0, -112)
+
+[node name="cobbles--loose-05" type="Sprite2D" parent="Props" unique_id=379510895]
+position = Vector2(1510, 1169)
+scale = Vector2(0.15911518, 0.15911518)
+texture = ExtResource("61_7loww")
+offset = Vector2(0, -112)
+
+[node name="weeds--tuft-c-06" type="Sprite2D" parent="Props" unique_id=1668213036]
+position = Vector2(718, 821)
+scale = Vector2(0.10622876, 0.10622876)
+texture = ExtResource("66_17uq2")
+offset = Vector2(0, -112)
+
+[node name="weeds--tuft-b-05" type="Sprite2D" parent="Props" unique_id=702147848]
+position = Vector2(1642, 1266)
+scale = Vector2(0.106061414, 0.106061414)
+texture = ExtResource("64_k7n4n")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="weeds--tuft-a-02" type="Sprite2D" parent="Props" unique_id=148846014]
+position = Vector2(871, 915)
+scale = Vector2(0.11324409, 0.11324409)
+texture = ExtResource("63_novqb")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="weeds--tuft-c-07" type="Sprite2D" parent="Props" unique_id=192875664]
+position = Vector2(1356, 1149)
+scale = Vector2(0.10684346, 0.10684346)
+texture = ExtResource("66_17uq2")
+offset = Vector2(0, -112)
+
+[node name="branch--dead-04" type="Sprite2D" parent="Props" unique_id=1674276385]
+position = Vector2(1540, 1258)
+scale = Vector2(0.16296163, 0.16296163)
+texture = ExtResource("68_0y1c0")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="weeds--tuft-a-03" type="Sprite2D" parent="Props" unique_id=1588364346]
+position = Vector2(1573, 1273)
+scale = Vector2(0.11310556, 0.11310556)
+texture = ExtResource("63_novqb")
+offset = Vector2(0, -112)
+
+[node name="nettles--clump-02" type="Sprite2D" parent="Props" unique_id=343047658]
+position = Vector2(1178, 1113)
+scale = Vector2(0.18128693, 0.18128693)
+texture = ExtResource("67_ju86n")
+offset = Vector2(0, -112)
+
+[node name="weeds--tuft-a-04" type="Sprite2D" parent="Props" unique_id=490752078]
+position = Vector2(1070, 1091)
+scale = Vector2(0.11961155, 0.11961155)
+texture = ExtResource("63_novqb")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="fern-04" type="Sprite2D" parent="Props" unique_id=437601019]
+position = Vector2(1014, 1084)
+scale = Vector2(0.20953117, 0.20953117)
+texture = ExtResource("65_noo7k")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="branch--dead-05" type="Sprite2D" parent="Props" unique_id=64719732]
+position = Vector2(1210, 1189)
+scale = Vector2(0.14076397, 0.14076397)
+texture = ExtResource("68_0y1c0")
+offset = Vector2(0, -112)
+
+[node name="cobbles--loose-06" type="Sprite2D" parent="Props" unique_id=226878287]
+position = Vector2(622, 916)
+scale = Vector2(0.14633608, 0.14633608)
+texture = ExtResource("61_7loww")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="branch--dead-06" type="Sprite2D" parent="Props" unique_id=852285644]
+position = Vector2(531, 918)
+scale = Vector2(0.14881106, 0.14881106)
+texture = ExtResource("68_0y1c0")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="cobbles--loose-07" type="Sprite2D" parent="Props" unique_id=439368957]
+position = Vector2(1009, 1157)
+scale = Vector2(0.15256642, 0.15256642)
+texture = ExtResource("61_7loww")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="nettles--clump-03" type="Sprite2D" parent="Props" unique_id=1631248129]
+position = Vector2(418, 913)
+scale = Vector2(0.20598505, 0.20598505)
+texture = ExtResource("67_ju86n")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="nettles--clump-04" type="Sprite2D" parent="Props" unique_id=1234150977]
+position = Vector2(359, 941)
+scale = Vector2(0.19058074, 0.19058074)
+texture = ExtResource("67_ju86n")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="weeds--tuft-b-06" type="Sprite2D" parent="Props" unique_id=69618621]
+position = Vector2(491, 1062)
+scale = Vector2(0.10223301, 0.10223301)
+texture = ExtResource("64_k7n4n")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-01" type="Sprite2D" parent="Props" unique_id=1719024723]
+position = Vector2(2781, 57)
+scale = Vector2(0.20220491, 0.20220491)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-01" type="Sprite2D" parent="Props" unique_id=632100140]
+position = Vector2(2808, 103)
+scale = Vector2(0.10445083, 0.10445083)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-01" type="Sprite2D" parent="Props" unique_id=734587925]
+position = Vector2(2833, 143)
+scale = Vector2(0.14026052, 0.14026052)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-01" type="Sprite2D" parent="Props" unique_id=1794377583]
+position = Vector2(2498, 78)
+scale = Vector2(0.21884033, 0.21884033)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-02" type="Sprite2D" parent="Props" unique_id=33977293]
+position = Vector2(2510, 108)
+scale = Vector2(0.19159348, 0.19159348)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-02" type="Sprite2D" parent="Props" unique_id=1037679694]
+position = Vector2(2759, 255)
+scale = Vector2(0.20983085, 0.20983085)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-01" type="Sprite2D" parent="Props" unique_id=700786863]
+position = Vector2(2478, 154)
+scale = Vector2(0.12491291, 0.12491291)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-02" type="Sprite2D" parent="Props" unique_id=2125380127]
+position = Vector2(2676, 250)
+scale = Vector2(0.1204804, 0.1204804)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="reeds--clump-01" type="Sprite2D" parent="Props" unique_id=1349857755]
+position = Vector2(2194, 58)
+scale = Vector2(0.30201718, 0.30201718)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-03" type="Sprite2D" parent="Props" unique_id=1878228992]
+position = Vector2(2624, 260)
+scale = Vector2(0.20673831, 0.20673831)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-02" type="Sprite2D" parent="Props" unique_id=1460264352]
+position = Vector2(2716, 302)
+scale = Vector2(0.115018494, 0.115018494)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-03" type="Sprite2D" parent="Props" unique_id=716493402]
+position = Vector2(2472, 236)
+scale = Vector2(0.13350692, 0.13350692)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-04" type="Sprite2D" parent="Props" unique_id=1887567800]
+position = Vector2(2286, 161)
+scale = Vector2(0.21362005, 0.21362005)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-05" type="Sprite2D" parent="Props" unique_id=662786306]
+position = Vector2(2261, 178)
+scale = Vector2(0.21234012, 0.21234012)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="creeper--mound-stone-03" type="Sprite2D" parent="Props" unique_id=1806599275]
+position = Vector2(2559, 325)
+scale = Vector2(0.11335854, 0.11335854)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-06" type="Sprite2D" parent="Props" unique_id=37946239]
+position = Vector2(2327, 249)
+scale = Vector2(0.21136627, 0.21136627)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-04" type="Sprite2D" parent="Props" unique_id=1733285822]
+position = Vector2(1994, 124)
+scale = Vector2(0.13069217, 0.13069217)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-03" type="Sprite2D" parent="Props" unique_id=1765324821]
+position = Vector2(1985, 167)
+scale = Vector2(0.1903324, 0.1903324)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-02" type="Sprite2D" parent="Props" unique_id=1426870894]
+position = Vector2(1682, 56)
+scale = Vector2(0.12727788, 0.12727788)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-04" type="Sprite2D" parent="Props" unique_id=973696356]
+position = Vector2(2903, 657)
+scale = Vector2(0.20284736, 0.20284736)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="creeper--mound-stone-04" type="Sprite2D" parent="Props" unique_id=544028483]
+position = Vector2(1898, 191)
+scale = Vector2(0.11064131, 0.11064131)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="scrap--bronze-01" type="Sprite2D" parent="Props" unique_id=1024598503]
+position = Vector2(2780, 624)
+scale = Vector2(0.10207993, 0.10207993)
+texture = ExtResource("76_e4i4d")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-05" type="Sprite2D" parent="Props" unique_id=1481009283]
+position = Vector2(2009, 268)
+scale = Vector2(0.12905468, 0.12905468)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-07" type="Sprite2D" parent="Props" unique_id=151263096]
+position = Vector2(1586, 105)
+scale = Vector2(0.22004634, 0.22004634)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-06" type="Sprite2D" parent="Props" unique_id=834785824]
+position = Vector2(2223, 416)
+scale = Vector2(0.12006331, 0.12006331)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="pottery--shards-01" type="Sprite2D" parent="Props" unique_id=1029160685]
+position = Vector2(2670, 645)
+scale = Vector2(0.13492468, 0.13492468)
+texture = ExtResource("77_8ikpv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-07" type="Sprite2D" parent="Props" unique_id=1046657146]
+position = Vector2(2776, 691)
+scale = Vector2(0.12803677, 0.12803677)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-08" type="Sprite2D" parent="Props" unique_id=370050654]
+position = Vector2(1777, 226)
+scale = Vector2(0.11865771, 0.11865771)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-09" type="Sprite2D" parent="Props" unique_id=1725815100]
+position = Vector2(1753, 247)
+scale = Vector2(0.11736394, 0.11736394)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-08" type="Sprite2D" parent="Props" unique_id=1758924753]
+position = Vector2(2343, 523)
+scale = Vector2(0.20316893, 0.20316893)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="lantern--broken-01" type="Sprite2D" parent="Props" unique_id=1908029207]
+position = Vector2(1599, 199)
+scale = Vector2(0.12323439, 0.12323439)
+texture = ExtResource("78_xda0p")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-09" type="Sprite2D" parent="Props" unique_id=1126082675]
+position = Vector2(2792, 783)
+scale = Vector2(0.20556355, 0.20556355)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-10" type="Sprite2D" parent="Props" unique_id=2009996402]
+position = Vector2(2193, 525)
+scale = Vector2(0.12880641, 0.12880641)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-05" type="Sprite2D" parent="Props" unique_id=1809349622]
+position = Vector2(1511, 250)
+scale = Vector2(0.10600162, 0.10600162)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-11" type="Sprite2D" parent="Props" unique_id=1785512685]
+position = Vector2(1808, 403)
+scale = Vector2(0.11805866, 0.11805866)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-10" type="Sprite2D" parent="Props" unique_id=1351357822]
+position = Vector2(2268, 622)
+scale = Vector2(0.19492324, 0.19492324)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-05" type="Sprite2D" parent="Props" unique_id=1322479009]
+position = Vector2(2637, 810)
+scale = Vector2(0.2106606, 0.2106606)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="lantern--broken-02" type="Sprite2D" parent="Props" unique_id=1942604212]
+position = Vector2(1184, 125)
+scale = Vector2(0.1127791, 0.1127791)
+texture = ExtResource("78_xda0p")
+offset = Vector2(0, -112)
+
+[node name="bones--animal-01" type="Sprite2D" parent="Props" unique_id=1910099925]
+position = Vector2(1496, 273)
+scale = Vector2(0.1301158, 0.1301158)
+texture = ExtResource("79_r4m2k")
+offset = Vector2(0, -112)
+
+[node name="reeds--clump-02" type="Sprite2D" parent="Props" unique_id=1306690067]
+position = Vector2(2763, 901)
+scale = Vector2(0.29686698, 0.29686698)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-06" type="Sprite2D" parent="Props" unique_id=227197791]
+position = Vector2(2286, 686)
+scale = Vector2(0.1874164, 0.1874164)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="reeds--clump-03" type="Sprite2D" parent="Props" unique_id=1418228871]
+position = Vector2(2633, 883)
+scale = Vector2(0.2672705, 0.2672705)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-03" type="Sprite2D" parent="Props" unique_id=1161466635]
+position = Vector2(908, 57)
+scale = Vector2(0.13569473, 0.13569473)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-12" type="Sprite2D" parent="Props" unique_id=1778607571]
+position = Vector2(958, 73)
+scale = Vector2(0.121501826, 0.121501826)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="reeds--clump-04" type="Sprite2D" parent="Props" unique_id=1486079339]
+position = Vector2(2250, 714)
+scale = Vector2(0.29195878, 0.29195878)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-11" type="Sprite2D" parent="Props" unique_id=166302364]
+position = Vector2(2487, 831)
+scale = Vector2(0.21244076, 0.21244076)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-04" type="Sprite2D" parent="Props" unique_id=1940059708]
+position = Vector2(860, 48)
+scale = Vector2(0.1234879, 0.1234879)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-12" type="Sprite2D" parent="Props" unique_id=1612695550]
+position = Vector2(982, 115)
+scale = Vector2(0.20972624, 0.20972624)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-13" type="Sprite2D" parent="Props" unique_id=307040329]
+position = Vector2(1095, 168)
+scale = Vector2(0.19747257, 0.19747257)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-05" type="Sprite2D" parent="Props" unique_id=102586418]
+position = Vector2(2528, 884)
+scale = Vector2(0.13926135, 0.13926135)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-06" type="Sprite2D" parent="Props" unique_id=1685549030]
+position = Vector2(2607, 951)
+scale = Vector2(0.14179961, 0.14179961)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-13" type="Sprite2D" parent="Props" unique_id=1262327001]
+position = Vector2(1275, 366)
+scale = Vector2(0.13291319, 0.13291319)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-07" type="Sprite2D" parent="Props" unique_id=60752897]
+position = Vector2(2505, 966)
+scale = Vector2(0.19015269, 0.19015269)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="reeds--clump-05" type="Sprite2D" parent="Props" unique_id=1889370034]
+position = Vector2(1099, 302)
+scale = Vector2(0.30296305, 0.30296305)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="candles--stubs-stone-01" type="Sprite2D" parent="Props" unique_id=42185798]
+position = Vector2(864, 216)
+scale = Vector2(0.1511525, 0.1511525)
+texture = ExtResource("80_g1ild")
+offset = Vector2(0, -112)
+
+[node name="net--fishing-floats-01" type="Sprite2D" parent="Props" unique_id=1412770688]
+position = Vector2(1131, 331)
+scale = Vector2(0.14047171, 0.14047171)
+texture = ExtResource("81_f1u6u")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="bones--animal-02" type="Sprite2D" parent="Props" unique_id=507555205]
+position = Vector2(477, 80)
+scale = Vector2(0.12515385, 0.12515385)
+texture = ExtResource("79_r4m2k")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-08" type="Sprite2D" parent="Props" unique_id=1256743251]
+position = Vector2(1100, 409)
+scale = Vector2(0.2121428, 0.2121428)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-07" type="Sprite2D" parent="Props" unique_id=152095297]
+position = Vector2(1152, 425)
+scale = Vector2(0.13920896, 0.13920896)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-09" type="Sprite2D" parent="Props" unique_id=2056412804]
+position = Vector2(1552, 620)
+scale = Vector2(0.20915373, 0.20915373)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="rag--dropped-01" type="Sprite2D" parent="Props" unique_id=1955916081]
+position = Vector2(752, 250)
+scale = Vector2(0.17736493, 0.17736493)
+texture = ExtResource("69_quguo")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-08" type="Sprite2D" parent="Props" unique_id=1265007902]
+position = Vector2(2117, 923)
+scale = Vector2(0.12195243, 0.12195243)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-06" type="Sprite2D" parent="Props" unique_id=1681916478]
+position = Vector2(2865, 1318)
+scale = Vector2(0.10803975, 0.10803975)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-14" type="Sprite2D" parent="Props" unique_id=414855167]
+position = Vector2(982, 398)
+scale = Vector2(0.21220988, 0.21220988)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-10" type="Sprite2D" parent="Props" unique_id=1714003250]
+position = Vector2(1109, 476)
+scale = Vector2(0.19054443, 0.19054443)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-09" type="Sprite2D" parent="Props" unique_id=1248322754]
+position = Vector2(2712, 1261)
+scale = Vector2(0.13218248, 0.13218248)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="lantern--broken-03" type="Sprite2D" parent="Props" unique_id=607494473]
+position = Vector2(201, 61)
+scale = Vector2(0.12869097, 0.12869097)
+texture = ExtResource("78_xda0p")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-11" type="Sprite2D" parent="Props" unique_id=1434663497]
+position = Vector2(985, 432)
+scale = Vector2(0.21597695, 0.21597695)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="creeper--mound-stone-07" type="Sprite2D" parent="Props" unique_id=661715020]
+position = Vector2(2691, 1293)
+scale = Vector2(0.119133234, 0.119133234)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="bones--animal-03" type="Sprite2D" parent="Props" unique_id=368382862]
+position = Vector2(726, 333)
+scale = Vector2(0.12738012, 0.12738012)
+texture = ExtResource("79_r4m2k")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-15" type="Sprite2D" parent="Props" unique_id=313234692]
+position = Vector2(1859, 937)
+scale = Vector2(0.20342782, 0.20342782)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="net--fishing-floats-02" type="Sprite2D" parent="Props" unique_id=386945224]
+position = Vector2(77, 83)
+scale = Vector2(0.1399689, 0.1399689)
+texture = ExtResource("81_f1u6u")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-14" type="Sprite2D" parent="Props" unique_id=2002142547]
+position = Vector2(270, 169)
+scale = Vector2(0.11454049, 0.11454049)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-16" type="Sprite2D" parent="Props" unique_id=778798078]
+position = Vector2(2159, 1104)
+scale = Vector2(0.21168086, 0.21168086)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-17" type="Sprite2D" parent="Props" unique_id=1733601781]
+position = Vector2(2218, 1157)
+scale = Vector2(0.19221057, 0.19221057)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-10" type="Sprite2D" parent="Props" unique_id=799685770]
+position = Vector2(2541, 1324)
+scale = Vector2(0.140589, 0.140589)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="candles--stubs-stone-02" type="Sprite2D" parent="Props" unique_id=807162625]
+position = Vector2(2173, 1158)
+scale = Vector2(0.1428645, 0.1428645)
+texture = ExtResource("80_g1ild")
+offset = Vector2(0, -112)
+
+[node name="pottery--shards-02" type="Sprite2D" parent="Props" unique_id=570929417]
+position = Vector2(2795, 1486)
+scale = Vector2(0.12345397, 0.12345397)
+texture = ExtResource("77_8ikpv")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-11" type="Sprite2D" parent="Props" unique_id=1218517822]
+position = Vector2(1388, 786)
+scale = Vector2(0.13547489, 0.13547489)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-15" type="Sprite2D" parent="Props" unique_id=2008374054]
+position = Vector2(2729, 1469)
+scale = Vector2(0.12648176, 0.12648176)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-16" type="Sprite2D" parent="Props" unique_id=1941974841]
+position = Vector2(714, 496)
+scale = Vector2(0.12007963, 0.12007963)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-12" type="Sprite2D" parent="Props" unique_id=1815955273]
+position = Vector2(2043, 1156)
+scale = Vector2(0.13274401, 0.13274401)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-17" type="Sprite2D" parent="Props" unique_id=925732635]
+position = Vector2(2195, 1230)
+scale = Vector2(0.12057312, 0.12057312)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-08" type="Sprite2D" parent="Props" unique_id=144050176]
+position = Vector2(1414, 868)
+scale = Vector2(0.12065919, 0.12065919)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-18" type="Sprite2D" parent="Props" unique_id=178090229]
+position = Vector2(2623, 1484)
+scale = Vector2(0.12249713, 0.12249713)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-12" type="Sprite2D" parent="Props" unique_id=2110402617]
+position = Vector2(2882, 1606)
+scale = Vector2(0.1996114, 0.1996114)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-13" type="Sprite2D" parent="Props" unique_id=2056117206]
+position = Vector2(2576, 1481)
+scale = Vector2(0.13568327, 0.13568327)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-09" type="Sprite2D" parent="Props" unique_id=1131574381]
+position = Vector2(2834, 1612)
+scale = Vector2(0.10881983, 0.10881983)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="rag--dropped-02" type="Sprite2D" parent="Props" unique_id=430984400]
+position = Vector2(2027, 1283)
+scale = Vector2(0.16051379, 0.16051379)
+texture = ExtResource("69_quguo")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-19" type="Sprite2D" parent="Props" unique_id=1981220980]
+position = Vector2(371, 490)
+scale = Vector2(0.122647114, 0.122647114)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="reeds--clump-06" type="Sprite2D" parent="Props" unique_id=1864206912]
+position = Vector2(974, 766)
+scale = Vector2(0.29147318, 0.29147318)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-20" type="Sprite2D" parent="Props" unique_id=745452922]
+position = Vector2(1105, 848)
+scale = Vector2(0.119858585, 0.119858585)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="reeds--clump-07" type="Sprite2D" parent="Props" unique_id=755160433]
+position = Vector2(1737, 1176)
+scale = Vector2(0.29887983, 0.29887983)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-14" type="Sprite2D" parent="Props" unique_id=1873593956]
+position = Vector2(750, 709)
+scale = Vector2(0.13215636, 0.13215636)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-18" type="Sprite2D" parent="Props" unique_id=546509656]
+position = Vector2(1700, 1171)
+scale = Vector2(0.20145607, 0.20145607)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-15" type="Sprite2D" parent="Props" unique_id=1711321886]
+position = Vector2(424, 592)
+scale = Vector2(0.13293085, 0.13293085)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="reeds--clump-08" type="Sprite2D" parent="Props" unique_id=58179197]
+position = Vector2(827, 798)
+scale = Vector2(0.28196573, 0.28196573)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-19" type="Sprite2D" parent="Props" unique_id=1011280071]
+position = Vector2(1584, 1179)
+scale = Vector2(0.19463384, 0.19463384)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="reeds--clump-09" type="Sprite2D" parent="Props" unique_id=1232708801]
+position = Vector2(94, 477)
+scale = Vector2(0.29451454, 0.29451454)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+
+[node name="net--fishing-floats-03" type="Sprite2D" parent="Props" unique_id=2058501936]
+position = Vector2(200, 511)
+scale = Vector2(0.13880368, 0.13880368)
+texture = ExtResource("81_f1u6u")
+offset = Vector2(0, -112)
+
+[node name="creeper--mound-stone-10" type="Sprite2D" parent="Props" unique_id=1590653232]
+position = Vector2(1613, 1237)
+scale = Vector2(0.10719179, 0.10719179)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-11" type="Sprite2D" parent="Props" unique_id=285504774]
+position = Vector2(2033, 1444)
+scale = Vector2(0.113387235, 0.113387235)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-13" type="Sprite2D" parent="Props" unique_id=1358423371]
+position = Vector2(1197, 1035)
+scale = Vector2(0.19879034, 0.19879034)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-20" type="Sprite2D" parent="Props" unique_id=1620341373]
+position = Vector2(1208, 1062)
+scale = Vector2(0.21736588, 0.21736588)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-12" type="Sprite2D" parent="Props" unique_id=671703672]
+position = Vector2(1793, 1349)
+scale = Vector2(0.10452141, 0.10452141)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-21" type="Sprite2D" parent="Props" unique_id=724529938]
+position = Vector2(1934, 1422)
+scale = Vector2(0.12961304, 0.12961304)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-22" type="Sprite2D" parent="Props" unique_id=1347060778]
+position = Vector2(203, 590)
+scale = Vector2(0.12078748, 0.12078748)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="candles--stubs-stone-03" type="Sprite2D" parent="Props" unique_id=1769046118]
+position = Vector2(1036, 1003)
+scale = Vector2(0.15321717, 0.15321717)
+texture = ExtResource("80_g1ild")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-23" type="Sprite2D" parent="Props" unique_id=1148897970]
+position = Vector2(1763, 1369)
+scale = Vector2(0.1284659, 0.1284659)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="pottery--shards-03" type="Sprite2D" parent="Props" unique_id=1194445915]
+position = Vector2(1951, 1466)
+scale = Vector2(0.13830794, 0.13830794)
+texture = ExtResource("77_8ikpv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-21" type="Sprite2D" parent="Props" unique_id=841786200]
+position = Vector2(569, 811)
+scale = Vector2(0.20756373, 0.20756373)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-24" type="Sprite2D" parent="Props" unique_id=897875724]
+position = Vector2(656, 843)
+scale = Vector2(0.12006163, 0.12006163)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-22" type="Sprite2D" parent="Props" unique_id=1924437905]
+position = Vector2(1161, 1086)
+scale = Vector2(0.21261731, 0.21261731)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-14" type="Sprite2D" parent="Props" unique_id=1148031581]
+position = Vector2(1323, 1181)
+scale = Vector2(0.20670292, 0.20670292)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-25" type="Sprite2D" parent="Props" unique_id=1971607199]
+position = Vector2(2131, 1595)
+scale = Vector2(0.115694165, 0.115694165)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-23" type="Sprite2D" parent="Props" unique_id=773862735]
+position = Vector2(170, 630)
+scale = Vector2(0.20911352, 0.20911352)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-24" type="Sprite2D" parent="Props" unique_id=480714810]
+position = Vector2(2073, 1593)
+scale = Vector2(0.18857983, 0.18857983)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-25" type="Sprite2D" parent="Props" unique_id=992834288]
+position = Vector2(2157, 1613)
+scale = Vector2(0.21957976, 0.21957976)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-26" type="Sprite2D" parent="Props" unique_id=494471891]
+position = Vector2(176, 672)
+scale = Vector2(0.21840382, 0.21840382)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-16" type="Sprite2D" parent="Props" unique_id=817168551]
+position = Vector2(1445, 1305)
+scale = Vector2(0.12368637, 0.12368637)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="rag--dropped-03" type="Sprite2D" parent="Props" unique_id=1029938447]
+position = Vector2(55, 650)
+scale = Vector2(0.18184231, 0.18184231)
+texture = ExtResource("69_quguo")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-27" type="Sprite2D" parent="Props" unique_id=1466114241]
+position = Vector2(716, 968)
+scale = Vector2(0.18882728, 0.18882728)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="candles--stubs-stone-04" type="Sprite2D" parent="Props" unique_id=565269643]
+position = Vector2(881, 1059)
+scale = Vector2(0.1422937, 0.1422937)
+texture = ExtResource("80_g1ild")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="reeds--clump-10" type="Sprite2D" parent="Props" unique_id=1280567338]
+position = Vector2(1676, 1435)
+scale = Vector2(0.26673368, 0.26673368)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-26" type="Sprite2D" parent="Props" unique_id=1459343171]
+position = Vector2(1539, 1403)
+scale = Vector2(0.11585056, 0.11585056)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="scrap--bronze-02" type="Sprite2D" parent="Props" unique_id=37803214]
+position = Vector2(1703, 1494)
+scale = Vector2(0.11514444, 0.11514444)
+texture = ExtResource("76_e4i4d")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-13" type="Sprite2D" parent="Props" unique_id=1461900408]
+position = Vector2(1987, 1639)
+scale = Vector2(0.11694532, 0.11694532)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-15" type="Sprite2D" parent="Props" unique_id=1228950832]
+position = Vector2(911, 1141)
+scale = Vector2(0.21086816, 0.21086816)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="net--fishing-floats-04" type="Sprite2D" parent="Props" unique_id=846544840]
+position = Vector2(1154, 1256)
+scale = Vector2(0.14227475, 0.14227475)
+texture = ExtResource("81_f1u6u")
+offset = Vector2(0, -112)
+
+[node name="reeds--clump-11" type="Sprite2D" parent="Props" unique_id=647951954]
+position = Vector2(1912, 1640)
+scale = Vector2(0.30997518, 0.30997518)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-17" type="Sprite2D" parent="Props" unique_id=1722202919]
+position = Vector2(299, 859)
+scale = Vector2(0.12908562, 0.12908562)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-28" type="Sprite2D" parent="Props" unique_id=637294125]
+position = Vector2(1224, 1352)
+scale = Vector2(0.20651576, 0.20651576)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-29" type="Sprite2D" parent="Props" unique_id=197186517]
+position = Vector2(1368, 1434)
+scale = Vector2(0.20476192, 0.20476192)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-14" type="Sprite2D" parent="Props" unique_id=1251011956]
+position = Vector2(1580, 1547)
+scale = Vector2(0.119178385, 0.119178385)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-18" type="Sprite2D" parent="Props" unique_id=826666776]
+position = Vector2(1193, 1373)
+scale = Vector2(0.12755798, 0.12755798)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-16" type="Sprite2D" parent="Props" unique_id=209637939]
+position = Vector2(1721, 1630)
+scale = Vector2(0.1985923, 0.1985923)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-30" type="Sprite2D" parent="Props" unique_id=79612744]
+position = Vector2(1377, 1501)
+scale = Vector2(0.18917465, 0.18917465)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="creeper--mound-stone-15" type="Sprite2D" parent="Props" unique_id=1602426353]
+position = Vector2(336, 998)
+scale = Vector2(0.10738351, 0.10738351)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="reeds--clump-12" type="Sprite2D" parent="Props" unique_id=765669639]
+position = Vector2(448, 1063)
+scale = Vector2(0.27240542, 0.27240542)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-17" type="Sprite2D" parent="Props" unique_id=1175575600]
+position = Vector2(1605, 1630)
+scale = Vector2(0.18797687, 0.18797687)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-27" type="Sprite2D" parent="Props" unique_id=663235286]
+position = Vector2(1796, 1731)
+scale = Vector2(0.13353889, 0.13353889)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-18" type="Sprite2D" parent="Props" unique_id=174852671]
+position = Vector2(725, 1237)
+scale = Vector2(0.19451381, 0.19451381)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="scrap--bronze-03" type="Sprite2D" parent="Props" unique_id=68269710]
+position = Vector2(775, 1257)
+scale = Vector2(0.10575532, 0.10575532)
+texture = ExtResource("76_e4i4d")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="rag--dropped-04" type="Sprite2D" parent="Props" unique_id=1746479236]
+position = Vector2(1524, 1638)
+scale = Vector2(0.1653756, 0.1653756)
+texture = ExtResource("69_quguo")
+offset = Vector2(0, -112)
+
+[node name="scrap--bronze-04" type="Sprite2D" parent="Props" unique_id=521217685]
+position = Vector2(1612, 1681)
+scale = Vector2(0.10890595, 0.10890595)
+texture = ExtResource("76_e4i4d")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stump--roots-31" type="Sprite2D" parent="Props" unique_id=854687397]
+position = Vector2(1761, 1746)
+scale = Vector2(0.21589996, 0.21589996)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-19" type="Sprite2D" parent="Props" unique_id=1116185951]
+position = Vector2(607, 1201)
+scale = Vector2(0.13828279, 0.13828279)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-20" type="Sprite2D" parent="Props" unique_id=1110678672]
+position = Vector2(870, 1336)
+scale = Vector2(0.13651353, 0.13651353)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-21" type="Sprite2D" parent="Props" unique_id=238709843]
+position = Vector2(1633, 1726)
+scale = Vector2(0.13789733, 0.13789733)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-28" type="Sprite2D" parent="Props" unique_id=12530684]
+position = Vector2(302, 1083)
+scale = Vector2(0.11981743, 0.11981743)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="mushrooms--cluster-29" type="Sprite2D" parent="Props" unique_id=1246975821]
+position = Vector2(634, 1259)
+scale = Vector2(0.12828246, 0.12828246)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-30" type="Sprite2D" parent="Props" unique_id=61282929]
+position = Vector2(955, 1411)
+scale = Vector2(0.116415836, 0.116415836)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-22" type="Sprite2D" parent="Props" unique_id=1104854303]
+position = Vector2(297, 1124)
+scale = Vector2(0.13132347, 0.13132347)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="reeds--clump-13" type="Sprite2D" parent="Props" unique_id=1122303900]
+position = Vector2(893, 1413)
+scale = Vector2(0.2842183, 0.2842183)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="lantern--broken-04" type="Sprite2D" parent="Props" unique_id=1739605276]
+position = Vector2(1373, 1661)
+scale = Vector2(0.12671956, 0.12671956)
+texture = ExtResource("78_xda0p")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-32" type="Sprite2D" parent="Props" unique_id=2031990660]
+position = Vector2(504, 1261)
+scale = Vector2(0.21028772, 0.21028772)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-31" type="Sprite2D" parent="Props" unique_id=1436611599]
+position = Vector2(970, 1499)
+scale = Vector2(0.13203724, 0.13203724)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="reeds--clump-14" type="Sprite2D" parent="Props" unique_id=1225801006]
+position = Vector2(1376, 1684)
+scale = Vector2(0.28451827, 0.28451827)
+texture = ExtResource("70_rfvwu")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-23" type="Sprite2D" parent="Props" unique_id=187122507]
+position = Vector2(458, 1244)
+scale = Vector2(0.12216186, 0.12216186)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-19" type="Sprite2D" parent="Props" unique_id=1072345843]
+position = Vector2(1121, 1580)
+scale = Vector2(0.21547084, 0.21547084)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="net--fishing-floats-05" type="Sprite2D" parent="Props" unique_id=728880309]
+position = Vector2(1443, 1744)
+scale = Vector2(0.12647773, 0.12647773)
+texture = ExtResource("81_f1u6u")
+offset = Vector2(0, -112)
+
+[node name="lantern--broken-05" type="Sprite2D" parent="Props" unique_id=1137204798]
+position = Vector2(174, 1135)
+scale = Vector2(0.11939672, 0.11939672)
+texture = ExtResource("78_xda0p")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-20" type="Sprite2D" parent="Props" unique_id=898335142]
+position = Vector2(228, 1169)
+scale = Vector2(0.18406615, 0.18406615)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-21" type="Sprite2D" parent="Props" unique_id=347914123]
+position = Vector2(617, 1389)
+scale = Vector2(0.21279964, 0.21279964)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="candles--stubs-stone-05" type="Sprite2D" parent="Props" unique_id=2019472440]
+position = Vector2(936, 1532)
+scale = Vector2(0.14486177, 0.14486177)
+texture = ExtResource("80_g1ild")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-16" type="Sprite2D" parent="Props" unique_id=190746048]
+position = Vector2(1366, 1741)
+scale = Vector2(0.107723325, 0.107723325)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-22" type="Sprite2D" parent="Props" unique_id=1254859349]
+position = Vector2(1072, 1640)
+scale = Vector2(0.20177956, 0.20177956)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="creeper--mound-stone-17" type="Sprite2D" parent="Props" unique_id=493685646]
+position = Vector2(556, 1418)
+scale = Vector2(0.117880575, 0.117880575)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-24" type="Sprite2D" parent="Props" unique_id=1231738367]
+position = Vector2(622, 1438)
+scale = Vector2(0.13210955, 0.13210955)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="pottery--shards-04" type="Sprite2D" parent="Props" unique_id=652830602]
+position = Vector2(282, 1298)
+scale = Vector2(0.13280468, 0.13280468)
+texture = ExtResource("77_8ikpv")
+offset = Vector2(0, -112)
+
+[node name="creeper--mound-stone-18" type="Sprite2D" parent="Props" unique_id=2067891720]
+position = Vector2(800, 1559)
+scale = Vector2(0.11291278, 0.11291278)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-19" type="Sprite2D" parent="Props" unique_id=409534468]
+position = Vector2(748, 1553)
+scale = Vector2(0.117120385, 0.117120385)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="bones--animal-04" type="Sprite2D" parent="Props" unique_id=2085272034]
+position = Vector2(894, 1659)
+scale = Vector2(0.13933879, 0.13933879)
+texture = ExtResource("79_r4m2k")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="net--fishing-floats-06" type="Sprite2D" parent="Props" unique_id=369490949]
+position = Vector2(440, 1468)
+scale = Vector2(0.13763267, 0.13763267)
+texture = ExtResource("81_f1u6u")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-33" type="Sprite2D" parent="Props" unique_id=150593366]
+position = Vector2(518, 1512)
+scale = Vector2(0.21173385, 0.21173385)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="lantern--broken-06" type="Sprite2D" parent="Props" unique_id=1252675118]
+position = Vector2(674, 1579)
+scale = Vector2(0.13082713, 0.13082713)
+texture = ExtResource("78_xda0p")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="creeper--mound-stone-20" type="Sprite2D" parent="Props" unique_id=560200629]
+position = Vector2(77, 1308)
+scale = Vector2(0.118836105, 0.118836105)
+texture = ExtResource("72_jhb5a")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-25" type="Sprite2D" parent="Props" unique_id=1837941376]
+position = Vector2(177, 1385)
+scale = Vector2(0.12791787, 0.12791787)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="scrap--bronze-05" type="Sprite2D" parent="Props" unique_id=347670174]
+position = Vector2(113, 1413)
+scale = Vector2(0.10350345, 0.10350345)
+texture = ExtResource("76_e4i4d")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="leaves--heap-26" type="Sprite2D" parent="Props" unique_id=1597209626]
+position = Vector2(536, 1630)
+scale = Vector2(0.13050917, 0.13050917)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+
+[node name="stump--roots-34" type="Sprite2D" parent="Props" unique_id=201313364]
+position = Vector2(68, 1416)
+scale = Vector2(0.2094325, 0.2094325)
+texture = ExtResource("71_dfqdv")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-27" type="Sprite2D" parent="Props" unique_id=887856314]
+position = Vector2(582, 1673)
+scale = Vector2(0.13484642, 0.13484642)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="mushrooms--cluster-32" type="Sprite2D" parent="Props" unique_id=1168195092]
+position = Vector2(294, 1565)
+scale = Vector2(0.12716754, 0.12716754)
+texture = ExtResource("73_4icvp")
+offset = Vector2(0, -112)
+
+[node name="stone--mossy-23" type="Sprite2D" parent="Props" unique_id=1370388649]
+position = Vector2(301, 1585)
+scale = Vector2(0.1951094, 0.1951094)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+flip_h = true
+
+[node name="stone--mossy-24" type="Sprite2D" parent="Props" unique_id=2011411779]
+position = Vector2(415, 1745)
+scale = Vector2(0.2004153, 0.2004153)
+texture = ExtResource("74_ue1k8")
+offset = Vector2(0, -112)
+
+[node name="leaves--heap-28" type="Sprite2D" parent="Props" unique_id=960864132]
+position = Vector2(105, 1707)
+scale = Vector2(0.1422298, 0.1422298)
+texture = ExtResource("75_0wqae")
+offset = Vector2(0, -112)
