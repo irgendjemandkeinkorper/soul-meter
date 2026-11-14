@@ -81,6 +81,15 @@ waited. The merge regenerates the dressing with the same seed and sprites. Evide
 - Counts: 209 ground decals, 363 standing pieces (103 solid, 28 give cover), 375 contact
   shadows. Draw calls on the overview: 456 with the dressing off, 1008 with it on.
 
+## M6: Ashlaren (2026-11-14)
+
+The second map, with the same kit and tool. Evidence: `docs/qa/lived-in-ashlaren-2026-11-14/`.
+`world/dressing/ashlaren_lived_in.tscn` (seed 1114): 182 ground decals, 350 standing pieces
+(134 solid, 37 give cover). The grain-road paving stamps give way to the road band, and the Dom
+backdrop is calmed. Eleven old props are rescaled to their height class (grain cart, brazier,
+two crate stacks, weighing board, two market stalls, grass tufts, flower clusters); the table is
+in the QA README. `test/manual/lived_in_capture.gd` takes `LIVED_IN_MAP`.
+
 ## Asset list for approval (~84)
 
 All painterly, gothic mythopunk, upper-left key light, 256×256 transparent, base-of-object

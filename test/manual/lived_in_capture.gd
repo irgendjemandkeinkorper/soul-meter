@@ -1,14 +1,28 @@
 extends GdUnitTestSuite
-## Rendered evidence for the lived-in maps (owner 2026-11-02): Kesselford at camera zoom 1 around
+## Rendered evidence for the lived-in maps (owner 2026-11-02): a map at camera zoom 1 around
 ## its landmarks, plus a zoomed-out overview, after the generated dressing loads. Run under Xvfb:
-##   CAPTURE_OUT=<dir> scripts/test.sh -a test/manual/lived_in_capture.gd
-## LIVED_IN_OFF=1 hides the generated dressing, for before/after pairs.
+##   CAPTURE_OUT=<dir> LIVED_IN_MAP=<kesselford|ashlaren> scripts/test.sh -a test/manual/lived_in_capture.gd
+## LIVED_IN_MAP defaults to kesselford. LIVED_IN_OFF=1 hides the generated dressing, for
+## before/after pairs.
 
-const SCENE := "res://world/kesselford.tscn"
-const SPOTS := {
-	"wayhouse": Vector2(1150, 860),
-	"chandlery": Vector2(1900, 860),
-	"south-yards": Vector2(1500, 1400),
+const MAPS := {
+	"kesselford": {
+		"scene": "res://world/kesselford.tscn",
+		"spots": {
+			"wayhouse": Vector2(1150, 860),
+			"chandlery": Vector2(1900, 860),
+			"south-yards": Vector2(1500, 1400),
+		},
+	},
+	"ashlaren": {
+		"scene": "res://world/ashlaren.tscn",
+		"spots": {
+			"weighing-hall": Vector2(1300, 860),
+			"millhouse": Vector2(1950, 860),
+			"warehouse-yard": Vector2(2400, 1300),
+			"road-in": Vector2(500, 950),
+		},
+	},
 }
 
 var _saved_state: Dictionary
@@ -26,13 +40,18 @@ func after_test() -> void:
 	GameState.from_dict(_saved_state)
 
 
-func test_kesselford_lived_in_spots() -> void:
+func test_lived_in_spots() -> void:
 	var out_dir := OS.get_environment("CAPTURE_OUT")
 	if out_dir.is_empty():
 		out_dir = ProjectSettings.globalize_path("user://qa/lived-in")
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var tag := "before" if OS.get_environment("LIVED_IN_OFF") == "1" else "after"
-	var runner := scene_runner(SCENE)
+	var map_name := OS.get_environment("LIVED_IN_MAP")
+	if map_name.is_empty():
+		map_name = "kesselford"
+	assert_bool(MAPS.has(map_name)).override_failure_message("unknown LIVED_IN_MAP %s" % map_name).is_true()
+	var map: Dictionary = MAPS[map_name]
+	var runner := scene_runner(str(map["scene"]))
 	var root := runner.scene() as Node
 	await runner.simulate_frames(10)
 	var lived_in := root.find_child("LivedIn", true, false) as Node2D
@@ -52,7 +71,7 @@ func test_kesselford_lived_in_spots() -> void:
 			(child as CanvasLayer).hide()
 	var player := root.find_child("Player", true, false) as Node2D
 	var camera := player.get_node_or_null("Camera2D") as Camera2D
-	var shots := SPOTS.duplicate()
+	var shots := (map["spots"] as Dictionary).duplicate()
 	shots["overview"] = Vector2(1500, 900)
 	for shot: String in shots:
 		player.global_position = shots[shot]
@@ -65,7 +84,7 @@ func test_kesselford_lived_in_spots() -> void:
 		await runner.simulate_frames(2)
 		RenderingServer.force_draw()
 		await RenderingServer.frame_post_draw
-		var path := "%s/kesselford-%s-%s.png" % [out_dir, shot, tag]
+		var path := "%s/%s-%s-%s.png" % [out_dir, map_name, shot, tag]
 		assert_int(get_viewport().get_texture().get_image().save_png(path)).is_equal(OK)
 		# Plan acceptance: profile node and draw-call counts; the real 60 fps check is FR-904.
 		print("SHOT ", path, " draw_calls=",

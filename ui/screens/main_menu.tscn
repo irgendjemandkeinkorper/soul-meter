@@ -1,17 +1,28 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://qb8dyj6gs315"]
 
-[ext_resource type="Script" path="res://ui/screens/main_menu.gd" id="1_mm"]
-[ext_resource type="Shader" path="res://ui/screens/main_menu_backdrop.gdshader" id="2_backdrop"]
+[ext_resource type="Script" uid="uid://pogie3ov2v05" path="res://ui/screens/main_menu.gd" id="1_mm"]
+[ext_resource type="Shader" uid="uid://da5q6bncuvf3l" path="res://ui/screens/main_menu_backdrop.gdshader" id="2_backdrop"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_backdrop"]
 shader = ExtResource("2_backdrop")
+shader_parameter/void_color = null
+shader_parameter/stone_color = null
+shader_parameter/iron_color = null
+shader_parameter/bronze_color = null
+shader_parameter/mote_color = null
+shader_parameter/motion_scale = null
+shader_parameter/key_art_mix = null
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1061449524]
 layout_mode = 3
 anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_mm")
 
-[node name="Visuals" type="Control" parent="."]
+[node name="Visuals" type="Control" parent="." unique_id=32468583]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,7 +31,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="ObsidianMirror" type="ColorRect" parent="Visuals"]
+[node name="ObsidianMirror" type="ColorRect" parent="Visuals" unique_id=2015416999]
 material = SubResource("ShaderMaterial_backdrop")
 layout_mode = 1
 anchors_preset = 15
