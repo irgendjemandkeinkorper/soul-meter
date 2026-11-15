@@ -71,7 +71,11 @@ static func target_height_for(texture: Texture2D) -> float:
 	if texture == null:
 		return TARGET_ACTOR_HEIGHT_PX
 	var unit_id := texture.resource_path.get_base_dir().get_file()
-	return float(UNIT_HEIGHT_PX.get(unit_id, TARGET_ACTOR_HEIGHT_PX))
+	var metadata := UnitFrames.metadata_for(unit_id)
+	var height_factor := float(metadata.get("height_factor", 1.0))
+	if not is_finite(height_factor) or height_factor <= 0.0:
+		height_factor = 1.0
+	return float(UNIT_HEIGHT_PX.get(unit_id, TARGET_ACTOR_HEIGHT_PX)) * height_factor
 
 
 ## Height in texture px of the sprite's visible (non-transparent) pixels, cached per
@@ -81,6 +85,11 @@ static func _drawn_height(sprite: Sprite2D) -> float:
 	if texture == null:
 		return 0.0
 	var region := sprite.region_rect if sprite.region_enabled else Rect2()
+	if not region.has_area():
+		var unit_id := texture.resource_path.get_base_dir().get_file()
+		var measured := float(UnitFrames.metadata_for(unit_id).get("drawn_height_px", 0.0))
+		if is_finite(measured) and measured > 0.0:
+			return measured
 	var key := "%s|%d|%s" % [texture.resource_path, texture.get_instance_id() if texture.resource_path.is_empty() else 0, region]
 	if _drawn_heights.has(key):
 		return _drawn_heights[key]
@@ -129,26 +138,61 @@ static func combat_unit_id(side: StringName, archetype_id: String, display_name:
 
 
 static func texture_path(unit_id: String) -> String:
-	return "%s/%s/%s--idle--se--f00.png" % [ROOT, unit_id, unit_id]
+	return UnitFrames.texture_path(unit_id)
+
+
+## Read-only resolution; no GameState access, RNG consumption or identity mutation.
+static func player_unit_id(ancestry_id: String, class_id: String, likeness_id: String) -> String:
+	if not ancestry_id.is_empty():
+		if not class_id.is_empty():
+			var class_unit := "player-%s-%s" % [ancestry_id, class_id]
+			if has_unit(class_unit):
+				return class_unit
+		var ancestry_unit := "player-%s" % ancestry_id
+		if has_unit(ancestry_unit):
+			return ancestry_unit
+	return resolve(ChargenData.likeness_fallback_unit(likeness_id))
+
+
+## Keep scene identity and scale while selecting its authored idle direction.
+## Non-unit scene textures retain the old mirror behavior.
+static func apply_idle_facing(sprite: Sprite2D, direction: String) -> void:
+	if sprite == null:
+		return
+	var unit_id := sprite.texture.resource_path.get_base_dir().get_file() if sprite.texture != null else ""
+	var frame := UnitFrames.lookup(unit_id, "idle", direction, 0)
+	if frame.path.is_empty():
+		if UnitFrames.directions_for(unit_id).is_empty():
+			sprite.flip_h = direction.contains("w")
+		return
+	if sprite.texture == null or sprite.texture.resource_path != frame.path:
+		var texture := load(frame.path) as Texture2D
+		if texture == null:
+			return
+		sprite.texture = texture
+	sprite.flip_h = frame.flip
 
 
 ## A portrait bust is never a walking sprite. Chargen already authors a field
 ## counterpart for each likeness; preserve that identity across menus and combat.
-static func field_unit_id(member_id: String, portrait_path: String = "") -> String:
+static func field_unit_id(member_id: String, portrait_path: String = "", ancestry_id: String = "", class_id: String = "") -> String:
 	if portrait_path.begins_with("res://assets/generated/portraits/player/"):
 		var likeness := portrait_path.get_file().get_basename()
-		var unit_id := ChargenData.likeness_fallback_unit(likeness)
-		if has_unit(unit_id):
-			return unit_id
+		return player_unit_id(ancestry_id, class_id, likeness)
 	elif portrait_path.begins_with(ROOT + "/"):
 		var unit_id := portrait_path.get_base_dir().get_file()
+		if not ancestry_id.is_empty() and FALLBACK_POOL.has(unit_id):
+			return player_unit_id(ancestry_id, class_id, unit_id)
 		if has_unit(unit_id):
 			return unit_id
+	if not ancestry_id.is_empty() and not has_unit(member_id):
+		return player_unit_id(ancestry_id, class_id, member_id)
 	return resolve(member_id)
 
 
 static func has_unit(unit_id: String) -> bool:
-	return not unit_id.is_empty() and ResourceLoader.exists(texture_path(unit_id))
+	var path := texture_path(unit_id)
+	return not path.is_empty() and ResourceLoader.exists(path)
 
 
 ## Deterministic fallback for a unit id with no dedicated art (e.g. a legacy

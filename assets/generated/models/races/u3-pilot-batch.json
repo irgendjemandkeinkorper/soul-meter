@@ -1,0 +1,29 @@
+{
+  "batch_id": "soul-meter-u3-pilot-2026-11-09",
+  "assets": [
+    {
+      "asset_id": "vael-base",
+      "kind": "image",
+      "reference_image": "vael/u3-reference-front.png",
+      "reference_sha256": "da7cea14b6a0ea0706307b78154aadc6ce71b04b10d95506738740e906a6cc42",
+      "role": "character",
+      "target_budget": {
+        "triangles": 6000,
+        "texture_size": 1024
+      },
+      "model": "meshy-7.1"
+    },
+    {
+      "asset_id": "ghorr-base",
+      "kind": "image",
+      "reference_image": "ghorr/u3-reference-front.png",
+      "reference_sha256": "8d0e08945f252eb66ed37ca4879cbcbe4740fabd983412128b1c285caf367c3a",
+      "role": "character",
+      "target_budget": {
+        "triangles": 6000,
+        "texture_size": 1024
+      },
+      "model": "meshy-7.1"
+    }
+  ]
+}

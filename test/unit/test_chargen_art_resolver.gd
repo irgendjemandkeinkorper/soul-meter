@@ -5,8 +5,18 @@ const UnitArtScript := preload("res://globals/unit_art.gd")
 
 const TEMP_ROOT := "user://gdunit_chargen_art"
 
+var _saved_units: Dictionary[String, Dictionary]
+var _fixture_textures: Array[Texture2D] = []
+
+
+func before_test() -> void:
+	UnitFrames._ensure_loaded()
+	_saved_units = UnitFrames._units.duplicate(true)
+
 
 func after_test() -> void:
+	UnitFrames._units = _saved_units
+	_fixture_textures.clear()
 	var portrait_path := "%s/portrait_guard.png" % TEMP_ROOT
 	var ancestry_path := "%s/ancestry_vael.png" % TEMP_ROOT
 	for path: String in [portrait_path, ancestry_path]:
@@ -118,3 +128,65 @@ func test_named_companion_keeps_its_existing_full_body_art() -> void:
 	assert_str(PartyMemberVisuals.field_texture(member).resource_path).is_equal(
 		UnitArtScript.texture_path("serai-lun")
 	)
+
+
+func test_saved_chargen_identity_selects_class_then_ancestry_without_replacing_portrait() -> void:
+	var member := PartyMember.new()
+	member.id = "custom-recruit"
+	member.race = "Vael"
+	member.class_id = "ironbrand"
+	member.portrait = ChargenArtResolverScript.portrait_texture("likeness_01")
+	var restored := PartyMember.from_dict(member.to_dict())
+	var portrait_path := restored.portrait.resource_path
+	assert_str(PartyMemberVisuals.field_texture(restored).resource_path).is_equal(
+		UnitArtScript.texture_path("crowd-acolyte-a")
+	)
+	_add_unit("player-vael")
+	assert_str(PartyMemberVisuals.field_texture(restored).resource_path).is_equal(
+		UnitArtScript.texture_path("player-vael")
+	)
+	_add_unit("player-vael-ironbrand")
+	assert_str(PartyMemberVisuals.field_texture(restored).resource_path).is_equal(
+		UnitArtScript.texture_path("player-vael-ironbrand")
+	)
+	assert_str(PartyMemberVisuals.ensure_portrait(restored).resource_path).is_equal(portrait_path)
+	assert_str(restored.race).is_equal("Vael")
+	assert_str(restored.class_id).is_equal("ironbrand")
+
+
+func test_legacy_field_portrait_uses_build_art_but_named_companions_keep_their_identity() -> void:
+	_add_unit("player-vael-ironbrand")
+	var member := PartyMember.new()
+	member.id = "legacy-player"
+	member.race = "vael"
+	member.class_id = "ironbrand"
+	member.portrait = load(UnitArtScript.texture_path("crowd-guard-a")) as Texture2D
+	assert_str(PartyMemberVisuals.field_texture(member).resource_path).is_equal(
+		UnitArtScript.texture_path("player-vael-ironbrand")
+	)
+	member.id = "ressa-quickfingers"
+	member.portrait = load(UnitArtScript.texture_path(member.id)) as Texture2D
+	assert_str(PartyMemberVisuals.field_texture(member).resource_path).is_equal(
+		UnitArtScript.texture_path(member.id)
+	)
+
+
+func test_unknown_likeness_and_missing_paired_unit_reach_the_crowd_fallback() -> void:
+	for likeness: String in ["missing-likeness", "likeness_01"]:
+		UnitFrames._units.erase("crowd-acolyte-a")
+		var expected := UnitArtScript.texture_path(
+			UnitArtScript.fallback_for(ChargenData.likeness_fallback_unit(likeness))
+		)
+		assert_str(ChargenArtResolverScript.portrait_path(likeness, "%s/missing_%%s.png" % TEMP_ROOT)).is_equal(expected)
+		assert_str(ChargenArtResolverScript.portrait_texture(likeness, "%s/missing_%%s.png" % TEMP_ROOT).resource_path) \
+			.is_equal(expected)
+
+
+func _add_unit(unit_id: String) -> void:
+	var path := "%s/%s/%s--idle--se--f00.png" % [UnitArtScript.ROOT, unit_id, unit_id]
+	var texture := ImageTexture.create_from_image(Image.create(2, 2, false, Image.FORMAT_RGBA8))
+	texture.take_over_path(path)
+	_fixture_textures.append(texture)
+	UnitFrames._units.merge(UnitFrames._index_manifest({"assets": [{
+		"presentation_id": unit_id, "output_paths": [path], "direction": "se", "state": "idle", "frame": 0,
+	}]}), true)

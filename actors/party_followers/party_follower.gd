@@ -50,7 +50,7 @@ func follow_trail(target: Vector2, delta: float) -> void:
 	if _is_moving:
 		facing_direction = movement.normalized()
 		if absf(facing_direction.x) > 0.01:
-			_sprite.flip_h = facing_direction.x < 0.0
+			UnitArt.apply_idle_facing(_sprite, "w" if facing_direction.x < 0.0 else "e")
 
 
 func _process(delta: float) -> void:

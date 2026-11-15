@@ -126,7 +126,7 @@ func _physics_process(delta: float) -> void:
 	if not direction.is_zero_approx():
 		facing_direction = direction.normalized()
 		if absf(facing_direction.x) > 0.01:
-			_sprite.flip_h = facing_direction.x < 0.0
+			UnitArt.apply_idle_facing(_sprite, "w" if facing_direction.x < 0.0 else "e")
 	var current_speed := speed
 	if InputMap.has_action("sprint") and Input.is_action_pressed("sprint"):
 		current_speed *= sprint_multiplier

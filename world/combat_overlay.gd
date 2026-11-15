@@ -708,16 +708,23 @@ func _sync_actors(event: CombatEvent) -> void:
 		elif not _moves.has(id):
 			_place(id, node, _grid.cell_to_world(cell))
 		# Keep the actor's scene-authored art; facing is a presentation property only.
+		# A unit with authored directions takes its UnitFrames idle frame; a set with
+		# none keeps the mirror flip, and a body at rest turns into it.
 		var sprite := node.find_child("Sprite2D", true, false) as Sprite2D
 		if sprite != null and actor.has("facing"):
-			var flip := str(actor["facing"]).contains("w")
-			if sprite.flip_h != flip:
-				# A body already posing (walking, striking) or down just flips; one at rest turns.
-				var turning := {} if _poses.has(id) or _moves.has(id) or _slumped.has(id) else _pose(id)
-				if turning.is_empty():
-					sprite.flip_h = flip
-				else:
-					CombatPosesScript.turn(turning["tween"], turning["sprite"], turning["base"], flip)
+			var facing := str(actor["facing"])
+			var unit_id := sprite.texture.resource_path.get_base_dir().get_file() if sprite.texture != null else ""
+			if not UnitFrames.directions_for(unit_id).is_empty():
+				UnitArt.apply_idle_facing(sprite, facing)
+			else:
+				var flip := facing.contains("w")
+				if sprite.flip_h != flip:
+					# A body already posing (walking, striking) or down just flips; one at rest turns.
+					var turning := {} if _poses.has(id) or _moves.has(id) or _slumped.has(id) else _pose(id)
+					if turning.is_empty():
+						sprite.flip_h = flip
+					else:
+						CombatPosesScript.turn(turning["tween"], turning["sprite"], turning["base"], flip)
 		if int(actor.get("hp", 1)) <= 0:
 			if not _pending_defeats.has(id):
 				_stop_flash(id)
