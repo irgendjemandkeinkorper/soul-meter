@@ -19,6 +19,7 @@ const ROLE_QUOTA := {
 ## the cheapest usable command left. Strike and the signature hold their slot while locked
 ## (out of reach, nothing banked yet); every other role needs a command usable now.
 ## `ready[i]` and `in_kit[i]` describe `actions[i]`; `taken` are ids already slotted.
+## AP round economy: AP is the shipped scheduler (Gate T-10), so "cheapest" reads `ap_cost`.
 static func default_fill(
 	actions: Array[CombatAction], ready: Array[bool], in_kit: Array[bool], taken: Array[StringName]
 ) -> Array[StringName]:
