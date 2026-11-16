@@ -106,6 +106,14 @@ var _groups: Dictionary = {ALLY: [], ENEMY: []}
 var _initial_cells: Dictionary = {}
 ## Live probes: combat_id -> the real cell, restored by clear_probe().
 var _probe_saved: Dictionary = {}
+## Grows on every write to the board this model keeps: seats, occupancy, sides, terrain, rules
+## or a rebuild (#642).
+var _revision: int = 0
+## Grows on the writes that can change any path answer: rules, a rebuild, a fresh setup.
+var _structure_revision: int = 0
+## Cell -> `_revision` at the last write that named it: a seat or occupancy change there, its
+## elevation, cliff, cover, visibility or obstacle.
+var _cell_revisions: Dictionary = {}
 
 
 func configure_initial_cells(cells: Dictionary) -> Dictionary:
@@ -299,12 +307,28 @@ func _row_then_column(a: Vector2i, b: Vector2i) -> bool:
 
 
 func configure(rules: CombatRules) -> void:
+	_wrote()
+	_structure_revision += 1
 	_rules = rules
+
+
+## Every write to the board starts here. It also ends an open path memo: the memo's search
+## read the board as it was, so no answer may come from it after a write (#642).
+func _wrote() -> void:
+	_revision += 1
+	_path_memo = {}
+
+
+func _touch(cell: Vector2i) -> void:
+	_cell_revisions[cell] = _revision
 
 
 ## Builds from the field layers. A live FieldMap supplies the exact IsoGrid already owned by
 ## ClickMoveController; bare-layer unit fixtures retain a local fallback grid.
 func build_grid(ground: TileMapLayer, blocking: TileMapLayer = null) -> void:
+	_wrote()
+	_structure_revision += 1
+	_handle_cache.clear()
 	_initial_cells.clear()
 	_tiles_snapshot_cache = []
 	_elevation.clear()
@@ -373,6 +397,9 @@ func cells_on_square(square_cell: Vector2i) -> Array[Vector2i]:
 
 ## Terrain height at `cell`. Scales the CT cost of entering it — never makes it impassable.
 func set_elevation(cell: Vector2i, elevation: int) -> void:
+	_wrote()
+	_touch(cell)
+	_handle_cache.clear()
 	_tiles_snapshot_cache = []
 	_elevation[cell] = elevation
 	_apply_elevation_weight(cell)
@@ -384,6 +411,8 @@ func elevation_at(cell: Vector2i) -> int:
 
 ## Marks (or clears) `cell` as a cliff: impassable outright, regardless of elevation weight.
 func set_cliff(cell: Vector2i, is_cliff: bool = true) -> void:
+	_wrote()
+	_touch(cell)
 	_tiles_snapshot_cache = []
 	_cliffs[cell] = is_cliff
 	if _grid != null and _grid.is_in_bounds(cell):
@@ -392,11 +421,15 @@ func set_cliff(cell: Vector2i, is_cliff: bool = true) -> void:
 
 ## Authors partial cover independently from elevation and impassability.
 func set_cover(cell: Vector2i, grants_cover: bool = true) -> void:
+	_wrote()
+	_touch(cell)
 	_tiles_snapshot_cache = []
 	_cover[cell] = grants_cover
 
 
 func setup(allies: Array[BattleActor], enemies: Array[BattleActor]) -> void:
+	_wrote()
+	_structure_revision += 1
 	for id: StringName in _cells.keys():
 		_release_solid(_cells[id])
 	_cells.clear()
@@ -492,11 +525,13 @@ func remove_combatant(actor: BattleActor) -> Dictionary:
 		return _blocked(
 			&"composition", "Combatant is not on the battlefield.", {"type": &"present_combatant"}
 		)
+	_wrote()
 	var previous_side := side_of(actor)
 	var previous_position := position_of(actor)
 	var id := actor.combat_id
 	if _cells.has(id):
 		var cell: Vector2i = _cells[id]
+		_touch(cell)
 		_occupancy.erase(cell)
 		_release_solid(cell)
 		_cells.erase(id)
@@ -521,6 +556,9 @@ func transfer_combatant(actor: BattleActor, new_side: StringName) -> Dictionary:
 		return _blocked(
 			&"composition", "Combatant is already on that side.", {"type": &"different_side"}
 		)
+	_wrote()
+	if _cells.has(actor.combat_id):
+		_touch(_cells[actor.combat_id])
 	var previous_group: Array = _groups.get(previous_side, [])
 	previous_group.erase(actor)
 	var new_group: Array = _groups.get(new_side, [])
@@ -536,6 +574,9 @@ func move(actor: BattleActor, destination: StringName) -> Dictionary:
 	var parsed := _parse_handle(destination)
 	var dest_cell: Vector2i = parsed["cell"]
 	var origin_cell: Vector2i = _cells[actor.combat_id]
+	_wrote()
+	_touch(origin_cell)
+	_touch(dest_cell)
 	_occupancy.erase(origin_cell)
 	_release_solid(origin_cell)
 	_occupancy[dest_cell] = actor
@@ -554,10 +595,12 @@ func move_query(actor: BattleActor, destination: StringName) -> Dictionary:
 	var query := path_query(actor, destination)
 	if not bool(query.get("allowed", false)):
 		return query
-	return _allowed({
+	# `_allowed({from, to, ct_cost, path})` written out: same keys, same order (#642).
+	return {
+		"allowed": true, "blocked_by": &"", "nearest_unblock": {}, "message": "",
 		"from": position_of(actor), "to": destination, "ct_cost": query.get("ct_cost", 0),
 		"path": query.get("path", []),
-	})
+	}
 
 
 func target_query(actor: BattleActor, target: BattleActor, profile: StringName) -> Dictionary:
@@ -608,6 +651,8 @@ func set_visibility(cell: Vector2i, level: StringName) -> Dictionary:
 		return _blocked(
 			&"visibility", "Unknown visibility level: %s." % level, {"type": &"visibility_level"}
 		)
+	_wrote()
+	_touch(cell)
 	_tiles_snapshot_cache = []
 	if level == &"clear":
 		_visibility.erase(cell)
@@ -635,6 +680,8 @@ func visibility_between(actor: BattleActor, target: BattleActor) -> Dictionary:
 
 
 func set_obstacle(cell: Vector2i, blocks_fire: bool = true) -> void:
+	_wrote()
+	_touch(cell)
 	_tiles_snapshot_cache = []
 	_obstacles[cell] = blocks_fire
 
@@ -785,17 +832,19 @@ func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName
 	var rect := _grid.get_used_rect()
 	# One search from the origin serves every cell in the box (#282). It settles cells in the
 	# same order a per-cell search would, so each cell gets the path that search would return.
-	var was_solid := _grid.is_point_solid(origin)
-	_grid.set_point_solid(origin, false)
-	var tree := _settled_paths(origin, search_cap)
-	_grid.set_point_solid(origin, was_solid)
+	# Inside a path memo for this actor and budget, the memo's search is that same search (#642).
+	var answers: Variant = _memo_answers(actor, search_cap)
+	var tree: Dictionary = _path_memo["tree"] if answers != null else _search_from(origin, search_cap)
+	var settled: Dictionary = tree["settled"]
 	if _grid.hex_mode:
 		# Every hex within the budget is in the capped search's tree.
-		for cell: Vector2i in (tree["settled"] as Dictionary):
+		for cell: Vector2i in settled:
 			if cell == origin:
 				continue
 			var hex_handle := _handle_for_cell(cell)
-			var hex_query := _path_query(actor, hex_handle, search_cap, tree)
+			var hex_query := _path_query_cell(actor, cell, search_cap, tree)
+			if answers != null:
+				(answers as Dictionary)[hex_handle] = hex_query
 			if bool(hex_query.get("allowed", false)) and int(hex_query.get("ct_cost", 0)) <= ct_budget:
 				handles.append(String(hex_handle))
 		handles.sort()
@@ -809,10 +858,13 @@ func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName
 	for y in range(min_y, max_y + 1):
 		for x in range(min_x, max_x + 1):
 			var cell := Vector2i(x, y)
-			if cell == origin:
+			# A cell the search never settled has no path, so `_path_query` could only refuse it.
+			if cell == origin or not settled.has(cell):
 				continue
 			var handle := _handle_for_cell(cell)
-			var query := _path_query(actor, handle, search_cap, tree)
+			var query := _path_query_cell(actor, cell, search_cap, tree)
+			if answers != null:
+				(answers as Dictionary)[handle] = query
 			if bool(query.get("allowed", false)) and int(query.get("ct_cost", 0)) <= ct_budget:
 				handles.append(String(handle))
 	# Sort as String, never as StringName: StringName's `<` compares by internal pointer, so a
@@ -830,6 +882,11 @@ func reachable_positions(actor: BattleActor, ct_budget: int) -> Array[StringName
 ## drift apart (doc §1.7).
 func path_query(actor: BattleActor, destination: StringName) -> Dictionary:
 	if not _path_memo.is_empty() and has_combatant(actor) and _cells.get(actor.combat_id) == _path_memo["origin"]:
+		# `reachable_positions()` already answered this cell from the memo's search (#642).
+		if actor.combat_id == _path_memo["actor_id"]:
+			var answered: Variant = (_path_memo["answers"] as Dictionary).get(destination)
+			if answered != null:
+				return answered
 		var parsed := _parse_handle(destination)
 		# Only a cell the capped search settled has its uncapped path in the tree.
 		if bool(parsed.get("ok", false)) and ((_path_memo["tree"] as Dictionary)["settled"] as Dictionary).has(parsed["cell"]):
@@ -847,15 +904,97 @@ func begin_path_memo(actor: BattleActor, ct_budget: int) -> void:
 	if _grid == null or not has_combatant(actor) or not _cells.has(actor.combat_id):
 		return
 	var origin: Vector2i = _cells[actor.combat_id]
-	var was_solid := _grid.is_point_solid(origin)
-	_grid.set_point_solid(origin, false)
-	var tree := _settled_paths(origin, _search_cost_cap(ct_budget))
-	_grid.set_point_solid(origin, was_solid)
-	_path_memo = {"origin": origin, "tree": tree}
+	var cap := _search_cost_cap(ct_budget)
+	_path_memo = {
+		"origin": origin, "tree": _search_from(origin, cap), "cap": cap,
+		"actor_id": actor.combat_id, "answers": {},
+	}
+
+
+## The cells of `path` when it is the very walk an answer of the open path memo carried (its
+## handles, read-only), else null: the same cells describing each handle gives, already built
+## by the search (#642).
+func memo_walk_cells(path: Array) -> Variant:
+	if _path_memo.is_empty() or path.is_empty() or not path.is_read_only():
+		return null
+	var walks: Variant = (_path_memo["tree"] as Dictionary).get("walks")
+	if walks == null:
+		return null
+	var parsed := _parse_handle(StringName(path.back()))
+	if not bool(parsed.get("ok", false)):
+		return null
+	var walk: Variant = (walks as Dictionary).get(parsed["cell"])
+	if walk == null or not is_same(walk[0], path):
+		return null
+	return walk[2]
 
 
 func end_path_memo() -> void:
 	_path_memo = {}
+
+
+## What the open path memo's search read, as a stamp for `reach_stamp_current()`: the cells it
+## settled and every neighbour it looked at, with this model's and the grid's write counters.
+## A reach priced inside the memo reads nothing else from the board (#642). Empty with no memo.
+func path_memo_stamp() -> Dictionary:
+	if _path_memo.is_empty() or _grid == null:
+		return {}
+	var region: Dictionary = {}
+	var offsets := _grid.neighbor_offsets()
+	for cell: Vector2i in ((_path_memo["tree"] as Dictionary)["settled"] as Dictionary):
+		region[cell] = true
+		for offset: Vector2i in offsets:
+			region[cell + offset] = true
+	return {
+		"region": region.keys(),
+		"structure": [_structure_revision, _grid.get_instance_id(), _grid.structure_revision, _grid.hex_mode],
+		"revision": _revision,
+		"grid_revision": _grid.revision,
+	}
+
+
+## True while no write has touched a cell `stamp` names and nothing was rebuilt since it was
+## taken: every path answer its search gave is unchanged. An enemy moving across the map does
+## not touch an ally's reach, so the ally's priced stands stand (#642). A passing check moves
+## the stamp up to now, so the next one costs nothing until the board is written again.
+func reach_stamp_current(stamp: Dictionary) -> bool:
+	if stamp.is_empty() or _grid == null:
+		return false
+	if stamp["structure"] != [_structure_revision, _grid.get_instance_id(), _grid.structure_revision, _grid.hex_mode]:
+		return false
+	var seen_revision: int = stamp["revision"]
+	var seen_grid_revision: int = stamp["grid_revision"]
+	if seen_revision == _revision and seen_grid_revision == _grid.revision:
+		return true
+	for cell: Vector2i in (stamp["region"] as Array):
+		if int(_cell_revisions.get(cell, -1)) > seen_revision:
+			return false
+		if _grid.cell_revision(cell) > seen_grid_revision:
+			return false
+	stamp["revision"] = _revision
+	stamp["grid_revision"] = _grid.revision
+	return true
+
+
+## The memo's answers by handle when the memo is `actor`'s, from where it stands, under the same
+## search cap; null otherwise. `_path_query()` given the memo's tree answers a settled cell the
+## same whatever its cap, so `reachable_positions()` fills this and `path_query()` reads it:
+## pricing a reach no longer walks each stand's path twice (#642).
+func _memo_answers(actor: BattleActor, search_cap: float) -> Variant:
+	if _path_memo.is_empty() or actor.combat_id != _path_memo["actor_id"]:
+		return null
+	if _cells.get(actor.combat_id) != _path_memo["origin"] or float(_path_memo["cap"]) != search_cap:
+		return null
+	return _path_memo["answers"]
+
+
+## `_settled_paths()` out of `origin`, which its standing actor holds solid: the cell is opened
+## for the walk and closed again (`IsoGrid.probe_open()`, which is not a write, #642).
+func _search_from(origin: Vector2i, max_search_cost: float) -> Dictionary:
+	var was_solid := _grid.probe_open(origin)
+	var tree := _settled_paths(origin, max_search_cost)
+	_grid.probe_close(origin, was_solid)
+	return tree
 
 
 ## `path_query()` with the search stopped once every unsettled cell costs more than
@@ -878,7 +1017,13 @@ func _path_query(
 		return _blocked(
 			&"position", "Unknown battlefield position: %s." % destination, {"type": &"position"}
 		)
-	var dest_cell: Vector2i = parsed["cell"]
+	return _path_query_cell(actor, parsed["cell"], max_search_cost, tree)
+
+
+## `_path_query()` from the parsed destination cell on (#642: the reach loop has the cell).
+func _path_query_cell(
+	actor: BattleActor, dest_cell: Vector2i, max_search_cost: float, tree: Dictionary = {}
+) -> Dictionary:
 	if not _grid.is_in_bounds(dest_cell):
 		return _blocked(
 			&"position", "That %s is outside the battlefield." % GridMetric.step_word(1), {"type": &"in_bounds"}
@@ -891,14 +1036,19 @@ func _path_query(
 	var origin_cell: Vector2i = _cells[actor.combat_id]
 	if origin_cell == dest_cell:
 		return _blocked(&"position", "Combatant is already there.", {"type": &"different_position"})
-	var path: PackedVector2Array
-	if tree.is_empty():
-		var was_solid := _grid.is_point_solid(origin_cell)
-		_grid.set_point_solid(origin_cell, false)
-		path = _deterministic_path(origin_cell, dest_cell, max_search_cost)
-		_grid.set_point_solid(origin_cell, was_solid)
-	else:
-		path = _settled_path(tree, origin_cell, dest_cell)
+	if not tree.is_empty():
+		var walk := _tree_walk(tree, origin_cell, dest_cell)
+		if walk.is_empty():
+			return _blocked(&"position", "No path to that %s." % GridMetric.step_word(1), {"type": &"reachable"})
+		# `_allowed({"ct_cost": …, "path": …})` written out: the same keys in the same order,
+		# without a merge per stand (#642).
+		return {
+			"allowed": true, "blocked_by": &"", "nearest_unblock": {}, "message": "",
+			"ct_cost": _walk_ct_cost(walk[1]), "path": walk[0],
+		}
+	var was_solid := _grid.probe_open(origin_cell)
+	var path := _deterministic_path(origin_cell, dest_cell, max_search_cost)
+	_grid.probe_close(origin_cell, was_solid)
 	if path.is_empty():
 		return _blocked(&"position", "No path to that %s." % GridMetric.step_word(1), {"type": &"reachable"})
 	var handles: Array[StringName] = []
@@ -1008,6 +1158,9 @@ func displace(actor: BattleActor, cell: Vector2i) -> Dictionary:
 	if origin_cell == cell:
 		return _allowed({"from": position_of(actor), "to": position_of(actor)})
 	var previous := position_of(actor)
+	_wrote()
+	_touch(origin_cell)
+	_touch(cell)
 	_occupancy.erase(origin_cell)
 	_release_solid(origin_cell)
 	_occupancy[cell] = actor
@@ -1087,12 +1240,35 @@ func elevation_delta(actor: BattleActor, target: BattleActor) -> int:
 # ---- internal: the only code in the project allowed to build or parse a position handle ----
 
 
+## Cell -> handle. A handle names the cell's elevation, so any elevation write empties it.
+var _handle_cache: Dictionary = {}
+## Handle -> its parse, read-only. Parsing reads nothing but the text, so it never goes stale.
+var _parse_cache: Dictionary = {}
+
+
+## Formatting and parsing handles was most of a reach pricing's path work: every stand's path
+## is written as handles and read back as cells (#642). Both are cached; the values are those
+## the uncached code builds.
 func _handle_for_cell(cell: Vector2i) -> StringName:
-	return StringName("c:%d,%d,%d" % [cell.x, cell.y, elevation_at(cell)])
+	var cached: Variant = _handle_cache.get(cell)
+	if cached != null:
+		return cached
+	var handle := StringName("c:%d,%d,%d" % [cell.x, cell.y, elevation_at(cell)])
+	_handle_cache[cell] = handle
+	return handle
 
 
 func _parse_handle(handle: StringName) -> Dictionary:
-	var text := String(handle)
+	var cached: Variant = _parse_cache.get(handle)
+	if cached != null:
+		return cached
+	var parsed := _parse_handle_text(String(handle))
+	parsed.make_read_only()
+	_parse_cache[handle] = parsed
+	return parsed
+
+
+func _parse_handle_text(text: String) -> Dictionary:
 	if not text.begins_with("c:"):
 		return {"ok": false}
 	var parts := text.substr(2).split(",")
@@ -1118,6 +1294,10 @@ func _place(actor: BattleActor, cell: Vector2i, facing: StringName) -> void:
 		clampi(cell.y, rect.position.y, rect.end.y - 1),
 	)
 	var id := actor.combat_id
+	_wrote()
+	if _cells.has(id):
+		_touch(_cells[id])
+	_touch(clamped)
 	_cells[id] = clamped
 	_facings[id] = facing
 	_occupancy[clamped] = actor
@@ -1214,6 +1394,55 @@ func _settled_paths(from_cell: Vector2i, max_search_cost: float) -> Dictionary:
 	return _dijkstra(from_cell, null, max_search_cost)
 
 
+## `to_cell`'s walk from the tree's origin: `[handles, cost]`, the path as read-only handles and
+## its running CT cost before rounding, or empty when the search never settled it. A walk is its
+## predecessor's plus one cell, so the tree keeps each one it builds and the stands of a reach
+## reuse their shared prefixes instead of each retracing and repricing its whole path (#642).
+## The handles and the cost are the ones `_settled_path()` and `_path_ct_cost()` give: the same
+## cells in the same order, the cost summed step by step in the same order.
+func _tree_walk(tree: Dictionary, from_cell: Vector2i, to_cell: Vector2i) -> Array:
+	var settled: Dictionary = tree["settled"]
+	if not settled.has(to_cell):
+		return []
+	if not tree.has("walks"):
+		var origin_handles: Array[StringName] = [_handle_for_cell(from_cell)]
+		origin_handles.make_read_only()
+		var origin_cells: Array[Vector2i] = [from_cell]
+		origin_cells.make_read_only()
+		tree["walks"] = {from_cell: [origin_handles, 0.0 if _grid.hex_mode else 0, origin_cells]}
+	var walks: Dictionary = tree["walks"]
+	var pending: Array[Vector2i] = []
+	var cursor := to_cell
+	while not walks.has(cursor):
+		pending.append(cursor)
+		cursor = settled[cursor]
+	var move_cost := _rules.move_ct_cost if _rules != null else 1
+	var walk: Array = walks[cursor]
+	for i in range(pending.size() - 1, -1, -1):
+		var cell := pending[i]
+		var handles: Array[StringName] = (walk[0] as Array[StringName]).duplicate()
+		handles.append(_handle_for_cell(cell))
+		handles.make_read_only()
+		var cells: Array[Vector2i] = (walk[2] as Array[Vector2i]).duplicate()
+		cells.append(cell)
+		cells.make_read_only()
+		var cost: Variant
+		if _grid.hex_mode:
+			cost = float(walk[1]) + move_cost * _grid.get_point_weight_scale(cell)
+		else:
+			cost = int(walk[1]) + int(ceil(move_cost * _grid.get_point_weight_scale(cell)))
+		walk = [handles, cost, cells]
+		walks[cell] = walk
+	return walk
+
+
+## A walk's running cost as `_path_ct_cost()` returns it: hex halves rounded up once.
+func _walk_ct_cost(cost: Variant) -> int:
+	if _grid.hex_mode:
+		return int(ceil(float(cost) / 2.0 - 0.000001))
+	return int(cost)
+
+
 ## The path `_dijkstra()` settled for `to_cell`, or empty when it never settled.
 func _settled_path(tree: Dictionary, from_cell: Vector2i, to_cell: Vector2i) -> PackedVector2Array:
 	var settled: Dictionary = tree["settled"]
@@ -1239,6 +1468,9 @@ func _dijkstra(from_cell: Vector2i, stop_at: Variant, max_search_cost: float) ->
 	var costs: Dictionary = {from_cell: 0.0}
 	var previous: Dictionary = {from_cell: from_cell}
 	var settled: Dictionary = {}
+	if rect.size.x >= 3:
+		_ordered_walk(frontier, rect, costs, previous, settled, stop_at, max_search_cost)
+		return {"settled": settled}
 	while not frontier.is_empty():
 		var cell := frontier.top_cell()
 		var current_cost := frontier.top_cost()
@@ -1287,6 +1519,45 @@ func _dijkstra(from_cell: Vector2i, stop_at: Variant, max_search_cost: float) ->
 	return {"settled": settled}
 
 
+## `_dijkstra()`'s loop with each cell's steps from one `IsoGrid.append_square_steps()` or
+## `append_hex_steps()` call (#642). The steps come in row-major order, the order the general
+## loop sorts them into (on a grid three or more columns wide a neighbour's index differs from
+## its cell's by `dy * width + dx`), and cost what it prices them at: the same walk, the same
+## settle order, the same predecessors.
+func _ordered_walk(
+	frontier: _Frontier, rect: Rect2i, costs: Dictionary, previous: Dictionary,
+	settled: Dictionary, stop_at: Variant, max_search_cost: float,
+) -> void:
+	var step_cells: Array[Vector2i] = []
+	var step_costs: Array[float] = []
+	var hex := _grid.hex_mode
+	while not frontier.is_empty():
+		var cell := frontier.top_cell()
+		var current_cost := frontier.top_cost()
+		frontier.pop()
+		var known_cost: float = costs.get(cell, INF)
+		if current_cost > known_cost:
+			continue
+		if current_cost > max_search_cost + 0.000001:
+			break
+		settled[cell] = previous[cell]
+		if stop_at != null and cell == stop_at:
+			break
+		step_cells.clear()
+		step_costs.clear()
+		if hex:
+			_grid.append_hex_steps(cell, step_cells, step_costs)
+		else:
+			_grid.append_square_steps(cell, step_cells, step_costs)
+		for i: int in step_cells.size():
+			var next := step_cells[i]
+			var next_cost := known_cost + step_costs[i]
+			if next_cost + 0.000001 < float(costs.get(next, INF)):
+				costs[next] = next_cost
+				previous[next] = cell
+				frontier.push(next, next_cost, _cell_index(next, rect))
+
+
 ## The walk's frontier: a binary min-heap over (cost, row-major cell index), so the cheapest cell
 ## settles first and equal costs settle lowest index first, the order the walk always had. It
 ## replaces a sort of the whole frontier on every step, which hexes made the largest single cost
@@ -1305,6 +1576,8 @@ class _Frontier:
 	func top_cost() -> float:
 		return _cost[0]
 
+	## Sifts with a hole instead of swapping all three arrays at each level (#642): the same
+	## comparisons in the same order, so the same entries end in the same slots.
 	func push(cell: Vector2i, cost: float, key: int) -> void:
 		_cost.append(cost)
 		_key.append(key)
@@ -1312,46 +1585,54 @@ class _Frontier:
 		var i := _cost.size() - 1
 		while i > 0:
 			var parent := (i - 1) >> 1
-			if not _less(i, parent):
+			if not _before(cost, key, _cost[parent], _key[parent]):
 				break
-			_swap(i, parent)
+			_cost[i] = _cost[parent]
+			_key[i] = _key[parent]
+			_cell[i] = _cell[parent]
 			i = parent
+		_cost[i] = cost
+		_key[i] = key
+		_cell[i] = cell
 
 	## Drops the cheapest entry (read it first with `top_cell()` and `top_cost()`).
 	func pop() -> void:
 		var last := _cost.size() - 1
-		_swap(0, last)
+		var cost := _cost[last]
+		var key := _key[last]
+		var cell := _cell[last]
 		_cost.resize(last)
 		_key.resize(last)
 		_cell.resize(last)
+		if last == 0:
+			return
 		var i := 0
 		while true:
 			var left := 2 * i + 1
 			var smallest := i
-			if left < last and _less(left, smallest):
+			var smallest_cost := cost
+			var smallest_key := key
+			if left < last and _before(_cost[left], _key[left], smallest_cost, smallest_key):
 				smallest = left
-			if left + 1 < last and _less(left + 1, smallest):
+				smallest_cost = _cost[left]
+				smallest_key = _key[left]
+			if left + 1 < last and _before(_cost[left + 1], _key[left + 1], smallest_cost, smallest_key):
 				smallest = left + 1
 			if smallest == i:
-				return
-			_swap(i, smallest)
+				break
+			_cost[i] = _cost[smallest]
+			_key[i] = _key[smallest]
+			_cell[i] = _cell[smallest]
 			i = smallest
+		_cost[i] = cost
+		_key[i] = key
+		_cell[i] = cell
 
-	func _less(i: int, j: int) -> bool:
-		if not is_equal_approx(_cost[i], _cost[j]):
-			return _cost[i] < _cost[j]
-		return _key[i] < _key[j]
-
-	func _swap(i: int, j: int) -> void:
-		var cost := _cost[i]
-		_cost[i] = _cost[j]
-		_cost[j] = cost
-		var key := _key[i]
-		_key[i] = _key[j]
-		_key[j] = key
-		var cell := _cell[i]
-		_cell[i] = _cell[j]
-		_cell[j] = cell
+	## Cheaper first; costs within rounding of each other go lowest cell index first.
+	static func _before(cost_a: float, key_a: int, cost_b: float, key_b: int) -> bool:
+		if not is_equal_approx(cost_a, cost_b):
+			return cost_a < cost_b
+		return key_a < key_b
 
 
 static func _cell_index(cell: Vector2i, rect: Rect2i) -> int:
@@ -1365,11 +1646,21 @@ static func facing_order() -> Array[StringName]:
 
 ## The facing that looks along `delta` (a cell difference), or empty for no difference. On
 ## squares, the nearest of eight grid directions; on hexes, the first step of the hex line.
+## Hex facing by offset: `HexMath.direction_toward()` walks the whole hex line to the offset to
+## find its first step, ~36 µs, and an enemy scores every stand it can reach by it. The answer
+## depends on the offset alone, so each is worked out once (#642).
+static var _hex_facing_by_delta: Dictionary = {}
+
+
 static func facing_for_delta(delta: Vector2i) -> StringName:
 	if delta == Vector2i.ZERO:
 		return &""
 	if GridMetric.hex():
-		return HEX_ORDER[HexMath.direction_toward(Vector2i.ZERO, delta)]
+		var known: Variant = _hex_facing_by_delta.get(delta)
+		if known == null:
+			known = HEX_ORDER[HexMath.direction_toward(Vector2i.ZERO, delta)]
+			_hex_facing_by_delta[delta] = known
+		return known
 	var angle := atan2(delta.y, delta.x)
 	var index := int(round(angle / (PI / 4.0)))
 	index = ((index % 8) + 8) % 8
