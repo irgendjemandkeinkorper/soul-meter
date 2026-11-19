@@ -74,6 +74,13 @@ a test asserts identity.
   and tests). `_on_battle_exited()` mirrors it with `exit_combat()`.
   `Paused` (the pause menu) keeps pausing the tree as today; pausing from `Battle` is
   allowed and returns to `Battle`.
+  **Amended 2026-11-19 (#649):** the region map opens only from the pause menu, so a journey
+  runs with the chart in `Paused`. `Paused —enter_battle→ Battle` (guard
+  `can_fight_here and not editor_open and not resume_to_battle`) lets a failed avoid open its
+  fight, and `Paused —travel→ Loading` (guard `not editor_open and not resume_to_battle`) lets
+  arrival or CANCEL load the scene. Leaving `Paused` closes the menu stack and unpauses the
+  tree. A fight paused under the menu (`resume_to_battle`) refuses every journey call
+  (`GameFlow.journey_refusal()`), so the paused session is never replaced.
 - Guards, not ifs: `enter_battle` carries an `ExpressionGuard` on `can_fight_here`
   (mirrored by GameFlow the way `rep_<faction>` is).
 
