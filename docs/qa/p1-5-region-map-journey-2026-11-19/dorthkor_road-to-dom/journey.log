@@ -1,0 +1,32 @@
+route under test: dorthkor_road -> dom
+setup: at dorthkor_road.tscn, dom discovered=true (stands in for one earlier walk there)
+party cell at origin: (-94, 121) in walking grid=true blocked=false
+capture 01-origin.jpg: OK
+capture 02-pause-menu.jpg: OK
+capture 03-region-map.jpg: OK
+selected dom: button 'BEGIN JOURNEY' disabled=false | ROUTE  ·  12 STEPS | TRAVEL TIME  ·  3 PHASES | ENCOUNTER RISK  ·  MODERATE
+registry route dom-dorthkor_road: steps=12 phases_cost=3 risk=moderate encounters=1-2
+capture 04-route-selected.jpg: OK
+journey committed: dorthkor_road -> dom, 12 steps, 1 scheduled encounter(s) at steps [3]
+capture 05-journey-underway.jpg: OK
+capture 06-ambush-prompt.jpg: OK
+AVOID at step 3 (slot 0, dorthkor-vanguard): plan now IN_BATTLE
+fight opened: chart Paused, battle HUD open=false, tree paused=true, top screen 'region_map.tscn'
+capture 07-ambush-opened.jpg: OK
+BACK pressed: chart Paused, top screen 'pause_menu.tscn'
+resumed: chart Active, battle HUD open=false, tree paused=false, top screen ''
+capture 08-ambush-fight.jpg: OK
+ambush ended: VICTORY after 19 autoplay steps
+capture 09-ambush-ended.jpg: OK
+after the fight: plan EN_ROUTE, field dorthkor_road.tscn, chart Active, top screen ''
+capture 10-after-fight-field.jpg: OK
+capture 11-pause-menu.jpg: OK
+capture 12-region-map.jpg: OK
+capture 13-continue-offered.jpg: OK
+CONTINUE pressed at step 3/12
+plan ARRIVED: scene still dorthkor_road.tscn, chart Paused, top screen 'pause_menu.tscn', clock phase 4
+capture 14-plan-arrived.jpg: OK
+resumed after arrival: scene dorthkor_road.tscn, chart Active, top screen ''
+capture 15-resumed-after-arrival.jpg: OK
+JOURNEY-CAPTURE: FAILED — no arrival within 240 s (plan state ARRIVED, step 12/12) — a dead end
+JOURNEY-CAPTURE: FAILED
