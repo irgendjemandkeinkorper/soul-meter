@@ -13,6 +13,10 @@ extends SceneTree
 ##      of `BuildingPlan.solid_rects()`. The wall cells, less the windows, also go into the map's
 ##      combat terrain (`blocks_fire_cells`), so a fight's line of fire cannot cross a wall but
 ##      passes a window or doorway.
+##      Climbable outcrops (`ArtBases.CLIMB_META`, owner item 48d) are the exception: the tool
+##      removes their `Base` body and writes their base's cells into the combat terrain's
+##      `elevation_one_cells` and `elevation_two_cells` (`ArtBases.climb_cells`). On these maps the
+##      tool owns those two arrays.
 ##   2. Paint: the layer's `tile_map_data` line is rewritten from the solids' cells. A cell on a
 ##      walk-in building's footprint takes `BlockingLayer.THIN_TILE` (no walk clearance ring).
 ## Nothing else in the file changes. `--check` writes nothing and lists the maps whose bases or
@@ -34,6 +38,8 @@ const SHAPE_NODE := "CollisionShape2D"
 const TERRAIN_NODE := "Terrain"
 ## CombatTerrainLayer.blocks_fire_cells.
 const FIRE_CELLS := "blocks_fire_cells"
+## CombatTerrainLayer.elevation_one_cells and elevation_two_cells, by height.
+const ELEVATION_CELLS := {1: "elevation_one_cells", 2: "elevation_two_cells"}
 
 var _footprints: GDScript
 var _bases: GDScript
@@ -156,6 +162,11 @@ func shape_bases(scene_path: String, write: bool) -> Dictionary:
 	if fire_error != "":
 		root.free()
 		return {"error": fire_error}
+	var climbs: Array = _bases.climbable_sprites(root)
+	var climb_error := _mark_climbs(scene, root, climbs)
+	if climb_error != "":
+		root.free()
+		return {"error": climb_error}
 	root.free()
 	scene.drop_unused_sub_resources()
 	var updated := scene.to_text()
@@ -166,7 +177,40 @@ func shape_bases(scene_path: String, write: bool) -> Dictionary:
 			return {"error": "cannot write %s" % scene_path}
 		file.store_string(updated)
 		file.close()
-	return {"props": sprites.size() + buildings.size(), "changed": changed}
+	return {"props": sprites.size() + buildings.size() + climbs.size(), "changed": changed}
+
+
+## Climbable outcrops (owner item 48d): drops each one's `Base` body and writes its cells' heights
+## into the combat terrain. A climbable sprite drawn by a body of its own is refused, since that
+## body would still stop walking.
+func _mark_climbs(scene: SceneText, root: Node, climbs: Array) -> String:
+	var terrain := terrain_layer(root)
+	if terrain == null:
+		return "" if climbs.is_empty() else "no %s layer for the climbable outcrops" % TERRAIN_NODE
+	var path := str(root.get_path_to(terrain))
+	if scene.find_node(path) < 0:
+		return "" if climbs.is_empty() else "%s is inside an instanced scene" % path
+	for sprite: Sprite2D in climbs:
+		var sprite_path := str(root.get_path_to(sprite))
+		if _bases.body_of(sprite) != null:
+			return "%s is climbable but drawn by a body; move it out" % sprite_path
+		scene.remove_node(sprite_path + "/" + _bases.BASE_BODY)
+	var heights: Dictionary = _bases.climb_cells(root, _footprints.find_ground(root))
+	for height: int in ELEVATION_CELLS:
+		var cells: Array[Vector2i] = []
+		for cell: Vector2i in heights:
+			if int(heights[cell]) == height:
+				cells.append(cell)
+		cells.sort()
+		var key: String = ELEVATION_CELLS[height]
+		if cells.is_empty():
+			scene.remove_property(path, key)
+			continue
+		var parts := PackedStringArray()
+		for cell: Vector2i in cells:
+			parts.append("Vector2i(%d, %d)" % [cell.x, cell.y])
+		scene.set_property(path, key, "Array[Vector2i]([%s])" % ", ".join(parts))
+	return ""
 
 
 ## The cells of `cells` that lie on a walk-in building's footprint: its walls, windows and

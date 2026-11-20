@@ -22,6 +22,12 @@ const WORLD := "res://assets/generated/sprites/world/"
 const NOT_SOLID_LAYERS: Array[String] = ["GroundDetails", "SoftDetails"]
 ## Name of the body given to a based sprite that has none.
 const BASE_BODY := "Base"
+## Owner item 48(d), 2026-11-20: a based sprite carrying this metadata is a low outcrop the party
+## can climb. It gets no body; the ground cells of its base become combat height instead (the
+## value, 1 or 2), so it stops neither walking nor fighting. This reverses item 34's "big props
+## block their base" for the sprites marked, and only for them. HEIGHTS ARE PROVISIONAL.
+const CLIMB_META := &"climb_height"
+const CLIMB_MAX := 2
 
 const BASES := {
 	WORLD + "dom-four-arms-tavern--building-facade.png": [
@@ -128,8 +134,60 @@ const BASES := {
 }
 
 
-## Every sprite under `root` that shows a based art file and is not in a non-solid layer.
+## Every sprite under `root` that shows a based art file, is not in a non-solid layer and is not
+## climbable: the props whose base is solid.
 static func based_sprites(root: Node) -> Array[Sprite2D]:
+	var found: Array[Sprite2D] = []
+	for sprite: Sprite2D in _art_sprites(root):
+		if climb_height(sprite) == 0:
+			found.append(sprite)
+	return found
+
+
+## Every art sprite under `root` marked climbable (`CLIMB_META`).
+static func climbable_sprites(root: Node) -> Array[Sprite2D]:
+	var found: Array[Sprite2D] = []
+	for sprite: Sprite2D in _art_sprites(root):
+		if climb_height(sprite) > 0:
+			found.append(sprite)
+	return found
+
+
+static func climb_height(sprite: Sprite2D) -> int:
+	return clampi(int(sprite.get_meta(CLIMB_META, 0)), 0, CLIMB_MAX)
+
+
+## Combat height of every ground cell under a climbable sprite's base, as {cell: height}. An
+## outcrop of height 2 steps down to 1 on its rim (a cell with a side neighbour off the base), so
+## it reads as a rise rather than a wall. Where two overlap, the higher wins. PROVISIONAL.
+static func climb_cells(root: Node, ground: TileMapLayer) -> Dictionary:
+	var heights := {}
+	for sprite: Sprite2D in climbable_sprites(root):
+		var height := climb_height(sprite)
+		var cells := {}
+		for polygon: PackedVector2Array in polygons_for(sprite):
+			# The cell maths read a shape node, so the base is measured on a throwaway one.
+			var probe := CollisionShape2D.new()
+			var shape := ConvexPolygonShape2D.new()
+			shape.points = polygon
+			probe.shape = shape
+			var holder: Node2D = body_of(sprite) if body_of(sprite) != null else sprite
+			holder.add_child(probe)
+			for cell: Vector2i in SolidFootprints.shape_cells(probe, root, ground):
+				cells[cell] = true
+			holder.remove_child(probe)
+			probe.free()
+		for cell: Vector2i in cells:
+			var at := height
+			for side: Vector2i in ground.get_surrounding_cells(cell):
+				if not cells.has(side):
+					at = maxi(height - 1, 1)
+					break
+			heights[cell] = maxi(int(heights.get(cell, 0)), at)
+	return heights
+
+
+static func _art_sprites(root: Node) -> Array[Sprite2D]:
 	var found: Array[Sprite2D] = []
 	for node: Node in root.find_children("*", "Sprite2D", true, false):
 		var sprite := node as Sprite2D

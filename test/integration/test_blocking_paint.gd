@@ -9,6 +9,7 @@ extends GdUnitTestSuite
 const KESSELFORD := "res://world/kesselford.tscn"
 const TRIAL_HALL := "res://world/interiors/lower_trial_hall.tscn"
 const WOUND_LIP := "res://world/wound_lip.tscn"
+const DORTHKOR_ROAD := "res://world/dorthkor_road.tscn"
 ## Scene coordinates on Kesselford: a cell of the walk-in Wayhouse's front wall (tavern layout cell
 ## (3, 12)), one of its front doorway cells ((5, 12); item 35), and ground beyond the north border wall.
 const WAYHOUSE_FRONT := Vector2(796, 500)
@@ -86,6 +87,80 @@ func test_every_based_prop_stands_on_its_art_base() -> void:
 			% [scene_path, wrong.size(), ", ".join(wrong.slice(0, 4))]
 		).is_true()
 		root.free()
+
+
+## Owner item 48(d), 2026-11-20: a climbable outcrop (`ArtBases.CLIMB_META`) has no body, and the
+## combat terrain holds exactly the heights of its base's cells. The tool writes both.
+func test_every_climbable_outcrop_is_height_not_a_solid() -> void:
+	for scene_path: String in SolidFootprints.PAINTED_MAPS:
+		var root := (load(scene_path) as PackedScene).instantiate()
+		var ground := SolidFootprints.find_ground(root)
+		var bodied: Array[String] = []
+		for sprite: Sprite2D in ArtBases.climbable_sprites(root):
+			if not sprite.find_children("*", "StaticBody2D", true, false).is_empty():
+				bodied.append(str(root.get_path_to(sprite)))
+		assert_array(bodied).override_failure_message(
+			"%s: climbable outcrops still stop walking (%s). Run tools/paint_blocking.gd."
+			% [scene_path, ", ".join(bodied)]
+		).is_empty()
+		var expected: Dictionary = ArtBases.climb_cells(root, ground)
+		var terrain := ground.get_parent().find_child("Terrain", true, false) as CombatTerrainLayer
+		var authored := {}
+		if terrain != null:
+			for cell: Vector2i in terrain.elevation_one_cells:
+				authored[cell] = 1
+			for cell: Vector2i in terrain.elevation_two_cells:
+				authored[cell] = 2
+		assert_dict(authored).override_failure_message(
+			"%s: the terrain's heights differ from its climbable outcrops. Run tools/paint_blocking.gd."
+			% scene_path
+		).is_equal(expected)
+		root.free()
+
+
+## The slice's height (#652 gap 3): Dorthkor Road's three rock outcrops are the climbable ones.
+## In a fight their cells are open and high: the big Warn Rock reaches 2 at its middle.
+func test_dorthkor_road_rocks_are_high_ground_in_a_fight() -> void:
+	var scene := await _load_map(DORTHKOR_ROAD)
+	var names: Array[String] = []
+	for sprite: Sprite2D in ArtBases.climbable_sprites(scene):
+		names.append(String(sprite.name))
+	names.sort()
+	assert_array(names).is_equal(["NorthRock", "SouthRock", "WarnRock"])
+
+	var ground := SolidFootprints.find_ground(scene)
+	var terrain := ground.get_parent().find_child("Terrain", true, false) as CombatTerrainLayer
+	assert_array(terrain.elevation_two_cells).is_not_empty()
+	var model := GridBattlefieldModel.new()
+	model.build_grid(ground)
+	var grid := (scene.find_child("FieldMap", true, false) as FieldMap).iso_grid()
+	var player := scene.find_child("Player", true, false) as Node2D
+	var start := grid.world_to_cell(player.global_position)
+	# Terrain is authored on square cells; a hex fight (`grid/hex`) gives each one's hexes its height.
+	var tops: Array[Vector2i] = []
+	for square: Vector2i in terrain.elevation_two_cells:
+		tops.append_array(model.cells_on_square(square))
+	assert_array(tops).is_not_empty()
+	# A walk keeps a body's clearance from the solids beside the rock, so part of its top is shut
+	# to walking (20 of 50 hexes on 2026-11-20); the rest must be open and reachable.
+	var open_tops: Array[Vector2i] = []
+	for cell: Vector2i in tops:
+		assert_int(model.elevation_at(cell)).override_failure_message(
+			"the Warn Rock cell %s is not height 2" % str(cell)
+		).is_equal(2)
+		if bool(model.cell_query(cell).get("passable", false)):
+			open_tops.append(cell)
+	assert_array(open_tops).override_failure_message("the top of the Warn Rock is all shut").is_not_empty()
+	var reached := open_tops.filter(
+		func(cell: Vector2i) -> bool: return grid.path_cells(start, cell).size() > 0
+	)
+	assert_array(reached).override_failure_message(
+		"no walk reaches the top of the Warn Rock"
+	).is_not_empty()
+	for square: Vector2i in terrain.elevation_one_cells:
+		for cell: Vector2i in model.cells_on_square(square):
+			assert_int(model.elevation_at(cell)).is_equal(1)
+	await _unload(scene)
 
 
 ## Bigger bases must not wall anyone in: from where the player arrives, the walk reaches every
