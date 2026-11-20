@@ -133,6 +133,9 @@ func test_effects_are_read_from_the_branch_mutations() -> void:
 
 
 func test_a_check_shows_the_chance_it_rolls() -> void:
+	# Gaath's charge, and the check that asks about it, need a company (owner item 48b).
+	var candidates := GameState.recruitable_candidates()
+	GameState.set_companions([candidates[0], candidates[1]])
 	var council := load(COUNCIL) as DialogueResource
 	var line: DialogueLine = await DialogueManager.get_next_dialogue_line(council, "start")
 	var response := _response(line, "Ask what truth matters before taking the road.")
