@@ -88,7 +88,12 @@ func test_trial_warden_fight_keeps_the_field_hud_and_grows_its_one_bar() -> void
 	assert_bool(strip.is_visible_in_tree()).is_true()
 	assert_float(strip.size.y).override_failure_message("the turn strip must stay thin").is_less(80.0)
 	assert_float(strip.global_position.y).is_equal_approx(0.0, 1.0)
-	assert_float(strip.size.x).is_less(viewport.size.x * 0.6)
+	# The width bound was set against AP's short round strip (9faa5207). The warden now runs
+	# charge time (D8, #652), whose timeline lists the coming turns as every field fight's does;
+	# it must stay on screen, and it stays thin (above).
+	assert_bool(viewport.encloses(strip.get_global_rect())).override_failure_message(
+		"the turn strip must stay on screen: %s" % strip.get_global_rect()
+	).is_true()
 	assert_bool(interface.breakdown_visible()).is_false()
 	var open_window := interface.stage.open_window()
 	assert_float(open_window.size.y).is_greater(viewport.size.y - strip.size.y - bar.size.y - 2.0)

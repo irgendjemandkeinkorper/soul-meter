@@ -300,6 +300,14 @@ otherwise reads the current scene's location. `CombatLab.resolve_weather()` gain
 Still open in step 8: `EncounterCatalog` losing `_FIELD_GRID_DATA`, `battlefield` and
 `use_charge_time`.
 
+**Amended 2026-11-20 (#652 gap 2): "always CT" is now true in play.** Until this date only
+ambient sessions ran CT; every set-piece opened by `Battle.start_set_piece()` (the Trial Hall
+warden and keeper, the class demo, the Combat Lab) still read `use_charge_time` from its
+definition, found none, and ran AP. `Battle.start()` now forces CT while a set-piece is opening.
+The definition flag steers only a bare `start()`, which no game scene calls, so the AP
+scheduler stays reachable for tests as D8 intends. Dropping the field from `EncounterCatalog`
+is still open.
+
 ## 4. Owner rulings (ruled 2026-09-04)
 1. **Flee rule** (D7): **accepted as proposed.** Session ends `FLED` when no living hostile
    has a party member inside `alert_radius × 1.5` for two full CT rounds; fled hostiles return
