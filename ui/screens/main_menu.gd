@@ -36,6 +36,18 @@ func _build() -> void:
 
 	_build_title_treatment(vbox)
 	vbox.add_child(HSeparator.new())
+	if SaveGame.ng_plus_armed():
+		# #652 gap 5: the chapter-complete screen armed a mock NG+; New Game applies it.
+		var armed := Label.new()
+		armed.name = "MockNgPlusNotice"
+		armed.text = (
+			"MOCK NG+  ·  New Game starts over carrying %d style points and Chapter One's completion."
+			% int(SaveGame.armed_ng_plus().get("style_points", 0))
+		)
+		armed.theme_type_variation = "QuoteLabel"
+		armed.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		armed.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(armed)
 
 	var button_well := PanelContainer.new()
 	button_well.theme_type_variation = "MainMenuButtonWell"
