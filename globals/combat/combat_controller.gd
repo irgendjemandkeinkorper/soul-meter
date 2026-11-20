@@ -267,6 +267,15 @@ func configure(
 		skill_check_service = SkillCheckService.new()
 
 
+## Teaches a running battle actions it was not configured with: an ambient session learns an
+## authored group's context actions when that group joins (#652). An id already known keeps
+## its first definition.
+func add_actions(actions: Array[CombatAction]) -> void:
+	for action in actions:
+		if not _actions.has(action.id):
+			_actions[action.id] = action
+
+
 func configure_agreement_integrity(value: float) -> void:
 	agreement_integrity = clampf(value, 0.0, 100.0)
 
