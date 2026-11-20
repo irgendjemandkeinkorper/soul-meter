@@ -60,7 +60,7 @@ Preflight:
   run CT; scripted fights (the Trial keeper, journey ambushes) still run AP until #655 lands.
   **(#652)**
 - [ ] The tactical encounter exposes the grid, elevation, and facing. Dorthkor Road has no
-  height until its rock outcrops become high ground (owner item 48d). **(#652)**
+  height until its rock outcrops become high ground (owner item 48d, #660). **(#652)**
 - [ ] The encounter visibly exposes Balance/weather and at least one tile charge, residue, or detonation event.
 - [ ] Recording is disabled unless the tester explicitly opts in.
 - [ ] The facilitator has a timer and a separate copy of the tester form.
@@ -92,8 +92,8 @@ The tester should, without hints. Where each item happens in the current build, 
 facilitator's eyes only:
 
 - [ ] Explore Dom and form the company. *(The Four Arms, recruiting two companions. Marshal
-  Coiljaw's commission requires them. Themka Gaath's charge will too (owner item 48b); until
-  that lands a tester can skip the company through Gaath: record that.)*
+  Coiljaw's commission requires them. Themka Gaath's charge will too (owner item 48b, #659);
+  until that lands a tester can skip the company through Gaath: record that.)*
 - [ ] Complete a visible dialogue skill check. *(First chance: the Lower Trial Hall.)*
 - [ ] Resolve one consequence-bearing town thread. *(For example, Keth Varr's "Dishonest
   Water" in the Bell House.)*
@@ -101,8 +101,8 @@ facilitator's eyes only:
 - [ ] Travel to Dorthkor Road. *(The North Road exit opens once the Dorthkor Road quest starts,
   from Gaath or Coiljaw. The region map lists a place only after the first visit.)*
 - [ ] Read and use the CT timeline. *(Field fights only, such as the Dorthkor vanguard.)*
-- [ ] Move or attack using meaningful height or facing. *(Dorthkor Road's rock outcrops, once
-  they are high ground: owner item 48d.)* **(#652)**
+- [ ] Move or attack using meaningful height or facing. *(Dorthkor Road's three rock outcrops
+  once #660 lands: owner item 48d. The hit breakdown shows a "Height" term.)* **(#652)**
 - [ ] Attempt or use a Defining Strike. *(Refused with a named reason until a weakness is
   discovered.)*
 - [ ] Move the Balance axis and observe weather/board feedback. *(Dorthkor Road weather: tham.)*

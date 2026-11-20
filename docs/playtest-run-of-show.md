@@ -20,12 +20,11 @@ One page per session. Print or split-screen this next to
 >   Bound Soldier" are its routes and also count as the session's combat speech (48e). Live
 >   with #654.
 > - **CT:** every fight runs CT with #655.
-> - **Height:** Dorthkor Road's low rock outcrops become climbable high ground (48d; #652 gap 3,
->   in progress).
+> - **Height:** Dorthkor Road's three rock outcrops become climbable high ground (48d; #660).
 > - **Mock NG+:** **Begin Mock NG+** on the chapter-complete screen, and on the pause menu once
 >   the chapter is in free roam (48c; #656).
 > - **Company:** Themka Gaath's charge requires two companions, as Coiljaw's commission does (48b;
->   in progress).
+>   #659).
 
 ## 0. Before any tester (once per build)
 
