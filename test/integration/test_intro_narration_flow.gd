@@ -122,3 +122,17 @@ func _return_to_title() -> void:
 	if _state_is_active(PAUSED_STATE_PATH):
 		GameFlow.send_event("to_main_menu")
 		await get_tree().process_frame
+	# #657: in some CI suite orders an earlier suite leaves the chart in a state this helper does
+	# not step out of. Name it, so the failure says which state leaked.
+	assert_bool(_state_is_active(TITLE_STATE_PATH)).override_failure_message(
+		"GameFlow is not on Title; active states: %s" % ", ".join(_active_states())
+	).is_true()
+
+
+func _active_states() -> PackedStringArray:
+	var root := GameFlow.get_node("StateChart/Root")
+	var active := PackedStringArray()
+	for node: Node in root.find_children("*", "", true, false):
+		if "active" in node and bool(node.get("active")):
+			active.append(String(root.get_path_to(node)))
+	return active
