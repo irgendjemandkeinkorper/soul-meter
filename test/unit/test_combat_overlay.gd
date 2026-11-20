@@ -198,6 +198,48 @@ func test_move_survives_followup_snapshot_and_overlay_cleanup_restores_actor_col
 	assert_bool(actor.modulate.is_equal_approx(original)).is_true()
 
 
+## #652: the overlay hands a standing hostile its colour back when it leaves, but a downed one
+## keeps the dim `mark_downed()` gave it. Freeing the overlay on CONTINUE used to un-dim every
+## body the session had downed, so a slain or released mob stood back up in full colour.
+func test_overlay_cleanup_leaves_a_downed_hostile_dim() -> void:
+	var ground := _ground()
+	var grid := IsoGrid.new()
+	grid.build(ground)
+	var root: Node2D = auto_free(Node2D.new())
+	add_child(root)
+	var downed := _hostile(root, "Downed")
+	var standing := _hostile(root, "Standing")
+	var standing_color := standing.modulate
+	var overlay := Node2D.new()
+	overlay.set_script(load("res://world/combat_overlay.gd"))
+	add_child(overlay)
+	overlay.call("bind_grid", grid, ground)
+	overlay.call("bind_actor", downed.combat_id, downed)
+	overlay.call("bind_actor", standing.combat_id, standing)
+	standing.modulate = Color(0.5, 0.5, 0.5, 1)
+	downed.mark_downed()
+	# The beat that presents a context resolution was snapshotted before the group resolved,
+	# so it still reports the downed body at full HP. It must not stand the body back up.
+	var stale := CombatEvent.new()
+	stale.type = &"battle_snapshot"
+	stale.data = {"snapshot": {"enemies": [
+		{"id": downed.combat_id, "position": &"c:0,0,0", "hp": 10, "max_hp": 10},
+		{"id": standing.combat_id, "position": &"c:1,0,0", "hp": 10, "max_hp": 10},
+	]}}
+	overlay.call("consume_event", stale)
+	await _await_presented(overlay)
+	await get_tree().create_timer(DS.DUR_SLOW * 2.0 + 0.1).timeout
+	var dim := downed.modulate
+	assert_float(dim.a).override_failure_message(
+		"a stale full-HP beat must not stand a downed hostile back up"
+	).is_less(1.0)
+	overlay.free()
+	assert_bool(downed.modulate.is_equal_approx(dim)).override_failure_message(
+		"a downed hostile must keep its dim after the overlay leaves"
+	).is_true()
+	assert_bool(standing.modulate.is_equal_approx(standing_color)).is_true()
+
+
 func test_action_feedback_uses_event_damage_without_changing_actor_state() -> void:
 	var ground := _ground()
 	var grid := IsoGrid.new()

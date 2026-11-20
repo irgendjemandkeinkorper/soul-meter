@@ -260,6 +260,19 @@ Scavenger) author `Hostile` nodes; `dorthkor-muster` and the Wound Lip post stay
 set-pieces. Evidence: `docs/qa/same-map-2026-09-19/`. The log-hidden Bog Wight acceptance is
 **not yet met** (stacked seating, no visible action beat) — see that README.
 
+**Amended 2026-11-20 (#652).** `d06a2ab8` (2026-10-02, the rest of D4) made both of them
+`Hostile`s too, so their fights became ambient sessions. A session carries no encounter
+definition (`_definition` is `{"battlefield": "grid", "use_charge_time": true}` and
+`encounter_id` is empty), so the muster's two resolution routes ("Speak Its Muster-Name",
+"Release the Bound Soldier") never loaded and the Bloodbellow could only end `slain`. Repair:
+when an authored group's first member joins a session, its `EncounterCatalog` context actions
+join too (`Battle._register_group_context_actions()`, `CombatController.add_actions()`), with
+the same `action_refusal()` gates as a set-piece. A resolution resolves **that group** with its
+own outcome, flags, message and ledger entry; its standing members go `DOWNED` instead of back
+to `IDLE`. The resolution still ends the whole session, as it ends a set-piece: any other group
+in the fight settles per D7 (standing hostiles return to `IDLE`). Speech hooks are not carried
+yet (#652 gap 4).
+
 ### Set-pieces fought on the field — 2026-10-03 (`port/424-unique`)
 
 `Battle.start_set_piece(field, encounter)` no longer wraps a zone-battlefield `start()`. The

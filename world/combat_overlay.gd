@@ -351,8 +351,13 @@ func _exit_tree() -> void:
 	_end_hold()
 	_settle_motion()
 	for node: Variant in _original_colors:
-		if is_instance_valid(node):
-			node.modulate = _original_colors[node]
+		if not is_instance_valid(node):
+			continue
+		# `mark_downed()` owns a corpse's tint (see `Hostile._refresh_lock()`): leaving on
+		# CONTINUE must not stand a slain or released mob back up in full colour (#652).
+		if node is Hostile and (node as Hostile).state == Hostile.State.DOWNED:
+			continue
+		node.modulate = _original_colors[node]
 	_release_camera(false)
 
 
@@ -718,7 +723,11 @@ func _sync_actors(event: CombatEvent) -> void:
 					sprite.flip_h = flip
 				else:
 					CombatPosesScript.turn(turning["tween"], turning["sprite"], turning["base"], flip)
-		if int(actor.get("hp", 1)) <= 0:
+		# A hostile the field already downed is down, whatever HP this beat's snapshot holds: a
+		# context resolution (the Bloodbellow released) ends its group without a killing blow,
+		# so the beat that presents it still reports the body at full HP (#652).
+		var field_downed := node is Hostile and (node as Hostile).state == Hostile.State.DOWNED
+		if int(actor.get("hp", 1)) <= 0 or field_downed:
 			if not _pending_defeats.has(id):
 				_stop_flash(id)
 				_fall(id, node)
