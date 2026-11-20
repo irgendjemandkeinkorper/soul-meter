@@ -90,6 +90,8 @@ var _reachable: Dictionary = {}
 ## 2026-10-10); `_move_budget` is the snapshot's `movement.ct_budget`, -1 when absent.
 var _charge_time := false
 var _move_budget := -1
+## The read-only `movement.reachable` array `_reachable` was built from, or null (#642).
+var _reachable_source: Variant = null
 var _last_presented: CombatEvent
 var _hover_path: Array[Vector2i] = []
 var _pending_cells: Array[Vector2i] = []
@@ -542,6 +544,18 @@ func cell_center(cell: Vector2i) -> Vector2:
 
 
 func _set_movement(value: Variant) -> void:
+	# The controller hands out one read-only rows array per priced reach, the same one on every
+	# event until the reach changes (#642). The same frozen array holds the same stands, so the
+	# index already built from it stands; rebuilding it copied ~300 rows on every event.
+	var incoming: Variant = (value as Dictionary).get("reachable", []) if value is Dictionary else null
+	if (
+		incoming is Array and (incoming as Array).is_read_only()
+		and is_same(incoming, _reachable_source)
+		and int((value as Dictionary).get("ct_budget", -1)) == _move_budget
+	):
+		_refresh_hover()
+		return
+	_reachable_source = null
 	_reachable.clear()
 	_move_budget = -1
 	if value is not Dictionary:
@@ -552,10 +566,23 @@ func _set_movement(value: Variant) -> void:
 	if rows is not Array:
 		_refresh_hover()
 		return
+	if (rows as Array).is_read_only():
+		_reachable_source = rows
 	for raw: Variant in rows:
 		if raw is not Dictionary:
 			continue
-		var row: Dictionary = (raw as Dictionary).duplicate(true)
+		var given: Dictionary = raw
+		var given_cells: Variant = given.get("path_cells", [])
+		# A frozen row whose cells are already `Array[Vector2i]` is kept as it is: the stage only
+		# reads its rows, and copying ~300 of them cost several milliseconds per new reach (#642).
+		if (
+			given.is_read_only() and given_cells is Array and (given_cells as Array).is_typed()
+			and (given_cells as Array).get_typed_builtin() == TYPE_VECTOR2I
+		):
+			if not (given_cells as Array).is_empty():
+				_reachable[(given_cells as Array).back()] = given
+			continue
+		var row: Dictionary = given.duplicate(true)
 		var cells := _path_cells(row.get("path_cells", []))
 		if cells.is_empty():
 			continue

@@ -19,6 +19,11 @@ extends SceneTree
 ## controller's `event_emitted` and Battle's `combat_event` / `turn_resolved` during the decision
 ## window. The proxies cost time of their own, so do not compare an attributed run's timings
 ## with an unattributed one.
+## `--event-dump PATH` writes every controller event of the decision window (type, actor, target
+## and the whole payload with its snapshot) to PATH, one base64 `var_to_bytes` record per line.
+## Run it with `SOUL_METER_FIXED_DICE=1` before and after a controller change and compare the two
+## files with `tools/compare_event_streams.gd` (#642). Writing costs time, so a dumped run's
+## timings are not comparable with an undumped one.
 ## #603 opt-in comparison: --planner-variant none|full|cached|fallback24 --planner-output PATH.
 ## Timing-only reruns: --planner-reuse-legibility PATH keeps previously inspected evidence.
 ## Use tools/planner_spike/measure_capped.py for isolated, memory-capped rendered evidence.
@@ -82,6 +87,7 @@ var _off_plan_examples: Array[Dictionary] = []
 var _wrapped: Array[Dictionary] = []
 var _listener_totals: Dictionary = {}  ## String label -> {calls, self_usec, max_usec}
 var _listener_child_usec: Array = []
+var _event_dump: FileAccess
 
 
 func _initialize() -> void:
@@ -316,6 +322,11 @@ func _run_decision_window() -> Array[Dictionary]:
 	if controller == null:
 		_add_error("The session has no CombatController to drive.")
 		return turns
+	var dump_path := _spike_argument("--event-dump")
+	if not dump_path.is_empty():
+		_event_dump = FileAccess.open(dump_path, FileAccess.WRITE)
+		if _event_dump == null:
+			_add_error("--event-dump could not open %s." % dump_path)
 	controller.event_emitted.connect(_on_controller_event)
 	var decisions_timed := 0
 	var target := _requested_decision_target()
@@ -356,6 +367,9 @@ func _run_decision_window() -> Array[Dictionary]:
 		await process_frame
 	if controller.event_emitted.is_connected(_on_controller_event):
 		controller.event_emitted.disconnect(_on_controller_event)
+	if _event_dump != null:
+		_event_dump.close()
+		_event_dump = null
 	if decisions_timed < target:
 		_add_error(
 			"Timed %d enemy decisions in %d ally turns; the target was %d."
@@ -408,6 +422,12 @@ func _drive_ally_turn() -> StringName:
 func _on_controller_event(event: RefCounted) -> void:
 	if DECISION_EVENT_TYPES.has(event.type) and _enemy_ids.has(event.actor_id):
 		_pass_marks.append(Time.get_ticks_usec())
+	if _event_dump != null:
+		var record := {
+			"sequence": event.sequence, "type": event.type, "actor_id": event.actor_id,
+			"target_id": event.target_id, "data": event.data,
+		}
+		_event_dump.store_line(Marshalls.raw_to_base64(var_to_bytes(record)))
 
 
 # --- listener attribution (--attribute-listeners) ---
