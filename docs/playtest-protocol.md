@@ -24,6 +24,9 @@ use `docs/fr-904-runbook.md` for Gate T criterion 9.
 - Each tester starts from a fresh save and default settings.
 - Each session lasts 45–90 minutes and covers the required slice without facilitator
   hints. A session outside that window, or one missing a required subsystem, is invalid.
+- A tester who reaches the chapter-complete screen before 45 minutes keeps playing in free
+  roam until 45 minutes. The facilitator says only "Keep playing as you like." (owner item 48a,
+  2026-11-20). The mock NG+ rollover follows from the pause menu.
 - The facilitator may explain controls only when the build itself does not display
   them. They may not explain mechanics, point at relevant UI, or confirm a theory
   before the four answers are recorded.

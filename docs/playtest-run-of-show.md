@@ -13,6 +13,19 @@ One page per session. Print or split-screen this next to
 > combat speech, and the mock NG+ rollover. A session that cannot see one is invalid
 > (protocol §1), so **do not book testers until #652 closes**. Region-map journeys also need
 > #650 and #651 merged.
+>
+> The owner set how each is met on 2026-11-20 (owner item 48). This kit already describes that
+> target build:
+> - **Routes and combat speech:** the Bloodbellow's "Speak Its Muster-Name" and "Release the
+>   Bound Soldier" are its routes and also count as the session's combat speech (48e). Live
+>   with #654.
+> - **CT:** every fight runs CT with #655.
+> - **Height:** Dorthkor Road's low rock outcrops become climbable high ground (48d; #652 gap 3,
+>   in progress).
+> - **Mock NG+:** **Begin Mock NG+** on the chapter-complete screen, and on the pause menu once
+>   the chapter is in free roam (48c; #656).
+> - **Company:** Themka Gaath's charge requires two companions, as Coiljaw's commission does (48b;
+>   in progress).
 
 ## 0. Before any tester (once per build)
 
@@ -51,7 +64,8 @@ One page per session. Print or split-screen this next to
 | Mid/late battle (≥3 combatants queued) | Ask once | **"Who acts next, and why?"** |
 | After a charge/residue/detonation resolves on a tile | Ask once | **"Explain what just happened on that tile."** |
 | Mid-slice, out of combat | Ask only | "Please save, then load that save, and continue." |
-| Slice end | The mock NG+ rollover, then the packet's **Mock NG+ comparison** table. No in-game entry exists yet (#652). | — |
+| Chapter-complete screen before 45 min | Nothing else: the tester keeps playing in free roam (Continue Exploring) until 45 min (owner item 48a) | **"Keep playing as you like."** |
+| Slice end (45 min reached, or the chapter-complete screen after 45 min) | Ask for the mock NG+ rollover: **Begin Mock NG+** is on the chapter-complete screen, and on the pause menu once the chapter is in free roam. Then fill the packet's **Mock NG+ comparison** table | **"Please begin the mock NG+ now."** |
 | Same sitting | The §5.1 meter-count re-score question | per amendment §5.1 |
 
 Record all four answers **verbatim**. Do not rephrase, probe, or re-ask. A tester saying

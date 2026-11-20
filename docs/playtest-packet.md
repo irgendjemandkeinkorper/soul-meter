@@ -57,9 +57,10 @@ Preflight:
 - [ ] The build exposes the required dialogue, consequence, tactical, save/load, and
   mock-NG+ breadth. **(#652)**
 - [ ] The tactical encounter uses charge time (CT), not the retired AP chassis. Field fights
-  run CT; scripted fights (the Trial keeper, journey ambushes) still run AP. **(#652)**
+  run CT; scripted fights (the Trial keeper, journey ambushes) still run AP until #655 lands.
+  **(#652)**
 - [ ] The tactical encounter exposes the grid, elevation, and facing. Dorthkor Road has no
-  height yet. **(#652)**
+  height until its rock outcrops become high ground (owner item 48d). **(#652)**
 - [ ] The encounter visibly exposes Balance/weather and at least one tile charge, residue, or detonation event.
 - [ ] Recording is disabled unless the tester explicitly opts in.
 - [ ] The facilitator has a timer and a separate copy of the tester form.
@@ -91,8 +92,8 @@ The tester should, without hints. Where each item happens in the current build, 
 facilitator's eyes only:
 
 - [ ] Explore Dom and form the company. *(The Four Arms, recruiting two companions. Marshal
-  Coiljaw's commission requires them; Themka Gaath's charge does not, so a tester can skip the
-  company: record that.)*
+  Coiljaw's commission requires them. Themka Gaath's charge will too (owner item 48b); until
+  that lands a tester can skip the company through Gaath: record that.)*
 - [ ] Complete a visible dialogue skill check. *(First chance: the Lower Trial Hall.)*
 - [ ] Resolve one consequence-bearing town thread. *(For example, Keth Varr's "Dishonest
   Water" in the Bell House.)*
@@ -100,19 +101,24 @@ facilitator's eyes only:
 - [ ] Travel to Dorthkor Road. *(The North Road exit opens once the Dorthkor Road quest starts,
   from Gaath or Coiljaw. The region map lists a place only after the first visit.)*
 - [ ] Read and use the CT timeline. *(Field fights only, such as the Dorthkor vanguard.)*
-- [ ] Move or attack using meaningful height or facing. **(#652: no height on the slice path)**
+- [ ] Move or attack using meaningful height or facing. *(Dorthkor Road's rock outcrops, once
+  they are high ground: owner item 48d.)* **(#652)**
 - [ ] Attempt or use a Defining Strike. *(Refused with a named reason until a weakness is
   discovered.)*
 - [ ] Move the Balance axis and observe weather/board feedback. *(Dorthkor Road weather: tham.)*
 - [ ] Observe tile charge, residue, hush, or detonation feedback. *(Needs an element cast;
   no location sets Hush.)*
-- [ ] Use or attempt combat speech. **(#652: no slice encounter offers it)**
+- [ ] Use or attempt combat speech. *(The Bloodbellow's "Speak Its Muster-Name" or "Release the
+  Bound Soldier" count: owner item 48e. Offered in the field fight once #654 lands.)* **(#652)**
 - [ ] Encounter one blocked cast with a named reason and unblock condition.
 - [ ] Save, alter visible state, load, and compare the restored state. *(Load is Main Menu →
   Load Game.)*
 - [ ] Return and report the encounter outcome. *(To Marshal Coiljaw in Dom. The Bloodbellow
-  can only end `slain` today: **#652**.)*
-- [ ] Inspect the existing mock NG+ rollover and visible carry-over. **(#652: no in-game entry)**
+  can only end `slain` until #654 lands: **#652**.)*
+- [ ] Inspect the existing mock NG+ rollover and visible carry-over. *(**Begin Mock NG+** on the
+  chapter-complete screen, or on the pause menu in free roam: owner item 48c, #656. The title
+  then names what carries over, and Hadrik Vale's archive hub offers an NG+ echo line.)*
+  **(#652)**
 
 ## Per-tester observation form
 
@@ -182,7 +188,8 @@ Prompt: **“Explain what just happened on that tile.”**
 | Carry-over | Before rollover | Fresh-save result | Correct? |
 |---|---|---|---|
 | Style points | | | |
-| Mirror Shop purchase(s) | | | |
+| Mirror Shop purchase(s) | n/a until M10 | n/a | n/a |
+| Chapter One completion (an NG+ echo line is offered) | | | |
 | Expected reset state | | | |
 
 ### Observations
