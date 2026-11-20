@@ -6,6 +6,10 @@ valid session and complete the summary only after all sessions are finished.
 
 Do not write real names, contact details, or recording links in this repository.
 
+> **Not runnable yet (2026-11-20, `main` `be4f0b6e`).** Five required subsystems cannot appear in
+> normal play, so no session can be valid. #652 lists them with evidence. Items marked
+> **(#652)** below are the ones affected.
+
 ## Build and session record
 
 | Field | Value |
@@ -18,32 +22,44 @@ Do not write real names, contact details, or recording links in this repository.
 | Test dates | |
 | Evidence directory | `test/manual/gate-t/` |
 
-Build the official Linux artifact from a clean worktree:
+Build the official artifact from a clean worktree. Testers on Windows get the Windows kit:
 
 ```bash
-scripts/build_playtest.sh
-cd build/playtest/linux
-sha256sum -c SHA256SUMS
+scripts/build_playtest.sh --target windows
+cd build/playtest/windows
+sha256sum -c SoulMeter-windows-x86_64.zip.sha256
 ```
 
-The builder runs strict acceptance, exports the release executable and pack, boots
-the exported binary headlessly, and writes `BUILD-MANIFEST.txt` plus `SHA256SUMS`.
-It refuses a dirty worktree by default. `--allow-dirty` is for local verification
-only; never use an artifact whose manifest says `valid_for_gate_t=no` in a tester
-session.
+A Linux tester gets `scripts/build_playtest.sh` (the default `--target linux`), checked with
+`cd build/playtest/linux && sha256sum -c SHA256SUMS`.
+
+The builder:
+- runs strict acceptance;
+- exports the release executable and pack;
+- proves every shipped `.dialogue` loads from the pack (`pack_probe` in the manifest);
+- boots the game headlessly: the Linux binary itself, or the Windows pack in the host engine;
+- writes `BUILD-MANIFEST.txt` and `SHA256SUMS` (both inside the Windows zip).
+
+It refuses a dirty worktree by default. `--allow-dirty` and `--skip-acceptance` are for local
+verification only. Never use an artifact whose manifest says `valid_for_gate_t=no` in a tester
+session, and never use the CI Windows artifact, which has no manifest.
 
 Preflight:
 
 - [ ] Artifact, commit SHA, and export target match for every session.
-- [ ] `BUILD-MANIFEST.txt` says `worktree=clean` and `valid_for_gate_t=yes`.
-- [ ] `sha256sum -c SHA256SUMS` passes before the first session and after transfer.
+- [ ] `BUILD-MANIFEST.txt` says `worktree=clean`, `valid_for_gate_t=yes`, and a `pack_probe`
+  of N/N.
+- [ ] The checksum passes before the first session and after transfer (on Windows:
+  `certutil -hashfile SoulMeter-windows-x86_64.zip SHA256` against the `.sha256` file).
 - [ ] The acceptance gate is green for this exact commit.
 - [ ] Each tester is outside the project and has not previously inspected the slice.
 - [ ] Each tester uses a fresh save and default settings.
 - [ ] The build exposes the required dialogue, consequence, tactical, save/load, and
-  mock-NG+ breadth.
-- [ ] The tactical encounter uses charge time (CT), not the retired AP chassis.
-- [ ] The tactical encounter exposes the grid, elevation, and facing.
+  mock-NG+ breadth. **(#652)**
+- [ ] The tactical encounter uses charge time (CT), not the retired AP chassis. Field fights
+  run CT; scripted fights (the Trial keeper, journey ambushes) still run AP. **(#652)**
+- [ ] The tactical encounter exposes the grid, elevation, and facing. Dorthkor Road has no
+  height yet. **(#652)**
 - [ ] The encounter visibly exposes Balance/weather and at least one tile charge, residue, or detonation event.
 - [ ] Recording is disabled unless the tester explicitly opts in.
 - [ ] The facilitator has a timer and a separate copy of the tester form.
@@ -71,23 +87,32 @@ During play:
 
 ## Scenario checklist
 
-The tester should, without hints:
+The tester should, without hints. Where each item happens in the current build, for the
+facilitator's eyes only:
 
-- [ ] Explore Dom and form the company.
-- [ ] Complete a visible dialogue skill check.
-- [ ] Resolve one consequence-bearing town thread.
+- [ ] Explore Dom and form the company. *(The Four Arms, recruiting two companions. Marshal
+  Coiljaw's commission requires them; Themka Gaath's charge does not, so a tester can skip the
+  company: record that.)*
+- [ ] Complete a visible dialogue skill check. *(First chance: the Lower Trial Hall.)*
+- [ ] Resolve one consequence-bearing town thread. *(For example, Keth Varr's "Dishonest
+  Water" in the Bell House.)*
 - [ ] Observe a later dialogue, price, encounter, or NPC read-back of that choice.
-- [ ] Travel to Dorthkor Road.
-- [ ] Read and use the CT timeline.
-- [ ] Move or attack using meaningful height or facing.
-- [ ] Attempt or use a Defining Strike.
-- [ ] Move the Balance axis and observe weather/board feedback.
-- [ ] Observe tile charge, residue, hush, or detonation feedback.
-- [ ] Use or attempt combat speech.
+- [ ] Travel to Dorthkor Road. *(The North Road exit opens once the Dorthkor Road quest starts,
+  from Gaath or Coiljaw. The region map lists a place only after the first visit.)*
+- [ ] Read and use the CT timeline. *(Field fights only, such as the Dorthkor vanguard.)*
+- [ ] Move or attack using meaningful height or facing. **(#652: no height on the slice path)**
+- [ ] Attempt or use a Defining Strike. *(Refused with a named reason until a weakness is
+  discovered.)*
+- [ ] Move the Balance axis and observe weather/board feedback. *(Dorthkor Road weather: tham.)*
+- [ ] Observe tile charge, residue, hush, or detonation feedback. *(Needs an element cast;
+  no location sets Hush.)*
+- [ ] Use or attempt combat speech. **(#652: no slice encounter offers it)**
 - [ ] Encounter one blocked cast with a named reason and unblock condition.
-- [ ] Save, alter visible state, load, and compare the restored state.
-- [ ] Return and report the encounter outcome.
-- [ ] Inspect the existing mock NG+ rollover and visible carry-over.
+- [ ] Save, alter visible state, load, and compare the restored state. *(Load is Main Menu →
+  Load Game.)*
+- [ ] Return and report the encounter outcome. *(To Marshal Coiljaw in Dom. The Bloodbellow
+  can only end `slain` today: **#652**.)*
+- [ ] Inspect the existing mock NG+ rollover and visible carry-over. **(#652: no in-game entry)**
 
 ## Per-tester observation form
 
