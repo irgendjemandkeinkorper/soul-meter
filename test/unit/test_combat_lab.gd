@@ -157,7 +157,10 @@ func test_visibility_fixture_dims_every_enemy_cell_and_shows_in_the_aim_quote() 
 	})
 	var grid := Battle.controller.battlefield as GridBattlefieldModel
 	var enemy := Battle.controller.enemies[0]
-	assert_str(String(grid.visibility_at(grid.cell_of(enemy)))).is_equal("dim")
+	# Lab sessions run charge time like every set-piece (D8, #652): the wight can act before the
+	# party's first turn and step off the seat the fixture dimmed, so read the authored cells.
+	var authored: Dictionary = grid.get("_visibility")
+	assert_int(authored.values().count(&"dim")).is_equal(Battle.controller.enemies.size())
 	var ally_cell: Vector2i = grid.cell_of(Battle.controller.active_actor())
 	assert_bool(grid.displace(enemy, ally_cell + Vector2i(1, 0))["allowed"]).is_true()
 	# The fixture authored the wight's original cell; author its new seat the same way.
@@ -593,14 +596,20 @@ func test_the_tripwire_compares_a_session_strike_and_keeps_a_divergence_loud() -
 	var pending: Dictionary = _lab.get("_pending_forecast")
 	assert_str(str(pending.get("action_id", ""))).is_equal("strike")
 
+	var striker := str(_lab.call("_actor_name", controller.active_actor().combat_id))
 	var result: Dictionary = controller.submit_action(&"strike", target)
 
 	assert_bool(bool(result.get("allowed", false))).override_failure_message(str(result)).is_true()
+	# Under charge time (D8, #652) the wight's own turns are rows too; read the party's strike.
 	var rows: Array[Dictionary] = _lab.get("_turn_rows")
-	assert_str(str(rows[0]["action"])).is_equal("strike")
-	assert_bool(bool(rows[0]["compared"])).is_true()
-	assert_bool(bool(rows[0]["diverged"])).override_failure_message(str(rows[0])).is_false()
-	assert_int(int(rows[0]["forecast"])).is_equal(int(rows[0]["resolution"]))
+	var strikes := rows.filter(
+		func(row: Dictionary) -> bool: return str(row["action"]) == "strike" and str(row["actor"]) == striker
+	)
+	assert_int(strikes.size()).override_failure_message(str(rows)).is_equal(1)
+	var strike: Dictionary = strikes[0]
+	assert_bool(bool(strike["compared"])).is_true()
+	assert_bool(bool(strike["diverged"])).override_failure_message(str(strike)).is_false()
+	assert_int(int(strike["forecast"])).is_equal(int(strike["resolution"]))
 
 	# A planted divergence (forecast 7, resolution 9) stays the session's comparison even when
 	# a later action matches.

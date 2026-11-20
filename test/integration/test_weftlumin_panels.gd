@@ -344,7 +344,19 @@ func test_combat_panel_inspector_shows_every_readout_and_the_full_aim_quote() ->
 	assert_str(panel.field_label.text).contains("Balance")
 	assert_str(panel.field_label.text).contains("Weather")
 	assert_str(panel.style_label.text).contains("Total")
-	assert_str(panel.turns_label.text).is_equal("No resolved actions yet.")
+	# Lab sessions run charge time (D8, #652 gap 2), so the wight can act before the ally's
+	# first turn. The readout lists every action resolved so far, one row each, or says none.
+	var resolved: Array = panel.model.get("_turn_rows")
+	if resolved.is_empty():
+		assert_str(panel.turns_label.text).is_equal("No resolved actions yet.")
+	else:
+		var rows := panel.turns_label.text.split("\n")
+		assert_int(rows.size()).is_equal(resolved.size())
+		for index: int in resolved.size():
+			var row: Dictionary = resolved[index]
+			assert_str(rows[index]).starts_with("%s. %s / %s — " % [
+				str(row.get("turn", "?")), str(row.get("actor", "?")), str(row.get("action", "?")),
+			])
 	assert_str(panel.export_label.text).is_equal("Export: not exported")
 	assert_bool(panel.aim_controls.visible).is_true()
 

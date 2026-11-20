@@ -154,7 +154,15 @@ func start(encounter: Variant) -> void:
 		push_error("Cannot start an empty encounter: %s" % encounter_id)
 		return
 	var rules := (load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(true) as CombatRules
-	rules.use_charge_time = bool(_definition.get("use_charge_time", rules.use_charge_time))
+	# D8 ("always CT now", #652 gap 2): a set-piece fought on a map runs charge time like every
+	# ambient session, and so does a Combat Lab session, which opens through the same door. The
+	# definition's flag only steers a bare `start()`, which no game scene calls; it keeps the AP
+	# scheduler reachable as the scheduler seam's alternate implementation (D8).
+	rules.use_charge_time = (
+		true
+		if _set_piece_pending
+		else bool(_definition.get("use_charge_time", rules.use_charge_time))
+	)
 	var battlefield := _battlefield_for_definition(rules)
 	if not _set_piece_seat_failure.is_empty():
 		# A set-piece that cannot seat everyone by the party does not open (2026-11-04). The
