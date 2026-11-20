@@ -315,3 +315,41 @@ func test_hex_facing_by_offset_matches_the_hex_line() -> void:
 		]
 		for ask in 2:
 			assert_that(GridBattlefieldModel.facing_for_delta(delta)).is_equal(expected)
+
+
+func test_walk_fed_reach_rows_match_a_query_per_stand_on_hexes() -> void:
+	_assert_rows_match_queries(_controller())
+
+
+func test_walk_fed_reach_rows_match_a_query_per_stand_on_squares() -> void:
+	GridMode.use_squares()
+	_assert_rows_match_queries(_controller())
+
+
+## The reach a pricing builds from the memo search's walks (`memo_reach_walks()`) offers the
+## stands, prices, paths and cells that a separate `query_action_for()` gives each stand from
+## scratch, with a foe standing inside the reach.
+func _assert_rows_match_queries(controller: CombatController) -> void:
+	_place(controller, controller.enemies[0], Vector2i(8, 10))
+	var actor := controller.allies[0]
+	var rows := _reach(controller)
+	assert_bool(rows.is_empty()).is_false()
+	var move := controller.action_by_id(CombatController.ACTION_MOVE)
+	var ct_budget := int(
+		float(controller._move_budget(actor)) / CombatInjury.move_cost_multiplier(actor)
+	)
+	var expected: Array[StringName] = []
+	for destination: StringName in _grid(controller).reachable_positions(actor, ct_budget):
+		var query := controller.query_action_for(actor, move, null, {"destination": destination})
+		if bool(query.get("allowed", false)):
+			expected.append(destination)
+	assert_array(_destinations(rows)).is_equal(expected)
+	assert_bool(_destinations(rows).has(_grid(controller).position_of(controller.enemies[0]))).is_false()
+	for row: Dictionary in rows:
+		var query := controller.query_action_for(actor, move, null, {"destination": row["destination"]})
+		assert_int(int(row["ap_cost"])).is_equal(int(query["ap_cost"]))
+		assert_int(int(row["ct_cost"])).is_equal(int(query["ct_cost"]))
+		assert_array(Array(row["path"])).is_equal(Array(query["path"]))
+		assert_array(Array(row["path_cells"])).is_equal(
+			Array(controller._describe_path_cells(query["path"]))
+		)

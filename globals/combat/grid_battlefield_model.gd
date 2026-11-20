@@ -894,6 +894,66 @@ func path_query(actor: BattleActor, destination: StringName) -> Dictionary:
 	return _path_query(actor, destination, INF)
 
 
+## `reachable_positions(actor, ct_budget)` answered straight from the open path memo, each stand
+## with its walk: `[handle, ct_cost, path, cells]`, in the same by-handle order. `ct_cost`,
+## `path` and `cells` are what `path_query()` and `memo_walk_cells()` give for that handle,
+## the very same read-only arrays. Null unless the memo is `actor`'s, from where it stands,
+## under this budget's cap; the caller then asks `reachable_positions()` as before. A reach
+## pricing reads these instead of asking each stand's answer back through `move_query()`
+## (#642: the per-stand round trip was a third of a cold pricing).
+func memo_reach_walks(actor: BattleActor, ct_budget: int) -> Variant:
+	if _grid == null or not has_combatant(actor) or not _cells.has(actor.combat_id):
+		return null
+	var search_cap := _search_cost_cap(ct_budget)
+	if _memo_answers(actor, search_cap) == null:
+		return null
+	var origin: Vector2i = _cells[actor.combat_id]
+	var tree: Dictionary = _path_memo["tree"]
+	var settled: Dictionary = tree["settled"]
+	var square := not _grid.hex_mode
+	var box := Rect2i()
+	if square:
+		# `reachable_positions()` reads only the move box on squares.
+		var move_cost := maxi(1, _rules.move_ct_cost if _rules != null else 1)
+		var max_radius := int(ct_budget / move_cost) + 1
+		var rect := _grid.get_used_rect()
+		var min_corner := Vector2i(
+			maxi(rect.position.x, origin.x - max_radius), maxi(rect.position.y, origin.y - max_radius)
+		)
+		var max_corner := Vector2i(
+			mini(rect.end.x - 1, origin.x + max_radius), mini(rect.end.y - 1, origin.y + max_radius)
+		)
+		box = Rect2i(min_corner, max_corner - min_corner + Vector2i.ONE)
+	var by_handle: Dictionary = {}
+	for cell: Vector2i in settled:
+		if cell == origin or (square and not box.has_point(cell)):
+			continue
+		# `_path_query_cell()`'s refusals, in its order, for a cell the search settled.
+		if not _grid.is_in_bounds(cell):
+			continue
+		var occupant: BattleActor = _occupancy.get(cell)
+		if _grid.is_point_solid(cell) and occupant == null:
+			continue
+		if occupant != null and occupant != actor:
+			continue
+		var walk := _tree_walk(tree, origin, cell)
+		if walk.is_empty():
+			continue
+		var ct_cost := _walk_ct_cost(walk[1])
+		if ct_cost > ct_budget:
+			continue
+		by_handle[String(_handle_for_cell(cell))] = [ct_cost, walk]
+	var handles: Array = by_handle.keys()
+	# As String, never as StringName (see `reachable_positions()`).
+	handles.sort()
+	var result: Array = []
+	for handle_text: String in handles:
+		var entry: Array = by_handle[handle_text]
+		var walk: Array = entry[1]
+		result.append([StringName(handle_text), entry[0], walk[0], walk[2]])
+	return result
+
+
 ## While a caller asks many uncapped path queries from one actor's cell (the movement snapshot
 ## quotes every reachable cell), one search from that cell, capped at `ct_budget`, answers every
 ## cell it settles. It settles cells in the order each per-destination search would, so every

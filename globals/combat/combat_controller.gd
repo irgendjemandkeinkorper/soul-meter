@@ -1227,7 +1227,17 @@ func _price_reachable(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
 	# A plain move's gates ahead of the walk answer the same for every stand: a living actor
 	# passes them all (`_plain_move()`), so each stand asks only the walk and its price.
 	var plain := _plain_move(action) and actor.is_alive()
-	for destination: StringName in battlefield.reachable_positions(actor, ct_budget):
+	var walks: Variant = (
+		battlefield.call("memo_reach_walks", actor, ct_budget)
+		if plain and memo and _walk_cells_known and battlefield.has_method("memo_reach_walks")
+		else null
+	)
+	var destinations: Array[StringName] = []
+	if walks != null:
+		_price_walks(actor, action, walks as Array, reachable)
+	else:
+		destinations = battlefield.reachable_positions(actor, ct_budget)
+	for destination: StringName in destinations:
 		var options := {"destination": destination}
 		var query := (
 			_query_move(actor, action, options) if plain
@@ -1255,6 +1265,31 @@ func _price_reachable(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
 			_last_reach_stamp = battlefield.call("path_memo_stamp")
 		battlefield.call("end_path_memo")
 	return reachable
+
+
+## `_price_reachable()`'s loop for a plain move, fed the memo search's walks
+## (`memo_reach_walks()`): every stand there passed `move_query()`, so each asks only its
+## price, and its row carries the walk's own path and cells. The rows are the ones the
+## per-stand `_query_move()` loop builds, in the same order (#642).
+func _price_walks(
+	actor: BattleActor, action: CombatAction, walks: Array, reachable: Array[Dictionary]
+) -> void:
+	for entry: Array in walks:
+		var destination: StringName = entry[0]
+		var quote := _quote_move(
+			action, {"ct_cost": entry[1]}, {"destination": destination}, actor
+		)
+		if not bool((quote["affordability"] as Dictionary).get("allowed", false)):
+			continue
+		var row := {
+			"destination": destination,
+			"ap_cost": int(quote["ap_cost"]),
+			"ct_cost": int(quote["ct_cost"]),
+			"path": entry[2],
+			"path_cells": entry[3],
+		}
+		row.make_read_only()
+		reachable.append(row)
 
 
 ## Refusals a walk can cure: out of reach, not adjacent, blocked sight, too high, wrong side.
