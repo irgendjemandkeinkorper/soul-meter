@@ -65,7 +65,7 @@ func _build() -> void:
 
 	var continue_button := _menu_button(vbox, "Continue Exploring — Open Loamroot", _continue)
 	continue_button.theme_type_variation = "BronzeButton"
-	var ng_plus_button := _menu_button(vbox, "Begin Mock NG+", _begin_mock_ng_plus)
+	var ng_plus_button := _menu_button(vbox, "Begin Mock NG+", begin_mock_ng_plus)
 	ng_plus_button.name = "BeginMockNgPlus"
 	_menu_button(vbox, "Return to Title", _return_to_title)
 
@@ -85,7 +85,9 @@ func _return_to_title() -> void:
 ## this carries only what exists today: the chapter's style points and a completion marker. The
 ## marker is what wakes the NG+ echo lines (`NGPlus.is_active`). This run is saved first, as
 ## Return to Title does; the title's New Game then starts over carrying the block.
-func _begin_mock_ng_plus() -> void:
+## The pause menu offers the same rollover once the chapter is in free roam (owner, 2026-11-20),
+## because Continue Exploring never brings this screen back.
+static func begin_mock_ng_plus() -> void:
 	SaveGame.save()
 	SaveGame.arm_ng_plus(mock_ng_plus_block())
 	GameFlow.send_event("to_main_menu")
