@@ -13,7 +13,7 @@ item in place. When an item is done, an agent strikes it through with the date a
 
 ## 1. Rule now — blocks agent work
 
-The 2026-10-22 rulings are in §5. One item blocks agent work as of 2026-11-19:
+The 2026-10-22 rulings are in §5. One item blocks agent work as of 2026-11-13:
 
 | # | Decision | How to answer | Your effort |
 |---|---|---|---|
@@ -23,7 +23,6 @@ The 2026-10-22 rulings are in §5. One item blocks agent work as of 2026-11-19:
 
 | # | Decision | How to answer | Your effort |
 |---|---|---|---|
-| 47 | **Dom's River Shrine exit spawn stands on the shrine's rock** (#649, `docs/qa/649-journey-flow-fix-2026-11-19.md`). `SpawnFromRiverShrine` is at (1100, 1705), 20 px south of the door, and every cell south of the door is blocked. Leaving the shrine puts the party on a cell it cannot walk from. The nearest walkable cell straight in front of it is about 60 px north of the door, at (1100, 1625). Four other markers in other maps stand on blocked cells too (listed in the QA report); the spawn test lists all five as known exceptions. Moving an authored marker is a level edit, so it waits for you. | `47: move it north` (Claude moves it to the nearest walkable cell in front of the door), `47: leave`, or a position | 1 min |
 | 5 | **Breath / Soul economy numbers** — `docs/casting-economy.md` §(b). Every number there is PROVISIONAL: Breath costs per magnitude, `breath_max` by class tier, Luth restore, Mozh conversion, Soul overreach rate. | `5: ratify as proposed` or edit the tables in place | 15 min |
 | 7 | **DRAMGID leftovers** — `docs/architecture-dramgid.md` §5. Open: (1) ratify the 22-skill table (RFC-0005) in the mono repo; (8) Fame raw vs Decorum-scaled, folded into item 1; (9) fizzle attribute canon-doc edit. Items 2–7 were implemented as recommended; say so and they close. | `7: 2–7 confirmed, 1 ratified` | 5 min |
 | 8 | **Companion canon packets** — `docs/canon-review/`: Packet A (Wyneth and the Hospice chain), Packet B (Grumbrand and Pozor's reading institutions), Packet C (naming collisions), trust-language redlines, and the Serai-Lun +3 vs +6 Renown asymmetry (recommend +6). | One line per packet, e.g. `8A: as recommended` | 30 min |
@@ -56,7 +55,6 @@ The 2026-10-22 rulings are in §5. One item blocks agent work as of 2026-11-19:
 
 ## 5. Answered (log, newest first)
 
-- 2026-11-19 — ~~46. Region-map journeys broken from the pause menu~~ — `approve #649`. Implemented on `claude/649-journey-flow-fix`, stacked on #650: Paused gains `enter_battle` → Battle and `travel` → Loading; a fight paused under the menu refuses journeys; a refused ambush returns the prompt and CANCEL works; Dom's ground now covers its camera rect. Both directions of the chapter road pass end to end (`docs/qa/649-journey-flow-fix-2026-11-19.md`). The River Shrine spawn left over is item 47.
 - 2026-11-13 — ~~19. GitHub clicks (items 1–7)~~ — merges authorized in session (`merge and continue`); the agent's `gh pr merge` now works. Landed with merge commits, each after green CI: #588, #585, #583, #593; the landing chain #586 → #587 → #589 → #591; #590; #618, #619, #620, #621, #623, #625, #626, #627, #629, #638 and #640. The originals the landing PRs carried are closed with a "Landed via" comment, after checking that each head commit is in `main`. #641 is closed: its commit landed with #589 as a cherry-pick. Fixed while landing:
   - #589's CI stalled at the 60-minute limit. gdUnit's `assert_error()` never removes the engine logger it installs, and when suite order ran those suites first, deferred-call errors recursed inside error printing. The four suites now extend `test/helpers/error_assert_suite.gd`, which removes each logger after its test; the vendor addon is unchanged.
   - #638's new test awaited `RenderingServer.frame_post_draw`, which the headless CI renderer never emits. It now samples per process frame.
