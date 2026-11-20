@@ -12,6 +12,11 @@ extends SceneTree
 ## export without the Dialogue Manager importer (`--recovery-mode` disables editor plugins) drops
 ## every `.dialogue` resource and the game still boots to its menu, so a boot smoke cannot see it.
 ## That shipped in the CI Windows artifact until 2026-11-20.
+##
+## Expected noise after the PACK PROBE line: Godot still loads `run/main_scene` in `-s` mode,
+## without the autoload members it references, so it logs parse errors for `main_menu.gd`
+## (`LOAD_GAME`, `SETTINGS`, sometimes `Screen`). Only the PACK PROBE line and the exit status
+## count. A real boot of the same pack (`--main-pack ... --quit-after 300`) parses the menu cleanly.
 
 const LIST_ENV := "SOUL_METER_PACK_PROBE_LIST"
 
