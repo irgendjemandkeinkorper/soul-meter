@@ -359,6 +359,8 @@ func _destinations(scene: Node) -> Array[Node2D]:
 			found.append(spot)
 		elif spot.scene_file_path == "" or spot == scene:
 			continue
+		elif spot is LivedIn:
+			continue  # generated dressing (lived-in maps) is scenery, not somewhere to walk to
 		elif not spot.scene_file_path in NOT_DESTINATIONS:
 			found.append(spot)
 	return found
