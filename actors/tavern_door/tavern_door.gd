@@ -30,11 +30,15 @@ func _ready() -> void:
 func _on_body(body: Node2D, entered: bool) -> void:
 	if body is Player:
 		_player_in_range = entered
+		InteractionFocus.set_in_range(self, body, entered, InteractionFocus.Tier.THRESHOLD)
 		_prompt.visible = entered
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _player_in_range and event.is_action_pressed("interact") and not get_tree().paused:
+	if (
+		_player_in_range and event.is_action_pressed("interact") and not get_tree().paused
+		and InteractionFocus.takes_interact(self)
+	):
 		get_viewport().set_input_as_handled()
 		_try_travel()
 

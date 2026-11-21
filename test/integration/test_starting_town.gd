@@ -495,6 +495,8 @@ func test_dom_shops_and_home_save_point_are_repeatable_interactions() -> void:
 	assert_bool(item_shop._used).is_false()
 	UIManager.close_all()
 
+	# Walk from the shop to the save point: leaving the shop's range hands E on (InteractionFocus).
+	item_shop._on_body(player, false)
 	save_point._on_body(player, true)
 	save_point._unhandled_input(interact)
 	assert_bool(GameState.get_flag("dom_save_point_used")).is_true()

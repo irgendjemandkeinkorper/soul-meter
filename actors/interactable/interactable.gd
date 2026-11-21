@@ -44,6 +44,7 @@ func _ready() -> void:
 	_sign.text = tr(display_name)
 	$Marker.color = marker_color
 	_prompt.visible = false
+	add_to_group(InteractionFocus.GROUP)
 	_refresh_prompt()
 
 	var range_area := Area2D.new()
@@ -61,13 +62,21 @@ func _ready() -> void:
 func _on_body(body: Node2D, entered: bool) -> void:
 	if body is Player:
 		_player_in_range = entered
-		_prompt.visible = entered
+		InteractionFocus.set_in_range(self, body, entered, InteractionFocus.Tier.WORLD)
+		_prompt.visible = entered and not InteractionFocus.is_outranked(self)
 		if entered:
 			_refresh_prompt()
 
 
+func _on_interaction_focus_changed() -> void:
+	if _player_in_range:
+		_prompt.visible = not InteractionFocus.is_outranked(self)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not _player_in_range or not event.is_action_pressed("interact") or get_tree().paused:
+		return
+	if not InteractionFocus.takes_interact(self):
 		return
 	get_viewport().set_input_as_handled()
 	if _skill_lock_is_live():
