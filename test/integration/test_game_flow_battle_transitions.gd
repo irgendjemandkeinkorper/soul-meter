@@ -51,10 +51,17 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	# #657: an ambient fixture re-alerts on every physics frame (cooldown 0). While the flow still
+	# watches the field, a sighting between the steps below re-opens a fight and leaves the chart
+	# in Playing/Battle for whichever suite runs next. Stop watching before stepping out.
+	_stop_watching_field_hostiles()
 	if _state_is_active(BATTLE_STATE):
 		GameFlow.send_event(&"battle_end")
 		await get_tree().process_frame
 	await _return_to_title()
+	assert_bool(_state_is_active(TITLE_STATE)).override_failure_message(
+		"after_test must leave GameFlow on Title; active states: %s" % ", ".join(_active_states())
+	).is_true()
 	var loading_state: Node = GameFlow.get_node(LOADING_STATE)
 	if (
 		_loading_handler_was_connected
@@ -359,6 +366,22 @@ func _finish_deployment() -> void:
 func _state_is_active(path: String) -> bool:
 	var state: Node = GameFlow.get_node_or_null(path)
 	return state != null and bool(state.get("active"))
+
+
+## Disconnects the flow's hostile watch from the fixture field and from whichever field the
+## watch would bind to now (`watch_field_hostiles` asks `Battle._current_field_map()`).
+func _stop_watching_field_hostiles() -> void:
+	for field: FieldMap in [_field, Battle._current_field_map()]:
+		if field != null and field.hostile_alerted.is_connected(GameFlow._on_field_hostile_alerted):
+			field.hostile_alerted.disconnect(GameFlow._on_field_hostile_alerted)
+
+
+func _active_states() -> PackedStringArray:
+	var names := PackedStringArray()
+	for state: Node in GameFlow.get_node("StateChart/Root").find_children("*", "", true, false):
+		if state.get("active") == true:
+			names.append(String(GameFlow.get_node("StateChart/Root").get_path_to(state)))
+	return names
 
 
 func _reset_battle() -> void:
