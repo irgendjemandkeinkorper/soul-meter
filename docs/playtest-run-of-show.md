@@ -8,19 +8,17 @@ One page per session. Print or split-screen this next to
 > use the same ratified Gate T chassis and four-question scoring rule. Do not substitute an older
 > Phase 1.5 packet from a prior build or session.
 
-> **Not runnable yet.** On `be4f0b6e` five subsystems the protocol requires cannot appear in normal
-> play: the Bloodbellow's named/released routes, CT in scripted fights, height on the slice path,
-> combat speech, and the mock NG+ rollover. A session that cannot see one is invalid
-> (protocol §1), so **do not book testers until #652 closes**. Region-map journeys also need
-> #650 and #651 merged.
+> **Not runnable yet.** #652's five gaps are closed on `main` (`21ca5a08`, 2026-11-21), and
+> region-map journeys work from the pause menu (#650, #651). Two of #652's checks remain: one
+> full rendered run of the slice that shows every protocol §2 item on a single fresh save, and a
+> Windows kit whose manifest says `valid_for_gate_t=yes`. **Do not book testers until #652
+> closes.**
 >
-> The owner set how each is met on 2026-11-20 (owner item 48). This kit already describes that
-> target build:
+> The owner set how each gap is met on 2026-11-20 (owner item 48), and `main` now plays it:
 > - **Routes and combat speech:** the Bloodbellow's "Speak Its Muster-Name" and "Release the
->   Bound Soldier" are its routes and also count as the session's combat speech (48e). Live
->   with #654.
-> - **CT:** every fight runs CT with #655.
-> - **Height:** Dorthkor Road's three rock outcrops become climbable high ground (48d; #660).
+>   Bound Soldier" are its routes and also count as the session's combat speech (48e; #654).
+> - **CT:** every fight runs CT (#655).
+> - **Height:** Dorthkor Road's three rock outcrops are climbable high ground (48d; #660).
 > - **Mock NG+:** **Begin Mock NG+** on the chapter-complete screen, and on the pause menu once
 >   the chapter is in free roam (48c; #656).
 > - **Company:** Themka Gaath's charge requires two companions, as Coiljaw's commission does (48b;

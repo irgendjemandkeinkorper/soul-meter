@@ -1,8 +1,8 @@
 # Gate T criterion 6 playtest protocol — tactical comprehension
 
-**Status:** blocked. As of 2026-11-20 the build cannot produce a valid session: five §2
-subsystems cannot appear in normal play (#652). No qualifying outside-player result is
-recorded yet.
+**Status:** blocked until #652 closes. As of 2026-11-21 its five gaps are closed on `main`;
+a full rendered slice run and the Windows kit's `valid_for_gate_t=yes` manifest remain. No
+qualifying outside-player result is recorded yet.
 
 **Authority:** `docs/prd-amendment-tactical-layer.md` §5, criterion 6, ratified and
 trimmed 2026-08-05. `docs/roadmap-chapter-one.md` §1.3 and M5 apply the same ruling.
