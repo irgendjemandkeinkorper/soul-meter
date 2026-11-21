@@ -149,10 +149,25 @@ jobs:
         run: |
           "$GODOT_BIN" --headless --path . --import --quit
           mkdir -p dist/SoulMeter
-          # Pandora's upstream release hook ASCII-compresses its JSON and drops Unicode lore.
-          # Recovery mode skips editor-only hooks; the preset explicitly includes raw data.pandora.
-          "$GODOT_BIN" --headless --recovery-mode --path . --export-release "Windows Desktop" dist/SoulMeter/SoulMeter.exe
+          # No --recovery-mode: it disables editor plugins, so the Dialogue Manager importer never
+          # ran and this artifact shipped without a single .dialogue (found 2026-11-20). The game
+          # reads data/generated/*, not Pandora, so Pandora's ASCII-only release copy is inert.
+          "$GODOT_BIN" --headless --path . --export-release "Windows Desktop" dist/SoulMeter/SoulMeter.exe
           cp README.md DEPENDENCIES.md dist/SoulMeter/
+
+      - name: Probe the exported pack
+        run: |
+          set -o pipefail
+          find dialogue -name '*.dialogue' | sort > /tmp/expected-resources.txt
+          probe_cwd="$(mktemp -d)"
+          # An empty working directory: with project.godot in reach, res:// resolves to the repo.
+          (cd "$probe_cwd" && SOUL_METER_PACK_PROBE_LIST=/tmp/expected-resources.txt \
+            "$GODOT_BIN" --headless --main-pack "$GITHUB_WORKSPACE/dist/SoulMeter/SoulMeter.pck" \
+            -s "$GITHUB_WORKSPACE/tools/playtest_pack_probe.gd") | tee /tmp/pack-probe.log
+          grep -q '^PACK PROBE: [0-9]' /tmp/pack-probe.log
+
+      - name: Zip the Windows build
+        run: |
           cd dist
           zip -r SoulMeter-windows-x86_64.zip SoulMeter
 

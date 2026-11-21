@@ -1,5 +1,8 @@
 # Gate T-6 (#93) — recruitment kit
 
+> **Hold (2026-11-20):** do not book testers until #652 closes. The build cannot produce a
+> valid session yet.
+
 Target: **6–8 recruits to net 3–5 completed sessions** (no-shows and invalid sessions are
 normal). Eligibility: not a project contributor, has never seen the slice, can play a
 Windows build for ~90 minutes while you watch (in person or screen-share), comfortable
@@ -12,7 +15,7 @@ players is ideal.
 > Hey — I'm building a story-heavy tactics RPG solo and I've hit the point where I need
 > eyes that aren't mine. Would you play a ~1-hour slice on Windows while I watch and take
 > notes? I can't answer questions during it (that's the whole point — I'm testing whether
-> the game explains itself), and at the end I'll ask you four short questions about what
+> the game explains itself), and as you play I'll ask four short questions about what
 > things meant. No prep, no spoilers needed, one session, done. Any evening this week or
 > next work?
 
@@ -24,7 +27,7 @@ players is ideal.
 > dialogue-and-consequence CRPG with turn-based tactical battles (think Fallout-style
 > consequences, isometric grid combat). This is a **comprehension test**: I sit in
 > (screen-share is fine), I stay silent while you play and think aloud, and afterwards I
-> ask four short questions about what you saw. There are no wrong answers — if something
+> ask four short questions about what you saw, each right after the moment it is about. There are no wrong answers — if something
 > confused you, that's exactly the data I need.
 >
 > Requirements: Windows PC, ~90 minutes, no prior exposure to the game, okay with me
@@ -36,7 +39,8 @@ players is ideal.
 ## Scheduling & logistics checklist
 
 - [ ] Book 2-hour windows (90 min play + setup/wrap); one tester per sitting.
-- [ ] Send the build zip (or bring the machine) *day-of*, not earlier — no previewing.
+- [ ] Send the build zip (or bring the machine) *day-of*, not earlier — no previewing. Only a
+      kit from `scripts/build_playtest.sh --target windows` counts (see the run-of-show §0).
 - [ ] Assign pseudonymous IDs T1–T5 on booking; never put real names in the repo.
 - [ ] Ask recording consent at session start, explicitly; default is notes only.
 - [ ] Remote sessions: Discord/Meet screen-share, tester shares audio, you stay muted
