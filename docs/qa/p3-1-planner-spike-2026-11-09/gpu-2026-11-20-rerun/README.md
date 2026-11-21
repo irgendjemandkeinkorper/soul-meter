@@ -50,5 +50,11 @@ All 8 runs admitted 100 hostiles and logged no errors.
 5. Every transition is under 2 s. D9's 2 ms per decision is still not met: the mean is 6.7–11.8 ms
    (advisory).
 
-The phase's rule sends this back to the owner (owner item 50). Legibility also still stands at
-2/3 until #639 (Guard), which is on hold under owner item 43.
+The phase's rule sent this back to the owner as owner item 50, and the item was answered on
+2026-11-20 (`50: a`):
+- The planner is judged by its cost over the control. On that measure **cached passes**: +3 to
+  +11 ms frame p95, with its own refresh at 9–10 ms.
+- The absolute frame budget stays with FR-904's rendered gate (#175). The field's own cost is
+  #663.
+- P3.1 is still not through: its legibility capture stands at 2/3 until #639 (Guard), which is on
+  hold under owner item 43.

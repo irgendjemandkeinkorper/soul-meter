@@ -56,6 +56,7 @@ The 2026-10-22 rulings are in §5. Two items block agent work as of 2026-11-20:
 
 ## 5. Answered (log, newest first)
 
+- 2026-11-20 — ~~50. Enemy planner: the #603 rerun still fails, and the field is why (#603, PR #661)~~ — answered in session: `50: a`. Judge the planner by its cost over the control. Cached adds +3 to +11 ms frame p95, and its own refresh is 9–10 ms. The absolute frame budget stays with FR-904's rendered gate (#175). The populated field's own cost is filed as #663: with 100 hostiles and no planner, no-action frames run at 33–37 ms p50. P3.1's legibility capture still stands at 2/3 until #639 (item 43). Ruling 6's capacity is unchanged.
 - 2026-11-20 — ~~49. Combat cost: the ally turn sits at the 16 ms bar (#642, PR #647)~~ — answered in session: `49: a`. Accept the remaining cost (GPU ally turn 158 ms on `main` → mean 17.3 ms, median 16.6, 2 of 6 runs under 16 ms; enemy decision 16.3 → 6.5–6.9 ms) and go to the #603 planner rerun. The snapshot contract is unchanged. The item's row was on #647's branch and never reached `main`.
 - 2026-11-20 — ~~48. Gate T-6 session rules (#652)~~ — answered in session: `48: a free roam, b require, c minimal, d rocks, e routes`.
   - (a) A tester who reaches the chapter-complete screen before 45 minutes keeps playing in free roam until 45 minutes. The facilitator says only "Keep playing as you like."
