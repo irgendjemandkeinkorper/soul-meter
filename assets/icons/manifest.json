@@ -377,6 +377,84 @@
 				}
 			],
 			"source": "assets/icons/src/items/weapons.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/intents/call.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/intents/call.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/intents/call.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/intents/flank.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/intents/flank.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/intents/flank.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/intents/flee.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/intents/flee.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/intents/flee.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/intents/guard-ally.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/intents/guard-ally.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/intents/guard-ally.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/intents/hold.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/intents/hold.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/intents/hold.svg"
+		},
+		{
+			"exports": [
+				{
+					"path": "assets/icons/png/24/intents/strike.png",
+					"size": 24
+				},
+				{
+					"path": "assets/icons/png/64/intents/strike.png",
+					"size": 64
+				}
+			],
+			"source": "assets/icons/src/intents/strike.svg"
 		}
 	],
 	"generator": "tools/export_icons.gd",

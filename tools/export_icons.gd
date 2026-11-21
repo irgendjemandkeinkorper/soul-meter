@@ -8,7 +8,7 @@ const SIZES: Array[int] = [24, 64]
 
 func _initialize() -> void:
 	var entries: Array[Dictionary] = []
-	for group: String in ["commands", "elements", "items"]:
+	for group: String in ["commands", "elements", "items", "intents"]:
 		for filename: String in DirAccess.get_files_at(SOURCE.path_join(group)):
 			if filename.get_extension() != "svg":
 				continue
