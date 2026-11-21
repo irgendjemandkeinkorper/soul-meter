@@ -75,6 +75,7 @@ func _ready() -> void:
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.visible = false
 	add_child(_prompt)
+	add_to_group(InteractionFocus.GROUP)
 
 	# FR-504a routines: a named NPC with a NpcRoutines row is placed (or made
 	# absent) per clock phase, on scene load and again on each phase change.
@@ -222,13 +223,20 @@ func _set_present(present: bool) -> void:
 	process_mode = Node.PROCESS_MODE_DISABLED
 	remove_from_group(NavOccupancy.GROUP)
 	_player_in_range = false
+	InteractionFocus.set_in_range(self, null, false, InteractionFocus.Tier.WORLD)
 	_prompt.visible = false
 
 
 func _on_body(body: Node2D, entered: bool) -> void:
 	if body is Player:
 		_player_in_range = entered
-		_prompt.visible = entered
+		InteractionFocus.set_in_range(self, body, entered, InteractionFocus.Tier.WORLD)
+		_prompt.visible = entered and not InteractionFocus.is_outranked(self)
+
+
+func _on_interaction_focus_changed() -> void:
+	if _player_in_range:
+		_prompt.visible = not InteractionFocus.is_outranked(self)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -237,7 +245,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		attempt_pickpocket()
 		_prompt.text = _prompt_text()
 		return
-	if _player_in_range and event.is_action_pressed("interact") and not get_tree().paused:
+	if (
+		_player_in_range and event.is_action_pressed("interact") and not get_tree().paused
+		and InteractionFocus.takes_interact(self)
+	):
 		get_viewport().set_input_as_handled()
 		if not vendor_id.is_empty():
 			var shop_screen := UIManager.open(UIManager.SHOP, true)

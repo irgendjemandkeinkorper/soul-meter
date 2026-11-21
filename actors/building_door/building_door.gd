@@ -83,12 +83,15 @@ func _validate_gate_configuration() -> void:
 func _on_body(body: Node2D, entered: bool) -> void:
 	if body is Player:
 		_player_in_range = entered
+		InteractionFocus.set_in_range(self, body, entered, InteractionFocus.Tier.THRESHOLD)
 		_prompt.visible = entered
 		_refresh_lock()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not _player_in_range or not event.is_action_pressed("interact") or get_tree().paused:
+		return
+	if not InteractionFocus.takes_interact(self):
 		return
 	get_viewport().set_input_as_handled()
 	_try_travel()
