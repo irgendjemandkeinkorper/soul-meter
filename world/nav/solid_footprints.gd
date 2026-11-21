@@ -121,7 +121,7 @@ static func transform_in(node: Node2D, root: Node) -> Transform2D:
 static func ground_bounds(ground: TileMapLayer) -> Rect2i:
 	var rect := ground.get_used_rect()
 	if rect.size == Vector2i.ZERO and ground is IsometricBlockout:
-		rect = Rect2i(Vector2i.ZERO, (ground as IsometricBlockout).map_size)
+		rect = (ground as IsometricBlockout).cell_rect()
 	return rect
 
 

@@ -3,8 +3,10 @@ extends Node
 ## then placed at the route's origin, the player presses Esc and opens the region map from the
 ## pause menu. They press the destination's marker, read the route's steps, phases and risk, press
 ## BEGIN JOURNEY and let the map's own step timer carry the journey. Every ambush prompt is
-## answered with AVOID. When the avoid roll fails, the ambush is fought on the field under
-## autoplay, then the player presses Esc, reopens the region map and presses CONTINUE. The run
+## answered with AVOID. When the avoid roll fails, the ambush opens on the field and is fought
+## under autoplay, every wave, until the combat bar offers CONTINUE and the spoils are taken. The
+## player then presses Esc, reopens the region map and presses CONTINUE. Since #649 the fight
+## opens straight from the map; before it, the driver recorded the BACK + Esc detour. The run
 ## passes only when the party arrives in the destination scene, the plan reads ARRIVED and the
 ## clock has advanced by the route's phases (fight time excluded). Any stall is a dead end and
 ## fails. A stranded ambush also captures what the player is left with.
@@ -132,13 +134,20 @@ func _drive() -> bool:
 		if plan.state == TravelPlan.State.AVOID_PROMPT:
 			if not await _answer_prompt():
 				return false
+		elif plan.state == TravelPlan.State.EN_ROUTE and _chart_state().contains("Battle"):
+			# Field foes joined after the ambush; the player finishes that fight first.
+			var phases_at_fight := WorldClock.phase_count
+			if not await _play_out_fight("field"):
+				return false
+			_fight_phases += WorldClock.phase_count - phases_at_fight
 		elif plan.state == TravelPlan.State.EN_ROUTE and not _region_map_open() and not Battle.session_active:
 			# The fight is over and the field is back: the player reopens the map to go on.
 			if not await _continue_from_field():
 				return false
 		elif plan.state == TravelPlan.State.ARRIVED and not arrival_noted:
 			arrival_noted = true
-			await _frames(30)
+			if await _wait_for(_arrived.bind(destination_scene), 15.0):
+				break
 			_note("plan ARRIVED: scene still %s, chart %s, top screen '%s', clock phase %d" % [
 				_scene_path().get_file(), _chart_state(), _top_screen().get_file(), WorldClock.phase_count,
 			])
@@ -230,62 +239,110 @@ func _fight_ambush() -> bool:
 		return await _record_stranded_ambush()
 	var phases_at_fight := WorldClock.phase_count
 	await _frames(20)
-	_note("fight opened: chart %s, battle HUD open=%s, tree paused=%s, top screen '%s'" % [
-		_chart_state(), _battle_hud_open(), get_tree().paused, _top_screen().get_file(),
+	_note("fight opened: chart %s, field combat mode=%s, tree paused=%s, top screen '%s'" % [
+		_chart_state(), _field_in_combat(), get_tree().paused, _top_screen().get_file(),
 	])
 	await _shoot("ambush-opened")
-	# What a player does to reach the fight: BACK off the map, then Esc to resume play.
-	var map := _region_map()
-	if map != null:
-		(map.find_child("BackButton", true, false) as Button).pressed.emit()
-		await _wait_for(func() -> bool: return not _region_map_open(), 5.0)
-		await _frames(10)
-		_note("BACK pressed: chart %s, top screen '%s'" % [_chart_state(), _top_screen().get_file()])
-	if UIManager.is_open() and not _battle_hud_open():
-		_press_action(&"ui_cancel")
-		await _frames(30)
-	_note("resumed: chart %s, battle HUD open=%s, tree paused=%s, top screen '%s'" % [
-		_chart_state(), _battle_hud_open(), get_tree().paused, _top_screen().get_file(),
-	])
+	if _region_map_open() or not _field_in_combat():
+		# Before #649 the fight opened behind the map with the chart still Paused. Record what
+		# a player then had to do: BACK off the map and Esc to resume.
+		var map := _region_map()
+		if map != null:
+			(map.find_child("BackButton", true, false) as Button).pressed.emit()
+			await _wait_for(func() -> bool: return not _region_map_open(), 5.0)
+			await _frames(10)
+		if UIManager.is_open():
+			_press_action(&"ui_cancel")
+			await _frames(30)
+		_note("after BACK and resume: chart %s, field combat mode=%s" % [
+			_chart_state(), _field_in_combat(),
+		])
 	await _shoot("ambush-fight")
-	Battle.controller.autoplay_allies = true
-	var steps := 0
-	while not Battle.ended and steps < 4000:
-		if not Battle.controller.autoplay_step():
-			await get_tree().process_frame
-		steps += 1
-		if steps % 20 == 0:
-			await get_tree().process_frame
-	if not Battle.ended:
-		return _fail("the ambush never ended")
-	_note("ambush ended: %s after %d autoplay steps" % [
-		BattleResult.State.keys()[Battle.last_result.state], steps,
-	])
-	await _frames(30)
-	await _shoot("ambush-ended")
-	# The spoils reveal holds input until it is dismissed, like a player's Enter.
-	for _press: int in 4:
-		if UIManager._reward_reveal == null or not UIManager._reward_reveal.visible:
-			break
-		_press_action(&"ui_accept")
-		await _frames(10)
-	if not await _wait_for(func() -> bool: return not Battle.session_active, 20.0):
-		return _fail("the fight ended but its session never closed")
+	if not await _play_out_fight("ambush"):
+		return false
 	_fight_phases += WorldClock.phase_count - phases_at_fight
 	_note("after the fight: plan %s, field %s, chart %s, top screen '%s'" % [
 		TravelPlan.State.keys()[GameFlow.travel_plan.state], _scene_path().get_file(), _chart_state(),
 		_top_screen().get_file(),
 	])
-	# Anything still stacked (a battle HUD left behind) is closed the way a player would.
-	for _press: int in 3:
-		if not UIManager.is_open():
-			break
-		_press_action(&"ui_cancel")
-		await _frames(15)
 	await _shoot("after-fight-field")
 	if not Battle.last_result.succeeded():
 		return _fail("the party lost the ambush; the journey path past a defeat is out of this run")
 	return true
+
+
+## KitAI plays the party until the combat bar offers CONTINUE. A field's own foes may join after
+## the set-piece is won (Dorthkor Road's Gnaal do), so one wave ending is not the fight ending.
+func _play_out_fight(label: String) -> bool:
+	var steps := 0
+	var deadline := Time.get_ticks_msec() + 180000
+	var waves := 0
+	var seen_controller: CombatController = null
+	while Time.get_ticks_msec() < deadline:
+		if Battle.ended and (_bar_continue() != null or not _chart_state().contains("Battle")):
+			break
+		if Battle.controller != null and not Battle.ended:
+			if Battle.controller != seen_controller:
+				seen_controller = Battle.controller
+				waves += 1
+			Battle.controller.autoplay_allies = true
+			if not Battle.controller.autoplay_step():
+				await get_tree().process_frame
+			steps += 1
+			if steps % 20 == 0:
+				await get_tree().process_frame
+		else:
+			await get_tree().process_frame
+	if not Battle.ended:
+		return _fail("the %s fight never ended" % label)
+	_note("%s fight ended: %s after %d autoplay steps, %d fight(s) in the session" % [
+		label, BattleResult.State.keys()[Battle.last_result.state], steps, waves,
+	])
+	await _frames(30)
+	await _shoot("%s-ended" % label)
+	return await _leave_the_fight()
+
+
+## What a player presses once a fight is decided: the spoils reveal (Enter), the combat bar's
+## CONTINUE, then the spoils panel's TAKE ALL. The chart must come back to Active.
+func _leave_the_fight() -> bool:
+	for _press: int in 4:
+		if UIManager._reward_reveal == null or not UIManager._reward_reveal.visible:
+			break
+		_press_action(&"ui_accept")
+		await _frames(10)
+	if not _chart_state().contains("Battle"):
+		# Pre-#649 path: the chart never entered Battle, so there is no outcome to dismiss.
+		if not await _wait_for(func() -> bool: return not Battle.session_active, 20.0):
+			return _fail("the fight ended but its session never closed")
+		return true
+	if not await _wait_for(func() -> bool: return _bar_continue() != null, 15.0):
+		return _fail("the combat bar never offered CONTINUE after the fight")
+	await _shoot("combat-continue")
+	_bar_continue().pressed.emit()
+	await _frames(10)
+	if _top_screen() == "res://ui/screens/loot_panel/loot_panel.tscn":
+		await _shoot("spoils")
+		var take := (UIManager._stack.back() as Control).find_child("TakeAllButton", true, false) as Button
+		var close := (UIManager._stack.back() as Control).find_child("CloseButton", true, false) as Button
+		take.pressed.emit()
+		await _frames(10)
+		if _top_screen() == "res://ui/screens/loot_panel/loot_panel.tscn":
+			close.pressed.emit()
+	if not await _wait_for(func() -> bool: return _chart_state() == "Active", 15.0):
+		return _fail("after CONTINUE the chart is %s, not Active" % _chart_state())
+	return true
+
+
+func _bar_continue() -> Button:
+	var button := get_tree().current_scene.find_child("ContinueButton", true, false) as Button
+	return button if button != null and button.is_visible_in_tree() else null
+
+
+func _field_in_combat() -> bool:
+	var field := Battle._current_field_map()
+	var hud: Node = field.field_hud() if field != null else null
+	return hud != null and bool(hud.get("_combat_active"))
 
 
 ## The plan says IN_BATTLE but no fight opened. Record what the player is left with: the map as it
@@ -366,13 +423,6 @@ func _chart_state() -> String:
 		if state != null and bool(state.get("active")):
 			states.append(state_name)
 	return "/".join(states) if not states.is_empty() else "none"
-
-
-func _battle_hud_open() -> bool:
-	for screen: Control in UIManager._stack:
-		if screen.scene_file_path == "res://ui/screens/battle.tscn":
-			return true
-	return false
 
 
 func _plan_state() -> String:

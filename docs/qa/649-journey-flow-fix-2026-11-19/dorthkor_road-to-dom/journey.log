@@ -1,0 +1,30 @@
+route under test: dorthkor_road -> dom
+setup: at dorthkor_road.tscn, dom discovered=true (stands in for one earlier walk there)
+party cell at origin: (-94, 121) in walking grid=true blocked=false
+capture 01-origin.jpg: OK
+capture 02-pause-menu.jpg: OK
+capture 03-region-map.jpg: OK
+selected dom: button 'BEGIN JOURNEY' disabled=false | ROUTE  ·  12 STEPS | TRAVEL TIME  ·  3 PHASES | ENCOUNTER RISK  ·  MODERATE
+registry route dom-dorthkor_road: steps=12 phases_cost=3 risk=moderate encounters=1-2
+capture 04-route-selected.jpg: OK
+journey committed: dorthkor_road -> dom, 12 steps, 1 scheduled encounter(s) at steps [6]
+capture 05-journey-underway.jpg: OK
+capture 06-ambush-prompt.jpg: OK
+AVOID at step 6 (slot 0, dorthkor-vanguard): plan now IN_BATTLE
+fight opened: chart Battle, field combat mode=true, tree paused=false, top screen ''
+capture 07-ambush-opened.jpg: OK
+capture 08-ambush-fight.jpg: OK
+ambush fight ended: VICTORY after 10 autoplay steps, 1 fight(s) in the session
+capture 09-ambush-ended.jpg: OK
+capture 10-combat-continue.jpg: OK
+capture 11-spoils.jpg: OK
+after the fight: plan EN_ROUTE, field dorthkor_road.tscn, chart Active, top screen ''
+capture 12-after-fight-field.jpg: OK
+capture 13-pause-menu.jpg: OK
+capture 14-region-map.jpg: OK
+capture 15-continue-offered.jpg: OK
+CONTINUE pressed at step 6/12
+arrived: scene starting_town.tscn, plan ARRIVED at 12/12, discovered=true, journey phases 3 (route 3), fight phases 0
+party cell at destination: (14, 111) in walking grid=true blocked=false
+capture 16-arrived.jpg: OK
+JOURNEY-CAPTURE: ok
