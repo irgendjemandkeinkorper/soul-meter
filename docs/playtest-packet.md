@@ -6,9 +6,9 @@ valid session and complete the summary only after all sessions are finished.
 
 Do not write real names, contact details, or recording links in this repository.
 
-> **Not runnable yet (2026-11-20, `main` `be4f0b6e`).** Five required subsystems cannot appear in
-> normal play, so no session can be valid. #652 lists them with evidence. Items marked
-> **(#652)** below are the ones affected.
+> **Not runnable yet (2026-11-21, `main` `21ca5a08`).** #652's five gaps are closed. Its last two
+> checks are still open: a full rendered run of the slice on one fresh save, and a Windows kit
+> whose manifest says `valid_for_gate_t=yes`. Run no session until #652 closes.
 
 ## Build and session record
 
@@ -55,12 +55,11 @@ Preflight:
 - [ ] Each tester is outside the project and has not previously inspected the slice.
 - [ ] Each tester uses a fresh save and default settings.
 - [ ] The build exposes the required dialogue, consequence, tactical, save/load, and
-  mock-NG+ breadth. **(#652)**
-- [ ] The tactical encounter uses charge time (CT), not the retired AP chassis. Field fights
-  run CT; scripted fights (the Trial keeper, journey ambushes) still run AP until #655 lands.
-  **(#652)**
-- [ ] The tactical encounter exposes the grid, elevation, and facing. Dorthkor Road has no
-  height until its rock outcrops become high ground (owner item 48d, #660). **(#652)**
+  mock-NG+ breadth.
+- [ ] The tactical encounter uses charge time (CT), not the retired AP chassis. Every fight
+  runs CT, scripted ones included (the Trial keeper, journey ambushes; #655).
+- [ ] The tactical encounter exposes the grid, elevation, and facing. Dorthkor Road's three
+  rock outcrops are high ground (owner item 48d, #660).
 - [ ] The encounter visibly exposes Balance/weather and at least one tile charge, residue, or detonation event.
 - [ ] Recording is disabled unless the tester explicitly opts in.
 - [ ] The facilitator has a timer and a separate copy of the tester form.
@@ -92,8 +91,8 @@ The tester should, without hints. Where each item happens in the current build, 
 facilitator's eyes only:
 
 - [ ] Explore Dom and form the company. *(The Four Arms, recruiting two companions. Marshal
-  Coiljaw's commission requires them. Themka Gaath's charge will too (owner item 48b, #659);
-  until that lands a tester can skip the company through Gaath: record that.)*
+  Coiljaw's commission requires them, and so does Themka Gaath's charge (owner item 48b,
+  #659).)*
 - [ ] Complete a visible dialogue skill check. *(First chance: the Lower Trial Hall.)*
 - [ ] Resolve one consequence-bearing town thread. *(For example, Keth Varr's "Dishonest
   Water" in the Bell House.)*
@@ -101,24 +100,23 @@ facilitator's eyes only:
 - [ ] Travel to Dorthkor Road. *(The North Road exit opens once the Dorthkor Road quest starts,
   from Gaath or Coiljaw. The region map lists a place only after the first visit.)*
 - [ ] Read and use the CT timeline. *(Field fights only, such as the Dorthkor vanguard.)*
-- [ ] Move or attack using meaningful height or facing. *(Dorthkor Road's three rock outcrops
-  once #660 lands: owner item 48d. The hit breakdown shows a "Height" term.)* **(#652)**
+- [ ] Move or attack using meaningful height or facing. *(Dorthkor Road's three rock outcrops:
+  owner item 48d. The hit breakdown shows a "Height" term.)*
 - [ ] Attempt or use a Defining Strike. *(Refused with a named reason until a weakness is
   discovered.)*
 - [ ] Move the Balance axis and observe weather/board feedback. *(Dorthkor Road weather: tham.)*
 - [ ] Observe tile charge, residue, hush, or detonation feedback. *(Needs an element cast;
   no location sets Hush.)*
 - [ ] Use or attempt combat speech. *(The Bloodbellow's "Speak Its Muster-Name" or "Release the
-  Bound Soldier" count: owner item 48e. Offered in the field fight once #654 lands.)* **(#652)**
+  Bound Soldier" count: owner item 48e, #654. Offered in the field fight.)*
 - [ ] Encounter one blocked cast with a named reason and unblock condition.
 - [ ] Save, alter visible state, load, and compare the restored state. *(Load is Main Menu →
   Load Game.)*
 - [ ] Return and report the encounter outcome. *(To Marshal Coiljaw in Dom. The Bloodbellow
-  can only end `slain` until #654 lands: **#652**.)*
+  can end `slain`, `named` or `released`: #654.)*
 - [ ] Inspect the existing mock NG+ rollover and visible carry-over. *(**Begin Mock NG+** on the
   chapter-complete screen, or on the pause menu in free roam: owner item 48c, #656. The title
   then names what carries over, and Hadrik Vale's archive hub offers an NG+ echo line.)*
-  **(#652)**
 
 ## Per-tester observation form
 
