@@ -176,6 +176,112 @@ base-tier caster cannot Refrain even once without touching Soul.
 
 ---
 
+## (c) Set-piece Breath drain — P2.2 (#595), measured 2026-11-19
+
+R2 (owner, 2026-10-31): keep per-scene refill, and size pools so set-pieces drain Breath by
+**PROVISIONAL round 3–4**, so the overreach decision arrives mid-fight. Nothing in this section
+changes a number. Every value stays PROVISIONAL under owner item 5.
+
+**Instrument.** `godot --headless --path . --script res://tools/casting_economy_sweep.gd`
+(add `-- --set-pieces-only` to skip §(a)–(b), `-- --seeds=N` for fights per row, default 20).
+The set-piece part lives in `tools/set_piece_drain.gd`. Before this change the tool printed
+compile errors instead of its grid: its `preload` of `skill_check.gd` compiled scripts that
+name autoloads before a `--script` run has them. It now loads them after the first frame.
+`test/unit/test_breath_drain_r2.gd` pins the steady-casting half below against the live
+numbers.
+
+**Live numbers, not §(b)'s proposal.**
+
+- `breath_max = 9 + 3 × Intuition`: 15 / 18 / 21 / 24 for Intuition 2–5
+  (`globals/stats/dramgid_derived.gd`).
+- Spell costs are 3 / 6 / 12 / 24 by tier.
+- The shipped rules give 4 AP a turn.
+- Refill is per scene (`GameState.refill_party_breath()` on scene entry, pinned by
+  `test/integration/test_travel_flow.gd` and `test/unit/test_game_state_party.gd`). Unchanged.
+- **Overreach differs from §(b).** `Resolution` charges 1 Soul for each Breath point the pool
+  cannot pay (`globals/combat/resolution.gd`, `soul_overreach`). §(b) proposes a flat 1 / 2 / 4 / 8
+  Soul per cast by tier. A Song cast on an empty pool costs 12 Soul live and 4 under §(b).
+  This is owner item 45 (c).
+
+### Steady casting: the turn the overreach decision first appears
+
+A caster who casts one tier as often as 4 AP allows (the cheapest card of that cost sets the
+AP). The turn shown is the first turn that has a cast its Breath cannot pay.
+
+| Tier | Breath | AP | Casts a turn | Int 2 (15) | Int 3 (18) | Int 4 (21) | Int 5 (24) |
+|---|---|---|---|---|---|---|---|
+| Note | 3 | 2 | 2 | 3 | 4 | 4 | 5 |
+| Phrase | 6 | 3 | 1 | 3 | 4 | 4 | 5 |
+| Song | 12 | 3 | 1 | 2 | 2 | 2 | 3 |
+| Refrain | 24 | 4 | 1 | 1 | 1 | 1 | 2 |
+
+Note and Phrase play lands on R2's turn 3–4 at Intuition 2–4 **with today's pools**.
+Intuition 5 reaches it on turn 5. Song-first play reaches it on turn 2, and any Refrain on
+turn 1–2.
+
+### Set-piece fights under KitAI
+
+KitAI plays both sides of each fight on an open 12×6 board, with the live rules (AP rounds;
+neither set-piece sets `use_charge_time`). Every fight opens on full Breath and Soul 50 (R3's
+start), and each row is 20 seeded fights. The members are the class demo's builds
+(`ClassDemo.member()`, Intuition 3, 18 Breath). "Dry" means a turn opened with less Breath than
+the class's cheapest kit spell. The round shown is the median, and the rounds column gives
+median (max).
+
+| Party | Dead Muster: wins | rounds | dry in | dry round | Empty Post: wins | rounds | dry in | dry round |
+|---|---|---|---|---|---|---|---|---|
+| Mirrorblade alone | 0/20 | 5 (5) | 20/20 | 4 | 0/20 | 5 (6) | 20/20 | 4 |
+| River-Mother alone | 20/20 | 10 (11) | 0/20 | — | 18/20 | 20 (22) | 0/20 | — |
+| Ironbrand alone | 20/20 | 4 (5) | 2/20 | 5 | 20/20 | 5 (7) | 13/20 | 5 |
+| Lensbearer alone | 20/20 | 10 (12) | 20/20 | 3 | 20/20 | 11 (14) | 20/20 | 3 |
+| Husk-bearer alone | 0/20 | 5 (6) | 20/20 | 4 | 0/20 | 4 (6) | 20/20 | 4 |
+| Flamebinder alone | 20/20 | 10 (12) | 0/20 | — | 20/20 | 15 (19) | 0/20 | — |
+| Stormbearer alone | 20/20 | 9 (14) | 20/20 | 3 | 20/20 | 10 (12) | 20/20 | 3 |
+| Oathclock alone | 20/20 | 4 (6) | 0/20 | — | 20/20 | 5 (6) | 0/20 | — |
+| Locksmirk alone | 20/20 | 9 (13) | 20/20 | 3 | 19/20 | 10 (12) | 20/20 | 3 |
+| Threadwalker alone | 0/20 | 5 (5) | 20/20 | 4 | 0/20 | 5 (6) | 20/20 | 4 |
+| Five (Ironbrand, River-Mother, Lensbearer, Mirrorblade, Threadwalker) | 20/20 | 3 (3) | 0/20 each | — | 20/20 | 3 (4) | 0/20 each | — |
+
+A lone caster that casts runs dry on round 3–4, inside R2's band, because KitAI spends big.
+A party of five ends both set-pieces by round 3–4, and no member ran dry in any of the
+40 fights.
+
+### Findings
+
+1. **Pools: no change proposed.** The smallest change that meets R2 is none. A steady caster
+   meets the overreach decision on turn 3–4 at Intuition 2–4. Two outliers go to the owner
+   rather than being tuned away. Intuition 5 reaches the decision on turn 5, and that is the
+   ratified property that maximum Intuition buys exactly one Refrain
+   (`test_dramgid_numbers.gd`). Song-first play reaches it on turn 2.
+2. **Set-piece length fails R2 with a full party.** Both approved set-pieces (R14) are one
+   enemy: the Mustered Bloodbellow (32 HP) and the Cleaned Jawbrace Guard (36 HP). A party of
+   five ends them by round 3 (Dead Muster) and round 3–4 (Empty Post), and no member ran dry
+   in 40 fights. So the decision arrives on the last round or not at all, and set-piece
+   overreach adds about nothing to the unavoidable Soul spend #599 (P2.6) sizes. Breath cannot
+   fix this. It needs set-piece length: a second
+   body, a reinforcement or more HP. That is encounter content, and Phase 5 owns it (R14
+   confirms these set-pieces without reauthoring them, and the Hollowmere set-piece is not
+   written). Owner item 45 (b).
+3. **KitAI is a greedy caster.** It prices damage, not Breath or Soul. It opens with its
+   biggest spell and overreaches freely. In one solo Jawbrace fight, a Lensbearer cast a
+   24-Breath Refrain from 18 Breath on round 2, then paid every later Song from Soul
+   (50 → 8 by round 5). Its rounds are a lower bound on drain, not a player's pace. Autoplay
+   (the 5v5 class demo) spends the real gauge the same way, which `test_kit_ai.gd` already
+   restores after each run.
+4. **Outlier classes under KitAI**, for the owner's balance pass and not tuned here:
+   - **River-Mother** never runs dry because it refills its own Breath, yet it paid Soul on
+     about 14 casts per Empty Post fight (280 over 20). That is the largest Soul drain in the
+     sweep.
+   - **Flamebinder** never casts. Its kit spells are Hold Note (1 Breath) and Anchor, and
+     KitAI always prefers its arms, so its fights run 10–15 rounds.
+   - **Oathclock and Ironbrand** seldom or never run dry, and their fights end on round 4–5.
+   - **This is not a Breath finding, but the sweep showed it:** Mirrorblade, Husk-bearer and
+     Threadwalker lose every set-piece alone (0/20 on both). Gate T1 checks clearability on
+     its own fixtures, not these set-pieces. This belongs in the owner's balance pass, and
+     it matters only if Chapter 1 can send the protagonist into a set-piece alone.
+
+---
+
 ## Out of scope
 
 The vault `magic-system.md` fizzle math includes a `relation_add` target-relation

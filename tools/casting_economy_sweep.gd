@@ -8,9 +8,18 @@ extends SceneTree
 ## ratified SkillCheck.fizzle_percent() formula to print a verification grid,
 ## then simulates the PROVISIONAL Breath economy from docs/casting-economy.md.
 ## It does not modify any runtime behavior.
+##
+## P2.2 (#595): the last section plays the approved set-pieces (R14) with KitAI on both
+## sides and reports, per class, the round a caster's Breath runs dry against how long the
+## fight lasts. R2's target is dry by PROVISIONAL round 3–4. Add `-- --set-pieces-only` to
+## skip the first two sections, `-- --seeds=N` to change the fights per row (default 20).
 
 const FIZZLE_TABLE_PATH := "res://globals/default_fizzle_table.tres"
-const SKILL_CHECK_SCRIPT := preload("res://globals/skill_check.gd")
+## Loaded, not preloaded: `skill_check.gd` depends on scripts that name autoloads, and in a
+## `--script` run those identifiers only exist once the tree has run a frame. A preload compiled
+## that chain first and failed, so this tool printed compile errors instead of its grid.
+const SKILL_CHECK_PATH := "res://globals/skill_check.gd"
+const SET_PIECE_DRAIN_PATH := "res://tools/set_piece_drain.gd"
 
 # PROVISIONAL — mirrors docs/casting-economy.md
 const BREATH_COST := {
@@ -43,19 +52,30 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var skill_check: SkillCheckService = SKILL_CHECK_SCRIPT.new()
-	skill_check.fizzle_table = load(FIZZLE_TABLE_PATH)
-	_print_fizzle_grid(skill_check)
-	_print_breath_simulation()
+	# Autoload identifiers exist from the first frame on; everything below loads after it.
+	await process_frame
+	var args := OS.get_cmdline_user_args()
+	if not args.has("--set-pieces-only"):
+		var skill_check: Object = load(SKILL_CHECK_PATH).new()
+		skill_check.set("fizzle_table", load(FIZZLE_TABLE_PATH))
+		_print_fizzle_grid(skill_check)
+		_print_breath_simulation()
+	var seeds := 20
+	for arg: String in args:
+		if arg.begins_with("--seeds="):
+			seeds = maxi(int(arg.trim_prefix("--seeds=")), 1)
+	# P2.2: the set-piece section plays real fights. It is its own script for the same reason
+	# skill_check is loaded: naming its classes here would compile them before the autoloads.
+	(load(SET_PIECE_DRAIN_PATH).new() as RefCounted).call("print_report", seeds)
 	quit()
 
 
-func _print_fizzle_grid(skill_check: SkillCheckService) -> void:
+func _print_fizzle_grid(skill_check: Object) -> void:
 	print("integrity,breadth,magnitude,fizzle_percent")
 	for integrity: float in INTEGRITIES:
 		for breadth: String in BREADTHS:
 			for magnitude: String in MAGNITUDES:
-				var fizzle: float = skill_check.fizzle_percent(
+				var fizzle: float = skill_check.call("fizzle_percent",
 					integrity, breadth, 0, magnitude, 2, false, ""
 				)
 				print("%.1f,%s,%s,%.1f" % [integrity, breadth, magnitude, fizzle])
