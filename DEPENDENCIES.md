@@ -82,9 +82,16 @@ reference, then run the affected workflow manually before merging.
   `data/generated/`: GLoot prototypes, item/faction/NPC/encounter ID constants, item gettext,
   and expanded encounter JSON. Runtime scenes reference an `EncounterIds` value; they do not
   duplicate enemy stats.
-- Release exports use Godot's `--recovery-mode` and the preset explicitly includes raw
-  `data.pandora`. This bypasses Pandora's editor-only ASCII compression hook, which cannot
-  preserve the Unicode sigils and names in the canonical database.
+- Release exports run with editor plugins on, never `--recovery-mode`. Recovery mode disables
+  plugins, so the Dialogue Manager importer never runs and the pack ships without a single
+  `.dialogue` resource; the CI Windows artifact did until 2026-11-20. Both exporters
+  (`scripts/build_playtest.sh`, the CI `package-windows` job) run `tools/playtest_pack_probe.gd`
+  against the exported pack and fail if any dialogue is missing.
+- With plugins on, Pandora's release hook adds its own compressed `data.pandora`, encoded
+  ASCII-only (it drops the Unicode sigils and names), and release builds load that copy. Nothing
+  at runtime reads Pandora: the game reads `data/generated/*`. The preset still includes the raw
+  `data.pandora`, so the database travels intact for reference. If a runtime system ever reads
+  Pandora, fix this first.
 
 ## Dialogue Manager quirks
 
