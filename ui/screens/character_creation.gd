@@ -31,6 +31,7 @@ const ENTRY_WIDTH := 420.0
 const CLASS_TILE_SIZE := Vector2(0, 72)
 const ABILITY_TILE_SIZE := Vector2(104, 76)
 const CARD_WIDTH := 400.0
+const HOTBAR_SLOT_SIZE := Vector2(0, 46)
 
 ## The tavern sets RECRUIT after the screen opens, so a change re-checks the header.
 var mode: Mode = Mode.PLAYER:
@@ -64,6 +65,8 @@ var _name_edit: LineEdit
 var _identity_lbl: Label
 var _vitals_lbl: Label
 var _measure_value_lbls: Dictionary = {}
+var _hotbar_grid: GridContainer
+var _hotbar_key := ""
 
 var _ancestry_rows: Dictionary = {}
 var _ancestry_art: TextureRect
@@ -298,6 +301,16 @@ func _build_entry_column() -> Control:
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		stack.add_child(value)
 		_measure_value_lbls[attribute_id] = value
+
+	var fight_heading := Label.new()
+	fight_heading.text = "IN A FIGHT"
+	fight_heading.theme_type_variation = "EyebrowLabel"
+	column.add_child(fight_heading)
+	_hotbar_grid = GridContainer.new()
+	_hotbar_grid.name = "FightHotbar"
+	_hotbar_grid.theme_type_variation = "ChargenHotbarGrid"
+	_hotbar_grid.columns = HotbarFill.SIZE
+	column.add_child(_hotbar_grid)
 	return frame
 
 
@@ -312,6 +325,58 @@ func _refresh_entry() -> void:
 		(_measure_value_lbls[attribute_id] as Label).text = str(
 			int(build.attributes.get(attribute_id, DramgidSchema.ATTRIBUTE_FLOOR))
 		)
+	_rebuild_hotbar(scratch)
+
+
+## The "In a fight" row: the bar the battle slots for this entry (KitPreview.hotbar, the
+## battle's own fill). Rebuilt only when its inputs can have changed.
+func _rebuild_hotbar(member: PartyMember) -> void:
+	var key := "%s|%s|%s|%s|%d|%d" % [
+		build.class_id, member.major_element, member.minor_element, ",".join(member.perk_ids),
+		member.breath_max, member.attribute_value(&"harmony"),
+	]
+	if key == _hotbar_key:
+		return
+	_hotbar_key = key
+	if _card_source != null and _card_source.get_parent() == _hotbar_grid:
+		_hide_card(_card_source)
+	for child: Node in _hotbar_grid.get_children():
+		_hotbar_grid.remove_child(child)
+		child.queue_free()
+	var bar := KitPreview.hotbar(member)
+	for slot: int in bar.size():
+		var action := bar[slot]
+		var tile := Button.new()
+		tile.name = "Slot_%d" % (slot + 1)
+		tile.theme_type_variation = "ChargenHotbarSlot"
+		tile.icon = _action_icon(action)
+		tile.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tile.expand_icon = false
+		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tile.custom_minimum_size = HOTBAR_SLOT_SIZE
+		tile.set_meta("action_id", action.id)
+		var key_lbl := Label.new()
+		key_lbl.theme_type_variation = "ChargenTileCost"
+		key_lbl.text = str(slot + 1)
+		key_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		key_lbl.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, DS.SPACE_1)
+		tile.add_child(key_lbl)
+		var entry := {"action": action, "lock": ""}
+		tile.mouse_entered.connect(_show_card.bind(tile, entry))
+		tile.focus_entered.connect(_show_card.bind(tile, entry))
+		tile.mouse_exited.connect(_hide_card.bind(tile))
+		tile.focus_exited.connect(_hide_card.bind(tile))
+		_hotbar_grid.add_child(tile)
+
+
+## The "In a fight" row's action ids, slot 1 first (tests and captures).
+func fight_hotbar_ids() -> Array[StringName]:
+	var ids: Array[StringName] = []
+	for child: Node in _hotbar_grid.get_children():
+		if child.is_queued_for_deletion():
+			continue
+		ids.append(StringName(child.get_meta("action_id", &"")))
+	return ids
 
 
 func _identity_line() -> String:
