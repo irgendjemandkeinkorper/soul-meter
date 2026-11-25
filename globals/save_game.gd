@@ -58,6 +58,10 @@ var _sandbox_sessions := 0
 var _run_started_unix := 0
 var _elapsed_before_load := 0
 var ng_plus: Dictionary = NGPlus.default_block()
+## Mock NG+ (#652 gap 5): a carry-over block waiting for the next `new_game()`, which applies
+## it through `apply_ng_plus_to_new_game()` and clears it. Runtime only: never saved, and a load
+## drops it, so quitting or loading instead of starting over leaves nothing armed.
+var _armed_ng_plus: Dictionary = {}
 var zhavar: Dictionary = {}
 
 ## FR-308: a zone's Zhavar rung changed (raised via raise_zhavar()).
@@ -367,6 +371,7 @@ func _load_from(primary_path: String, fallback_path: String) -> bool:
 	Renown.from_dict(payload.get("renown", {}))
 	QuestRegistry.from_dict(payload.get("quests", {}))
 	ng_plus = NGPlus.normalize(payload.get("ng_plus", {}))
+	_armed_ng_plus = {}
 	zhavar = payload.get("zhavar", {}).duplicate(true)
 	SkillCheck.from_dict(payload.get("skill_check", {}))
 	# _prepare_for_load already proved this parses; the migration guarantees the key.
@@ -589,7 +594,24 @@ func new_game() -> void:
 	_elapsed_before_load = 0
 	_run_started_unix = int(Time.get_unix_time_from_system())
 	_pending_autosave_reason = CHECKPOINT_NAMES[Checkpoint.NEW_GAME]
+	if not _armed_ng_plus.is_empty():
+		var armed := _armed_ng_plus
+		_armed_ng_plus = {}
+		ng_plus = NGPlus.normalize(apply_ng_plus_to_new_game({"ng_plus": ng_plus}, armed)["ng_plus"])
 	load_requested.emit(destination)
+
+
+## Arms a mock NG+ rollover: the next `new_game()` starts over carrying this block.
+func arm_ng_plus(block: Dictionary) -> void:
+	_armed_ng_plus = NGPlus.normalize(block)
+
+
+func ng_plus_armed() -> bool:
+	return not _armed_ng_plus.is_empty()
+
+
+func armed_ng_plus() -> Dictionary:
+	return _armed_ng_plus.duplicate(true)
 
 
 func apply_pending_location(scene: Node) -> void:

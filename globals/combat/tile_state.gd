@@ -53,20 +53,52 @@ const CLASH_WHEEL_DISTANCE := 5
 ## never produces it and `ElementsData.element(&"")` resolves to the empty default definition.
 const UNCHARGED := &""
 
-var battle_id: StringName = &""
-var x: int = 0
-var y: int = 0
-var charge_element_id: StringName = UNCHARGED
-var charge_level: int = 0
+## Grows on every write to any TileState's fields, this one's or another's (#642). The combat
+## snapshot keeps its 4,900-row tile list while it is unchanged, so a write must move it.
+static var write_count: int = 0
+
+## Grows on every write to this tile's fields: the snapshot rebuilds only the rows whose tile
+## moved. Neither counter is tile data: `to_dict()` and `from_dict()` never carry them.
+var revision: int = 0
+
+var battle_id: StringName = &"":
+	set(value):
+		battle_id = value
+		_wrote()
+var x: int = 0:
+	set(value):
+		x = value
+		_wrote()
+var y: int = 0:
+	set(value):
+		y = value
+		_wrote()
+var charge_element_id: StringName = UNCHARGED:
+	set(value):
+		charge_element_id = value
+		_wrote()
+var charge_level: int = 0:
+	set(value):
+		charge_level = value
+		_wrote()
 ## Authored `map_tiles.height` plus any battle-time change (e.g. Thamshaper). Carried here,
 ## not on `map_tiles`, for the same immutable-content-vs-battle-layer reason as charge.
-var height_delta: int = 0
+var height_delta: int = 0:
+	set(value):
+		height_delta = value
+		_wrote()
 ## Static terrain cover carried into the live tile snapshot.
-var cover: bool = false
+var cover: bool = false:
+	set(value):
+		cover = value
+		_wrote()
 ## Hushwarden fields: "no charge moves at all — residue is suspended, detonations impossible"
 ## (issue "Constraints"). Reads (`is_charged()`, `action_multiplier()`) still answer honestly
 ## while hushed; only the mutating operations refuse.
-var hush: bool = false
+var hush: bool = false:
+	set(value):
+		hush = value
+		_wrote()
 
 
 static func create(
@@ -220,6 +252,11 @@ static func from_dict(data: Dictionary) -> TileState:
 
 
 # ---- helpers ----
+
+
+func _wrote() -> void:
+	revision += 1
+	write_count += 1
 
 
 ## Normalizes and validates against `ElementsData` so an unrecognized string never silently

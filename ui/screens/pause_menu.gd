@@ -1,6 +1,7 @@
 extends Screen
 ## Opened by Esc during gameplay. Routes to the sub-screens; the tree stays paused until closed.
 
+const CHAPTER_COMPLETE := preload("res://ui/screens/chapter_complete.gd")
 const SAVE_FAILURE_MESSAGE := (
 	"Could not save your progress. Please check your available storage and try again."
 )
@@ -50,6 +51,13 @@ func _build() -> void:
 			func() -> void: UIManager.open(load("res://ui/screens/debug_menu.tscn"))
 		)
 		debug_button.name = "DebugMenuButton"
+	# #652 gap 5: after Continue Exploring the chapter-complete screen never returns, so the
+	# mock NG+ rollover is offered here once the chapter is in free roam (owner, 2026-11-20).
+	if ChapterOneProgress.current_stage() == ChapterOneProgress.Stage.FREE_ROAM:
+		var ng_plus_button := _menu_button(
+			vbox, "Begin Mock NG+", func() -> void: CHAPTER_COMPLETE.begin_mock_ng_plus()
+		)
+		ng_plus_button.name = "BeginMockNgPlus"
 	_menu_button(vbox, "Main Menu", func() -> void: GameFlow.send_event("to_main_menu"))
 	_menu_button(vbox, "Quit", func() -> void: get_tree().quit())
 

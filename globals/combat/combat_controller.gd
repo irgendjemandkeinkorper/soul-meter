@@ -104,8 +104,12 @@ var _tile_by_cell: Dictionary = {}  ## Vector2i -> TileState
 var _tiles_cache: Array[Dictionary] = []
 var _tiles_cache_terrain: Array[Dictionary] = []
 var _tiles_cache_encounter: StringName = &""
-var _tiles_cache_live: Dictionary = {}  ## Vector2i -> the TileState dict in _tiles_cache
-var _tiles_cache_cells: Dictionary = {}  ## Vector2i -> true: _tile_by_cell's keys at the build
+## Vector2i -> [TileState, its revision] for each live tile the cache was built or patched from.
+var _tiles_cache_tiles: Dictionary = {}
+## Vector2i -> the indices of that cell's rows in _tiles_cache.
+var _tiles_cache_index: Dictionary = {}
+## `TileState.write_count` when the cache was last checked against the live tiles (#642).
+var _tiles_cache_write_count: int = -1
 ## Khash prototype fire substrate (globals/combat/fire_field.gd): fire lines, Burning, Soaked.
 ## The controller applies every hazard/burn HP change through `_apply_resolution_writes()`.
 var fire: FireField = FireField.new()
@@ -265,6 +269,15 @@ func configure(
 			)
 	if skill_check_service == null:
 		skill_check_service = SkillCheckService.new()
+
+
+## Teaches a running battle actions it was not configured with: an ambient session learns an
+## authored group's context actions when that group joins (#652). An id already known keeps
+## its first definition.
+func add_actions(actions: Array[CombatAction]) -> void:
+	for action in actions:
+		if not _actions.has(action.id):
+			_actions[action.id] = action
 
 
 func configure_agreement_integrity(value: float) -> void:
@@ -720,18 +733,10 @@ func query_action_for(
 			return _blocked(&"soul", "Requires %d Soul." % int(command_soul), {
 				"type": &"soul", "minimum": command_soul,
 			})
+	# `_price_reachable()` skips every gate above for a `_plain_move()`: none of them reads the
+	# destination then. A gate that reads `options["destination"]` belongs in `_query_move()`.
 	if action.kind == CombatAction.Kind.MOVE:
-		var movement := battlefield.move_query(actor, _move_destination(action, options))
-		if not bool(movement.get("allowed", false)):
-			return movement
-		var priced_action := _priced_move_action(action, movement, options, actor)
-		var move_affordability := _can_afford(actor, priced_action)
-		if not bool(move_affordability.get("allowed", false)):
-			return move_affordability
-		movement["ap_cost"] = priced_action.ap_cost
-		movement["ct_cost"] = priced_action.ct_cost
-		movement["move_modifiers"] = CombatInjury.move_cost_modifiers(actor)
-		return movement
+		return _query_move(actor, action, options)
 	var affordability := _can_afford(actor, CalledShot.priced_action(action, aim_location))
 	if not bool(affordability.get("allowed", false)):
 		return affordability
@@ -1048,7 +1053,7 @@ func snapshot() -> Dictionary:
 		"enemies": _frozen(_actor_snapshots(enemies)),
 		"tiles": _tile_snapshots(),
 		"weather": _weather_snapshot(),
-		"scheduler_mode": str(scheduler.to_dict().get("scheduler", "")) if scheduler != null else "",
+		"scheduler_mode": _scheduler_mode(),
 		"turn_order": _frozen(_turn_order_snapshot()),
 		"movement": _movement_snapshot(),
 		"deferred": deferred_entries(),
@@ -1065,6 +1070,20 @@ func move_query(destination: StringName) -> Dictionary:
 	return query_action(action_by_id(ACTION_MOVE), null, {"destination": destination})
 
 
+## The scheduler's `to_dict()["scheduler"]`, the name a save restores it by, read once per
+## scheduler: the full `to_dict()` serializes every combatant's charge, ~0.15 ms an event with
+## 99 hostiles, to answer a name that never changes (#642).
+var _scheduler_mode_of: Array = [0, ""]
+
+
+func _scheduler_mode() -> String:
+	if scheduler == null:
+		return ""
+	if int(_scheduler_mode_of[0]) != scheduler.get_instance_id():
+		_scheduler_mode_of = [scheduler.get_instance_id(), str(scheduler.to_dict().get("scheduler", ""))]
+	return _scheduler_mode_of[1]
+
+
 func _movement_snapshot() -> Dictionary:
 	var actor := active_actor()
 	var action := action_by_id(ACTION_MOVE)
@@ -1079,8 +1098,16 @@ func _movement_snapshot() -> Dictionary:
 		"per_cell_ap_cost": maxi(1, action.ap_cost),
 		"remaining_ap": actor.action_points,
 		"ct_budget": raw_budget,
-		"reachable": _reachable_for(actor, raw_budget),
+		"reachable": _snapshot_reach(actor, raw_budget),
 	}
+
+
+## The snapshot's `reachable`: inside a reach memo the memo's rows, as before; otherwise the
+## cached, read-only rows themselves (#642 H1).
+func _snapshot_reach(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
+	if not _reach_memo.is_empty():
+		return _reachable_for(actor, raw_budget)
+	return _cached_reach(actor, raw_budget)
 
 
 ## The actor's move budget in path cost units, before injuries.
@@ -1115,15 +1142,76 @@ func end_reach_memo() -> void:
 
 
 ## Every destination `actor` can afford to walk to now, each priced by the same move gate a
-## submit runs: `{destination, ap_cost, ct_cost, path, path_cells}`.
+## submit runs: `{destination, ap_cost, ct_cost, path, path_cells}`. The rows are read-only
+## (they are `_cached_reach()`'s); the array is the caller's own.
 func _reachable_for(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
 	if not _reach_memo.is_empty() and actor != null:
 		var key := "%s|%d" % [actor.combat_id, raw_budget]
 		var rows: Dictionary = _reach_memo["rows"]
 		if not rows.has(key):
-			rows[key] = _price_reachable(actor, raw_budget)
+			rows[key] = _cached_reach(actor, raw_budget)
 		return (rows[key] as Array[Dictionary]).duplicate()
-	return _price_reachable(actor, raw_budget)
+	return _cached_reach(actor, raw_budget).duplicate()
+
+
+## `_cached_reach()`'s stands per actor id: `{key, stamp, rows}`.
+var _reach_cache: Dictionary = {}
+## What the last `_price_reachable()` read from the board: the battlefield's path memo stamp, or
+## `{"board_free": true}` when it refused every stand without searching.
+var _last_reach_stamp: Dictionary = {}
+
+
+## `_price_reachable()`, priced once per board state instead of once per event (#642 H1). With
+## 99 hostiles on the field, pricing the active ally's stands took 54–60 ms, and every event of
+## an ally turn did it again for its snapshot. The rows are kept while `_reach_key()` is
+## unchanged and no write has touched a cell their search read (the battlefield's
+## `reach_stamp_current()`), and handed out read-only, so no reader can change what the next
+## one reads.
+func _cached_reach(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
+	var key := _reach_key(actor, raw_budget)
+	if key.is_empty():
+		return _frozen(_price_reachable(actor, raw_budget))
+	var entry: Dictionary = _reach_cache.get(actor.combat_id, {})
+	if not entry.is_empty() and entry["key"] == key and _reach_stamp_current(entry["stamp"]):
+		return entry["rows"]
+	_last_reach_stamp = {}
+	var rows := _frozen(_price_reachable(actor, raw_budget))
+	_reach_cache[actor.combat_id] = {"key": key, "stamp": _last_reach_stamp, "rows": rows}
+	_last_reach_stamp = {}
+	return rows
+
+
+func _reach_stamp_current(stamp: Dictionary) -> bool:
+	if bool(stamp.get("board_free", false)):
+		return true
+	return bool(battlefield.call("reach_stamp_current", stamp))
+
+
+## Everything the move gate reads when it prices `actor`'s stands, apart from the board cells
+## its search read (those are the stamp's): the actor's own cell, life, injuries and banked AP
+## or charge, whether the scheduler lets it act, and the move's prices. Empty when the
+## battlefield cannot stamp what a search read; nothing is cached then.
+func _reach_key(actor: BattleActor, raw_budget: int) -> Array:
+	if (
+		actor == null or battlefield == null or not battlefield.has_method("path_memo_stamp")
+		or not battlefield.has_method("reach_stamp_current")
+	):
+		return []
+	var action := action_by_id(ACTION_MOVE)
+	return [
+		raw_budget,
+		battlefield.get_instance_id(),
+		battlefield.position_of(actor),
+		actor.is_alive(),
+		actor.injuries.duplicate(true),
+		actor.action_points,
+		scheduler.get_instance_id() if scheduler != null else 0,
+		scheduler.charge_of(actor) if scheduler != null else 0,
+		bool(scheduler.can_act(actor).get("allowed", false)) if scheduler != null else false,
+		action.get_instance_id() if action != null else 0,
+		action.ap_cost if action != null else 0,
+		rules.move_ct_cost if rules != null else 0,
+	]
 
 
 func _price_reachable(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
@@ -1131,25 +1219,86 @@ func _price_reachable(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
 	var action := action_by_id(ACTION_MOVE)
 	if actor == null or action == null or battlefield == null:
 		return reachable
+	# Every quote below ends at `_can_afford()`, whose first gate is the scheduler's can_act():
+	# an actor that may not act (a yielded ally, mid-turn_ended) can afford no stand. Searching
+	# them all to refuse each one was a whole pricing per such event (#642).
+	if scheduler != null and not bool(scheduler.can_act(actor).get("allowed", false)):
+		_last_reach_stamp = {"board_free": true}
+		return reachable
 	var ct_budget := int(float(raw_budget) / CombatInjury.move_cost_multiplier(actor))
 	# Every quote below starts from the actor's cell: one shared search, not one per cell (#282).
 	var memo := battlefield.has_method("begin_path_memo")
 	if memo:
 		battlefield.call("begin_path_memo", actor, ct_budget)
-	for destination: StringName in battlefield.reachable_positions(actor, ct_budget):
-		var query := query_action_for(actor, action, null, {"destination": destination})
+	_move_quotes.clear()
+	_move_quotes_action = action
+	_walk_cells_known = memo and battlefield.has_method("memo_walk_cells")
+	# A plain move's gates ahead of the walk answer the same for every stand: a living actor
+	# passes them all (`_plain_move()`), so each stand asks only the walk and its price.
+	var plain := _plain_move(action) and actor.is_alive()
+	var walks: Variant = (
+		battlefield.call("memo_reach_walks", actor, ct_budget)
+		if plain and memo and _walk_cells_known and battlefield.has_method("memo_reach_walks")
+		else null
+	)
+	var destinations: Array[StringName] = []
+	if walks != null:
+		_price_walks(actor, action, walks as Array, reachable)
+	else:
+		destinations = battlefield.reachable_positions(actor, ct_budget)
+	for destination: StringName in destinations:
+		var options := {"destination": destination}
+		var query := (
+			_query_move(actor, action, options) if plain
+			else query_action_for(actor, action, null, options)
+		)
 		if not bool(query.get("allowed", false)):
 			continue
-		reachable.append({
+		var path: Array = query.get("path", [])
+		var row := {
 			"destination": destination,
 			"ap_cost": int(query.get("ap_cost", 0)),
 			"ct_cost": int(query.get("ct_cost", 0)),
-			"path": (query.get("path", []) as Array).duplicate(),
-			"path_cells": _describe_path_cells(query.get("path", [])),
-		})
+			# A read-only path is the search's own walk: shared, as every row is frozen (#642).
+			"path": path if path.is_read_only() else path.duplicate(),
+			"path_cells": _describe_path_cells(path),
+		}
+		_freeze(row)
+		reachable.append(row)
+	_move_quotes.clear()
+	_move_quotes_action = null
+	_walk_cells_known = false
+	_path_cell_memo.clear()
 	if memo:
+		if battlefield.has_method("path_memo_stamp"):
+			_last_reach_stamp = battlefield.call("path_memo_stamp")
 		battlefield.call("end_path_memo")
 	return reachable
+
+
+## `_price_reachable()`'s loop for a plain move, fed the memo search's walks
+## (`memo_reach_walks()`): every stand there passed `move_query()`, so each asks only its
+## price, and its row carries the walk's own path and cells. The rows are the ones the
+## per-stand `_query_move()` loop builds, in the same order (#642).
+func _price_walks(
+	actor: BattleActor, action: CombatAction, walks: Array, reachable: Array[Dictionary]
+) -> void:
+	for entry: Array in walks:
+		var destination: StringName = entry[0]
+		var quote := _quote_move(
+			action, {"ct_cost": entry[1]}, {"destination": destination}, actor
+		)
+		if not bool((quote["affordability"] as Dictionary).get("allowed", false)):
+			continue
+		var row := {
+			"destination": destination,
+			"ap_cost": int(quote["ap_cost"]),
+			"ct_cost": int(quote["ct_cost"]),
+			"path": entry[2],
+			"path_cells": entry[3],
+		}
+		row.make_read_only()
+		reachable.append(row)
 
 
 ## Refusals a walk can cure: out of reach, not adjacent, blocked sight, too high, wrong side.
@@ -1340,21 +1489,31 @@ func _tile_snapshots() -> Array[Dictionary]:
 	if battlefield == null:
 		return []
 	var terrain_rows := battlefield.tiles_snapshot()
-	if (
+	if not (
 		is_same(terrain_rows, _tiles_cache_terrain) and _tiles_cache_encounter == _encounter_id
-		and not _tiles_cache.is_empty() and _live_tiles_match_cache()
+		and not _tiles_cache.is_empty()
 	):
+		return _build_tile_snapshots(terrain_rows)
+	# No TileState anywhere was created or written, and none was dropped: nothing changed (#642).
+	if TileState.write_count == _tiles_cache_write_count \
+			and _tile_by_cell.size() == _tiles_cache_tiles.size():
 		return _tiles_cache
+	return _patch_tile_snapshots(terrain_rows)
+
+
+func _build_tile_snapshots(terrain_rows: Array[Dictionary]) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	var live: Dictionary = {}
+	var index: Dictionary = {}
 	var neutral: Dictionary = TileState.create(_encounter_id, 0, 0).to_dict()
 	for terrain: Dictionary in terrain_rows:
 		var cell := Vector2i(int(terrain.get("x", 0)), int(terrain.get("y", 0)))
+		if index.has(cell):
+			(index[cell] as Array).append(result.size())
+		else:
+			index[cell] = [result.size()]
 		var tile: TileState = _tile_by_cell.get(cell)
 		if tile != null:
-			var tile_data := tile.to_dict()
-			live[cell] = tile_data
-			result.append(tile_data)
+			result.append(tile.to_dict())
 		else:
 			var data: Dictionary = neutral.duplicate()
 			data["x"] = cell.x
@@ -1368,25 +1527,58 @@ func _tile_snapshots() -> Array[Dictionary]:
 	_tiles_cache = result
 	_tiles_cache_terrain = terrain_rows
 	_tiles_cache_encounter = _encounter_id
-	_tiles_cache_live = live
-	_tiles_cache_cells.clear()
+	_tiles_cache_index = index
+	_tiles_cache_tiles.clear()
 	for cell: Vector2i in _tile_by_cell:
-		_tiles_cache_cells[cell] = true
+		var tile: TileState = _tile_by_cell[cell]
+		_tiles_cache_tiles[cell] = [tile, tile.revision]
+	_tiles_cache_write_count = TileState.write_count
 	return result
 
 
-## True when the same cells have TileStates as at the last build and each still reads as
-## the dict the cache holds for it. A handful of to_dict() calls instead of 4,900.
-func _live_tiles_match_cache() -> bool:
-	if _tile_by_cell.size() != _tiles_cache_cells.size():
-		return false
+## The cache with the rows of new or written tiles rebuilt: a TileState write touches a
+## handful of the 4,900 rows, and rebuilding all of them was ~46 ms per weather measure or
+## tile touch (#642). Each row is the dict `_build_tile_snapshots()` would give it. A tile that
+## left `_tile_by_cell` (a reset) rebuilds everything.
+func _patch_tile_snapshots(terrain_rows: Array[Dictionary]) -> Array[Dictionary]:
+	var changed: Array[Vector2i] = []
 	for cell: Vector2i in _tile_by_cell:
-		if not _tiles_cache_cells.has(cell):
-			return false
-		if _tiles_cache_live.has(cell) \
-				and (_tile_by_cell[cell] as TileState).to_dict() != _tiles_cache_live[cell]:
-			return false
-	return true
+		var tile: TileState = _tile_by_cell[cell]
+		var seen: Array = _tiles_cache_tiles.get(cell, [])
+		if seen.is_empty() or not is_same(seen[0], tile) or int(seen[1]) != tile.revision:
+			changed.append(cell)
+	if _tile_by_cell.size() - _count_new(changed) != _tiles_cache_tiles.size():
+		return _build_tile_snapshots(terrain_rows)
+	_tiles_cache_write_count = TileState.write_count
+	if changed.is_empty():
+		return _tiles_cache
+	var result: Array[Dictionary] = []
+	for cell: Vector2i in changed:
+		var tile: TileState = _tile_by_cell[cell]
+		_tiles_cache_tiles[cell] = [tile, tile.revision]
+		for row_index: int in _tiles_cache_index.get(cell, []):
+			var data := tile.to_dict()
+			# A write that left the values as they were keeps the cached list, as before.
+			if data == _tiles_cache[row_index]:
+				continue
+			if result.is_empty():
+				result = _tiles_cache.duplicate()
+			data.make_read_only()
+			result[row_index] = data
+	if result.is_empty():
+		return _tiles_cache
+	result.make_read_only()
+	_tiles_cache = result
+	return result
+
+
+## How many of `cells` the cache has never seen a tile for.
+func _count_new(cells: Array[Vector2i]) -> int:
+	var count := 0
+	for cell: Vector2i in cells:
+		if not _tiles_cache_tiles.has(cell):
+			count += 1
+	return count
 
 
 func _weather_snapshot() -> Dictionary:
@@ -1694,10 +1886,20 @@ func _resolve_enemy_actor(actor: BattleActor) -> void:
 	var targeting := battlefield.target_query(actor, target, enemy_action.target_profile)
 	var has_cells := bool(battlefield.capabilities().get("cells", false))
 	if not bool(targeting.get("allowed", false)) and has_cells:
+		# One search serves the choice and the walk (#642 H3/H4): the memo's tree gives every
+		# stand `_best_enemy_position()` scores, the chosen stand's path and the move's own
+		# check, each the answer a fresh search gives. The move's write ends the memo.
+		var memo := battlefield.has_method("begin_path_memo")
+		if memo:
+			battlefield.call("begin_path_memo", actor, _enemy_move_budget(actor))
 		var destination := _best_enemy_position(actor, target)
 		if destination != &"":
 			_resolve_enemy_move(actor, target, destination)
+			if memo:
+				battlefield.call("end_path_memo")
 			return
+		if memo:
+			battlefield.call("end_path_memo")
 		_emit_event(
 			&"action_refused", actor, target, {"action_id": enemy_action.id, "reason": targeting}
 		)
@@ -2093,11 +2295,7 @@ func _best_enemy_position(actor: BattleActor, target: BattleActor) -> StringName
 	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
 	if not target_position.has("cell"):
 		return &""
-	var budget := int(
-		float(rules.maximum_action_ct_cost if rules != null else 0)
-		/ CombatInjury.move_cost_multiplier(actor)
-	)
-	var candidates: Array[StringName] = battlefield.reachable_positions(actor, budget)
+	var candidates: Array[StringName] = battlefield.reachable_positions(actor, _enemy_move_budget(actor))
 	var best := &""
 	var best_score := -2147483648
 	for candidate in candidates:
@@ -2134,6 +2332,14 @@ func _enemy_position_score(
 	if attack_direction != &"" and attack_direction == _opposite_facing(battlefield.facing_of(target)):
 		score += 1000
 	return score
+
+
+## The CT an enemy may spend walking: the largest action's, less for its injuries.
+func _enemy_move_budget(actor: BattleActor) -> int:
+	return int(
+		float(rules.maximum_action_ct_cost if rules != null else 0)
+		/ CombatInjury.move_cost_multiplier(actor)
+	)
 
 
 func _resolve_enemy_move(actor: BattleActor, target: BattleActor, destination: StringName) -> void:
@@ -2283,6 +2489,63 @@ func _priced_move_action(
 	return priced
 
 
+## While `_price_reachable()` quotes every stand of one combatant: path CT -> that path's quote
+## (`{ap_cost, ct_cost, affordability, modifiers}`). A quote reads the combatant, the scheduler
+## and the path's CT, never the stand, and nothing writes to those during the pass, so each
+## distinct price is worked out once instead of once per stand (#642). Empty outside a pass.
+var _move_quotes: Dictionary = {}
+var _move_quotes_action: CombatAction = null
+
+
+## `query_action_for()`'s move branch: the walk, then its price against the scheduler.
+func _query_move(actor: BattleActor, action: CombatAction, options: Dictionary) -> Dictionary:
+	var movement := battlefield.move_query(actor, _move_destination(action, options))
+	if not bool(movement.get("allowed", false)):
+		return movement
+	var quote := _quote_move(action, movement, options, actor)
+	var move_affordability: Dictionary = quote["affordability"]
+	if not bool(move_affordability.get("allowed", false)):
+		return move_affordability
+	movement["ap_cost"] = quote["ap_cost"]
+	movement["ct_cost"] = quote["ct_cost"]
+	movement["move_modifiers"] = quote["modifiers"]
+	return movement
+
+
+## A move with no voice, aim, class command, effect, cell targeting or side rule: every gate
+## `query_action_for()` asks ahead of its move branch then reads only the actor and the action,
+## never the destination, so a pricing pass asks them once rather than per stand (#642).
+static func _plain_move(action: CombatAction) -> bool:
+	return (
+		action.kind == CombatAction.Kind.MOVE and not action.requires_voice
+		and action.class_resource_action.is_empty() and action.effect_id.is_empty()
+		and action.effect_payload.is_empty() and not action.targets_cells()
+		and not action.requires_ally_target() and not action.targets_any_side()
+		and not _OBJECT_ONLY_EFFECTS.has(action.effect_id)
+	)
+
+
+## The move gate's quote for `movement`: priced, checked against the scheduler, with the
+## injury modifiers the answer carries.
+func _quote_move(
+	action: CombatAction, movement: Dictionary, options: Dictionary, actor: BattleActor
+) -> Dictionary:
+	var in_pass := _move_quotes_action != null and _move_quotes_action == action
+	var key: Variant = movement.get("ct_cost")
+	if in_pass and _move_quotes.has(key):
+		return _move_quotes[key]
+	var priced_action := _priced_move_action(action, movement, options, actor)
+	var quote := {
+		"ap_cost": priced_action.ap_cost,
+		"ct_cost": priced_action.ct_cost,
+		"affordability": _can_afford(actor, priced_action),
+		"modifiers": CombatInjury.move_cost_modifiers(actor),
+	}
+	if in_pass:
+		_move_quotes[key] = quote
+	return quote
+
+
 func _injured_move_ct(actor: BattleActor, path_ct: int) -> int:
 	if actor == null:
 		return path_ct
@@ -2351,13 +2614,33 @@ func _describe_path_cells(value: Variant) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	if battlefield == null or value is not Array:
 		return cells
+	var in_pass := _move_quotes_action != null
+	if in_pass and _walk_cells_known:
+		# The pass's paths are the memo search's walks, which carry their cells (#642).
+		var walked: Variant = battlefield.call("memo_walk_cells", value)
+		if walked != null:
+			return walked
 	for handle_value: Variant in value as Array:
-		var described: Dictionary = battlefield.describe_position(StringName(str(handle_value)))
-		var cell_value: Variant = described.get("cell")
+		var handle: StringName = (
+			handle_value if handle_value is StringName else StringName(str(handle_value))
+		)
+		# While a pricing pass runs the board holds still, so each handle is described once:
+		# its stands' paths share most of their cells (#642).
+		var cell_value: Variant = _path_cell_memo.get(handle) if in_pass else null
+		if cell_value == null:
+			cell_value = (battlefield.describe_position(handle) as Dictionary).get("cell")
+			if in_pass and cell_value is Vector2i:
+				_path_cell_memo[handle] = cell_value
 		if cell_value is not Vector2i:
 			return []
 		cells.append(cell_value)
 	return cells
+
+
+## `_describe_path_cells()`'s cells by handle during one `_price_reachable()` pass.
+var _path_cell_memo: Dictionary = {}
+## Whether the battlefield of the running pass answers `memo_walk_cells()`.
+var _walk_cells_known := false
 
 
 func _query_defining_strike(target: BattleActor, weakness_id: StringName) -> Dictionary:
@@ -3566,19 +3849,38 @@ static func _freeze(value: Variant) -> void:
 			_freeze(nested)
 		(value as Dictionary).make_read_only()
 	elif value is Array:
-		for nested: Variant in value as Array:
-			_freeze(nested)
-		(value as Array).make_read_only()
+		var array := value as Array
+		# A typed array of scalars (a path's handles or cells) holds nothing to freeze: one call,
+		# not one per element (#642).
+		if not array.is_typed() or array.get_typed_builtin() in [TYPE_ARRAY, TYPE_DICTIONARY]:
+			for nested: Variant in array:
+				_freeze(nested)
+		array.make_read_only()
 
 
+## Per combatant, the frozen containers its last snapshot row carried, each with the hash of
+## what it was copied from: combat_id -> {field: [hash, frozen copy]} (#642 H2).
+var _row_parts: Dictionary = {}
+
+
+## Snapshot rows, each already frozen. A container field (anatomy, injuries, effects,
+## aftertones, impositions, the class resource and intent reads) reuses the frozen copy the
+## combatant's last row carried while the live value still equals it, key order included;
+## only a changed one is copied and frozen again. Copying and freezing every container of
+## every combatant was ~3 ms per event with 99 hostiles. Scalars are read fresh each time.
+## The check is against the live data itself, so no write path has to report the change.
 func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for actor in group:
-		result.append({
+		var parts: Dictionary = _row_parts.get(actor.combat_id, {})
+		if parts.is_empty():
+			_row_parts[actor.combat_id] = parts
+		var exposed := _is_exposed_now(actor)
+		var row := {
 			"id": actor.combat_id,
 			"display_name": actor.display_name,
-			"anatomy": actor.anatomy.duplicate(true),
-			"injuries": actor.injuries.duplicate(true),
+			"anatomy": _row_part(parts, &"anatomy", actor.anatomy, true),
+			"injuries": _row_part(parts, &"injuries", actor.injuries, true),
 			# Serializable presentation identity; never embed loaded textures in replay data.
 			"member_id": actor.source_member.id if actor.source_member != null else "",
 			"portrait_path": (
@@ -3601,19 +3903,50 @@ func _actor_snapshots(group: Array[BattleActor]) -> Array[Dictionary]:
 			"unused_ap_defense_bonus": actor.unused_ap_defense_bonus,
 			"archetype_id": actor.archetype_id,
 			"balance_band_id": actor.balance_band_id,
-			"balance_effects": actor.balance_effects.duplicate(true),
-			"defining_effects": actor.defining_effects.duplicate(true),
-			"discovered_weakness_ids": actor.discovered_weakness_ids.duplicate(),
+			"balance_effects": _row_part(parts, &"balance_effects", actor.balance_effects, true),
+			"defining_effects": _row_part(parts, &"defining_effects", actor.defining_effects, true),
+			"discovered_weakness_ids": _row_part(
+				parts, &"discovered_weakness_ids", actor.discovered_weakness_ids, true
+			),
 			"breath": actor.breath,
-			"aftertones": actor.aftertones.duplicate(true),
+			"aftertones": _row_part(parts, &"aftertones", actor.aftertones, true),
 			"tempo": actor.tempo,
-			"discord_signatures_visible": _signatures_visible(actor),
-			"exposed": _is_exposed_now(actor),
-			"class_resource": _class_resource_of(actor).snapshot(),
-			"impositions": actor.impositions.duplicate(true),
-			"intent": shown_intent(actor),
-		})
+			"discord_signatures_visible": _signatures_visible(actor, exposed),
+			"exposed": exposed,
+			"class_resource": _row_part(
+				parts, &"class_resource", _class_resource_of(actor).snapshot(), false
+			),
+			"impositions": _row_part(parts, &"impositions", actor.impositions, true),
+			"intent": _row_part(parts, &"intent", shown_intent(actor), false),
+		}
+		row.make_read_only()
+		result.append(row)
 	return result
+
+
+## `value` frozen for a snapshot row. When it equals the copy `parts` holds for `field` (same
+## content by `==`, same order by hash) that copy is returned; otherwise a frozen copy is made
+## and kept. `live` values belong to the combatant and are deep-copied first, as before; the
+## others are fresh reads (the class resource snapshot, the shown intent) and are frozen as is.
+func _row_part(parts: Dictionary, field: StringName, value: Variant, live: bool) -> Variant:
+	var seen: Variant = parts.get(field)
+	if seen != null:
+		var kept: Variant = seen[1]
+		if typeof(kept) == typeof(value):
+			# Most of a combatant's containers are empty: two empties of one type are equal.
+			if value.is_empty():
+				if kept.is_empty():
+					return kept
+			elif int(seen[0]) == hash(value) and kept == value:
+				return kept
+	var value_hash := hash(value)
+	var copy: Variant = value
+	if live:
+		# A shallow copy for the weakness ids, as before: they are StringNames.
+		copy = value.duplicate(field != &"discovered_weakness_ids")
+	_freeze(copy)
+	parts[field] = [value_hash, copy]
+	return copy
 
 
 func _tick_actor_aftertones() -> void:
@@ -4680,8 +5013,8 @@ func _is_exposed_now(actor: BattleActor) -> bool:
 
 
 ## Revelation beats concealment; a Veil hides; otherwise the side-wide rule applies.
-func _signatures_visible(actor: BattleActor) -> bool:
-	if _is_exposed_now(actor):
+func _signatures_visible(actor: BattleActor, exposed: Variant = null) -> bool:
+	if (_is_exposed_now(actor) if exposed == null else bool(exposed)):
 		return true
 	if LightField.is_veiled(actor):
 		return false

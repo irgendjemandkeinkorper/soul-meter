@@ -108,6 +108,8 @@ var _pending_defeat_wake: StringName = &""
 ## SR7: the defeat's one checkpoint, requested once the wake hub's level is ready.
 var _wake_checkpoint_pending := false
 const WAKE_CHECKPOINT_DETAIL := "session-defeat"
+## Shown by the region map when a journey is refused because a fight is paused under it.
+const JOURNEY_FIGHT_REFUSAL := "FINISH THE FIGHT BEFORE TRAVELLING"
 var travel_plan: TravelPlan = null
 ## The runtime state from before the class demo, restored when the flow returns to the title.
 ## Non-empty exactly while the demo owns the sandbox.
@@ -277,7 +279,22 @@ func _on_paused_to_menus_taken() -> void:
 	chart.set_expression_property(&"resume_to_battle", false)
 
 
+## Why a journey may not start or move on right now, or empty when it may. The region map is
+## reachable from the pause menu during a fight too, and a journey's arrival or ambush would
+## leave that fight behind (#649).
+func journey_refusal() -> String:
+	var fight_paused: bool = (
+		$StateChart/Root/Playing/Paused.active
+		and bool(chart.get_expression_property(&"resume_to_battle", false))
+	)
+	if fight_paused or $StateChart/Root/Playing/Battle.active:
+		return JOURNEY_FIGHT_REFUSAL
+	return ""
+
+
 func start_journey(origin_id: StringName, destination_id: StringName) -> bool:
+	if not journey_refusal().is_empty():
+		return false
 	var route := WorldMapRegistry.route_between(origin_id, destination_id)
 	if route.is_empty():
 		return false
@@ -297,6 +314,9 @@ func start_journey(origin_id: StringName, destination_id: StringName) -> bool:
 func advance_journey(steps: int = 1) -> Dictionary:
 	if travel_plan == null or travel_plan.state != TravelPlan.State.EN_ROUTE:
 		return {}
+	var refusal := journey_refusal()
+	if not refusal.is_empty():
+		return {"event": "refused", "message": refusal}
 	# A multi-step advance can never carry the party past an unresolved
 	# encounter boundary (or the destination): clamp to the first unresolved
 	# slot's at_step so every scheduled interruption fires at its own step.
@@ -347,6 +367,10 @@ func resolve_encounter_prompt(avoid: bool) -> Dictionary:
 	var slot_index := _next_reached_slot_index()
 	if slot_index < 0:
 		return {}
+	var refusal := journey_refusal()
+	if not refusal.is_empty():
+		# An ambush opened now would replace the paused fight's session.
+		return {"event": "refused", "message": refusal}
 	var route := _journey_route()
 	if avoid:
 		var chance := EncounterDirector.avoidance_chance(route, GameState.party)
@@ -367,7 +391,15 @@ func resolve_encounter_prompt(avoid: bool) -> Dictionary:
 	# A journey ambush is a set-piece fought where the party stands, with no deployment: an
 	# ambush gives no time to deploy (F0 D3 as read 2026-10-02; the Trial Hall keeps its slate).
 	var opened: Dictionary = Battle.start_set_piece(Battle._current_field_map(), encounter_id)
-	if bool(opened.get("allowed", false)) and not Battle.ended:
+	if not bool(opened.get("allowed", false)):
+		# No ground to seat both sides, or no living enemy: no fight exists, so the plan must
+		# not stay IN_BATTLE (#649). The prompt comes back and CANCEL works, as for the
+		# can_fight_here() refusal above. A battle_ended that already resolved the slot wins.
+		if travel_plan != null and travel_plan.state == TravelPlan.State.IN_BATTLE:
+			travel_plan.state = TravelPlan.State.AVOID_PROMPT
+			_persist_travel_plan()
+		return {"event": "battle_refused", "refusal": opened}
+	if not Battle.ended:
 		send_event("enter_battle")
 	return {"event": "battle_started"}
 
@@ -491,7 +523,7 @@ func _on_journey_battle_ended(result: BattleResult) -> void:
 ## from game code (see the header note above).
 func travel(scene_path: String, spawn_id: StringName = &"default") -> bool:
 	# Ask the authored guard before staging any destination or clock/save mutation.
-	if not ($StateChart/Root/Playing/Active/ToLoading as Transition).evaluate_guard():
+	if not _travel_guard_open():
 		return false
 	var location := LocationRegistry.by_scene(scene_path)
 	if location == null:
@@ -515,6 +547,15 @@ func travel(scene_path: String, spawn_id: StringName = &"default") -> bool:
 		return false
 	WorldClock.advance("travel:%s" % scene_path)
 	return true
+
+
+## Asks the guard of the Loading edge the chart would take from where it stands. A region-map
+## journey runs under the pause menu, so Paused has its own edge (#649), which a fight paused
+## under the menu or an open editor closes. Every other state asks Active's edge, as before.
+func _travel_guard_open() -> bool:
+	if $StateChart/Root/Playing/Paused.active:
+		return ($StateChart/Root/Playing/Paused/ToLoading as Transition).evaluate_guard()
+	return ($StateChart/Root/Playing/Active/ToLoading as Transition).evaluate_guard()
 
 
 func _travel_to_gameplay_scene(scene_path: String, spawn_id: StringName) -> bool:
@@ -658,7 +699,7 @@ func fast_travel(hub_id: StringName, current_scene_path: String = "") -> Diction
 ## Resolves a stable destination into GameFlow-owned scene state and asks the
 ## chart to enter its existing loading transition.
 func load_destination(destination: LoadDestination) -> bool:
-	if not ($StateChart/Root/Playing/Active/ToLoading as Transition).evaluate_guard():
+	if not _travel_guard_open():
 		return false
 	if not destination.scene_path.is_empty():
 		if not LocationRegistry.is_gameplay_scene(destination.scene_path):

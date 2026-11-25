@@ -1,0 +1,2161 @@
+{
+	"admission": {
+		"admitted": 100,
+		"path": "Hostile.request_alert -> FieldMap.hostile_alerted -> Battle.admit",
+		"per_hostile_ms": {
+			"max": 3.295,
+			"mean": 1.25236363636364,
+			"p50": 0.99,
+			"p95": 2.684,
+			"p99": 3.295,
+			"sample_count": 99,
+			"unit": "ms"
+		},
+		"refusals": [],
+		"refused": 0,
+		"total_ms": 124.411
+	},
+	"benchmark_id": "P3.1-planner-spike",
+	"budget": {
+		"frame_p95_ms": 16.67,
+		"transition_strict_ms": 2000.0
+	},
+	"budget_pass": false,
+	"cold_planning_ms": 0.292,
+	"ct_hostiles_max": 100,
+	"ct_hostiles_min": 100,
+	"d9_event_decision_ms_advisory": {
+		"max": 30.193,
+		"mean": 11.7732641509434,
+		"p50": 11.127,
+		"p95": 18.257,
+		"p99": 27.767,
+		"sample_count": 106,
+		"unit": "ms"
+	},
+	"environment": {
+		"display_server": "X11",
+		"godot": {
+			"build": "official",
+			"hash": "a13da4feb8d8aefc283c3763d33a2f170a18d541",
+			"hex": 263937,
+			"major": 4,
+			"minor": 7,
+			"patch": 1,
+			"status": "stable",
+			"string": "4.7.1-stable (official)",
+			"timestamp": 0
+		},
+		"headless": false,
+		"os": "Linux",
+		"os_version": "22.04",
+		"processor": "13th Gen Intel(R) Core(TM) i5-13400F",
+		"processor_count": 16,
+		"renderer": "gl_compatibility",
+		"video_adapter": "D3D12 (Radeon RX 580 Series)"
+	},
+	"errors": [],
+	"execution": "no speculative planning; unchanged production controller resolves actions",
+	"fixture": {
+		"action_every_frames": 4,
+		"fallback_deciders": 24,
+		"near_hex_distance": 6,
+		"opener_reason": 0,
+		"priority_depth": 8,
+		"samples": 120,
+		"settle": {
+			"actual_duration_ms": 2032.639,
+			"discarded_frames": 63,
+			"method": "fixed_post_setup_warmup",
+			"starts_after": "all_admitted_and_cold_planned",
+			"target_duration_ms": 2000
+		}
+	},
+	"frame_interval_ms": {
+		"max": 1781.273,
+		"mean": 58.9600583333333,
+		"p50": 34.373,
+		"p95": 93.187,
+		"p99": 430.334,
+		"sample_count": 120,
+		"unit": "ms"
+	},
+	"legibility": {
+		"automated_facts": 2.0,
+		"before": "/home/adamjroder/projects/soul-meter-wt/codex-planner-603/docs/qa/p3-1-planner-spike-2026-11-09/cached-legibility-before.jpg",
+		"capture_rerun": false,
+		"facts": [
+			{
+				"answer": "Benchmark Wight 001",
+				"marker_index": 1.0,
+				"name": "next_actor",
+				"verified": true
+			},
+			{
+				"answer": "CT 100 → 100\n→ Vex the Unbowed · 74% · 13 dmg · weak: the knee, what it conceals · resists vekh, mozh, khash",
+				"name": "revealed_intent",
+				"plan": {
+					"action_id": "enemy-strike",
+					"aim_location": "",
+					"damage_on_hit": 13.0,
+					"element": "mozh",
+					"hit_chance": 74.0,
+					"injury_chance": 0.0,
+					"kind": "strike",
+					"resists": [
+						"vekh",
+						"mozh",
+						"khash"
+					],
+					"target_id": "ally-0",
+					"target_name": "Vex the Unbowed",
+					"weaknesses": [
+						"the knee",
+						"what it conceals"
+					]
+				},
+				"rect": {
+					"height": 35.0,
+					"width": 685.0,
+					"x": 99.5,
+					"y": 27.0
+				},
+				"verified": true
+			},
+			{
+				"answer": "Vex the Unbowed uses Guard against the revealed strike",
+				"name": "right_response",
+				"rect": {
+					"height": 103.0,
+					"width": 84.0,
+					"x": 629.0,
+					"y": 892.0
+				},
+				"submit": true,
+				"trace": {
+					"enemy_action_id": "enemy-strike",
+					"enemy_target_id": "ally-0",
+					"guarded_damage": 13.0,
+					"guarding": true
+				},
+				"unguarded_damage_on_hit": 13.0,
+				"verified": false
+			}
+		],
+		"fixture": "After timing only: adjacent existing wight, attack 20; allies HP 100 and unguarded; ally CT 110, wight CT 100, other seats CT 0; lock via existing controller seam; presentation replay flush. All numbers PROVISIONAL.",
+		"response": "/home/adamjroder/projects/soul-meter-wt/codex-planner-603/docs/qa/p3-1-planner-spike-2026-11-09/cached-legibility-response.jpg",
+		"reused_from": "/home/adamjroder/projects/soul-meter-wt/642-controller-cost/docs/qa/p3-1-planner-spike-2026-11-09/retained-legibility.json",
+		"source_variant": "cached",
+		"visual_inspection_required": true
+	},
+	"legibility_facts": 2,
+	"official_fr904_gate": false,
+	"planner_computation_ms_advisory": {
+		"max": 0.0,
+		"mean": 0.0,
+		"p50": 0.0,
+		"p95": 0.0,
+		"p99": 0.0,
+		"sample_count": 0,
+		"unit": "ms"
+	},
+	"planner_refresh_ms": {
+		"max": 3.989,
+		"mean": 0.763175,
+		"p50": 0.606,
+		"p95": 1.753,
+		"p99": 2.843,
+		"sample_count": 120,
+		"unit": "ms"
+	},
+	"provisional": true,
+	"raw": {
+		"d9_event_decision_ms": [
+			26.428,
+			30.193,
+			27.767,
+			4.694,
+			5.057,
+			7.864,
+			8.16,
+			8.285,
+			10.375,
+			13.324,
+			8.964,
+			9.172,
+			10.756,
+			7.673,
+			6.675,
+			8.407,
+			9.781,
+			9.501,
+			8.539,
+			14.885,
+			12.961,
+			7.387,
+			10.268,
+			14.235,
+			7.253,
+			12.251,
+			12.998,
+			9.981,
+			16.772,
+			19.846,
+			19.705,
+			12.617,
+			10.393,
+			14.645,
+			17.248,
+			13.423,
+			8.797,
+			7.882,
+			14.57,
+			11.26,
+			15.101,
+			11.082,
+			10.673,
+			12.833,
+			12.302,
+			9.955,
+			12.747,
+			10.17,
+			9.314,
+			12.306,
+			9.561,
+			7.636,
+			8.58,
+			11.022,
+			11.201,
+			10.513,
+			9.473,
+			9.059,
+			8.501,
+			14.202,
+			11.885,
+			9.273,
+			13.401,
+			11.303,
+			8.255,
+			13.541,
+			11.859,
+			11.238,
+			11.525,
+			11.163,
+			10.294,
+			12.482,
+			10.613,
+			14.967,
+			17.671,
+			10.809,
+			9.72,
+			10.987,
+			7.478,
+			13.534,
+			12.375,
+			15.111,
+			13.709,
+			9.326,
+			8.875,
+			11.659,
+			11.835,
+			14.699,
+			18.257,
+			12.36,
+			15.395,
+			11.707,
+			10.422,
+			9.411,
+			11.498,
+			9.864,
+			10.947,
+			8.692,
+			8.957,
+			13.739,
+			12.339,
+			9.081,
+			14.046,
+			11.493,
+			11.821,
+			11.127
+		],
+		"frame_interval_ms": [
+			430.334,
+			49.112,
+			57.757,
+			57.883,
+			224.894,
+			53.652,
+			33.226,
+			34.373,
+			100.073,
+			39.731,
+			30.194,
+			37.649,
+			66.464,
+			28.963,
+			30.595,
+			27.929,
+			69.349,
+			63.638,
+			44.99,
+			32.163,
+			94.16,
+			31.508,
+			35.771,
+			60.138,
+			107.231,
+			42.572,
+			55.666,
+			47.859,
+			85.153,
+			55.314,
+			49.488,
+			44.829,
+			1781.273,
+			31.274,
+			93.187,
+			29.398,
+			24.716,
+			23.103,
+			22.195,
+			29.931,
+			30.01,
+			44.029,
+			30.377,
+			32.116,
+			31.04,
+			26.133,
+			59.071,
+			35.73,
+			38.314,
+			38.851,
+			43.993,
+			43.546,
+			32.631,
+			28.096,
+			30.876,
+			27.602,
+			30.619,
+			35.235,
+			31.544,
+			35.732,
+			30.73,
+			35.371,
+			30.515,
+			26.737,
+			22.37,
+			27.053,
+			21.551,
+			84.608,
+			20.306,
+			30.694,
+			25.852,
+			22.894,
+			19.661,
+			27.298,
+			21.817,
+			20.082,
+			27.825,
+			25.968,
+			27.769,
+			24.4,
+			25.867,
+			68.186,
+			36.723,
+			38.108,
+			36.003,
+			31.678,
+			22.573,
+			29.271,
+			26.429,
+			46.668,
+			34.541,
+			32.14,
+			32.281,
+			32.834,
+			30.45,
+			31.962,
+			32.403,
+			35.341,
+			34.604,
+			30.906,
+			33.052,
+			36.286,
+			30.646,
+			34.618,
+			46.47,
+			39.281,
+			37.652,
+			44.201,
+			40.888,
+			43.103,
+			55.165,
+			50.149,
+			52.587,
+			23.7,
+			34.096,
+			34.146,
+			78.565,
+			54.502,
+			44.65,
+			35.701
+		],
+		"frames": [
+			{
+				"ally_action": "yield",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 0,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 1,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 2,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 3,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "yield",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 4,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 5,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 6,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 7,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "yield",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 8,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 9,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 10,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 11,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "yield",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 12,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 13,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 14,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 15,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "yield",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 16,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 17,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 18,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 19,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "yield",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 20,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 21,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 22,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 23,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "guard",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 24,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 25,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 26,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 27,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "guard",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 28,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 29,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 30,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 31,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "guard",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 32,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 33,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 34,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 35,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 36,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 37,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 38,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 39,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 40,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 41,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 42,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 43,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 44,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 45,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 46,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 47,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 48,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 49,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 50,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 51,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 52,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 53,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 54,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 55,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 56,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 57,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 58,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 59,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 60,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 61,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 62,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 63,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 64,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 65,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 66,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 67,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 68,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 69,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 70,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 71,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 72,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 73,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 74,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 75,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 76,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 77,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 78,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 79,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 80,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 81,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 82,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 83,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 84,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 85,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 86,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 87,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 88,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 89,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 90,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 91,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 92,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 93,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 94,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 95,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 96,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 97,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 98,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 99,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 100,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 101,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 102,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 103,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 104,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 105,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 106,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 107,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 108,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 109,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 110,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 111,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 112,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 113,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 114,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 115,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 116,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 117,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 118,
+				"planned_hostiles": 0,
+				"revision": 0
+			},
+			{
+				"ally_action": "",
+				"cache_hits": 0,
+				"cheap_hostiles": 0,
+				"ct_hostiles": 100,
+				"detailed_hostiles": 0,
+				"frame": 119,
+				"planned_hostiles": 0,
+				"revision": 0
+			}
+		],
+		"planner_computation_ms": [],
+		"planner_refresh_ms": [
+			0.726,
+			1.261,
+			2.843,
+			2.035,
+			1.284,
+			2.191,
+			1.31,
+			0.667,
+			0.497,
+			0.691,
+			0.481,
+			1.475,
+			1.158,
+			1.065,
+			1.062,
+			0.939,
+			0.752,
+			1.858,
+			0.692,
+			0.409,
+			0.592,
+			1.161,
+			0.748,
+			1.182,
+			0.64,
+			1.703,
+			0.525,
+			1.386,
+			0.532,
+			3.989,
+			0.818,
+			0.872,
+			0.678,
+			0.372,
+			1.324,
+			0.47,
+			0.462,
+			0.451,
+			0.577,
+			0.358,
+			0.362,
+			1.296,
+			1.107,
+			0.349,
+			0.422,
+			0.351,
+			0.606,
+			0.925,
+			0.467,
+			0.619,
+			0.622,
+			1.357,
+			0.474,
+			0.382,
+			0.816,
+			1.753,
+			0.638,
+			0.462,
+			0.752,
+			0.275,
+			0.303,
+			0.46,
+			0.559,
+			0.455,
+			0.351,
+			0.383,
+			0.384,
+			0.335,
+			0.406,
+			0.359,
+			0.347,
+			0.655,
+			0.417,
+			0.341,
+			0.372,
+			0.432,
+			0.845,
+			0.465,
+			1.186,
+			0.343,
+			0.493,
+			0.421,
+			0.634,
+			0.739,
+			0.911,
+			0.607,
+			0.501,
+			0.418,
+			0.342,
+			0.594,
+			0.498,
+			0.648,
+			0.493,
+			1.082,
+			0.3,
+			0.284,
+			0.655,
+			0.534,
+			0.722,
+			0.432,
+			0.463,
+			0.698,
+			0.446,
+			0.462,
+			0.542,
+			0.905,
+			1.173,
+			0.479,
+			0.839,
+			0.529,
+			0.618,
+			1.794,
+			1.063,
+			0.763,
+			0.408,
+			0.683,
+			0.518,
+			0.876,
+			0.821,
+			0.524
+		]
+	},
+	"scenario": {
+		"ally_count": 3,
+		"authored_hostile_count": 4,
+		"battle_hud_visible": true,
+		"enemy_count": 100,
+		"field_hostile_count": 104,
+		"fixture_ally_hp": 1000000,
+		"fixture_unit_id": "bog-wight",
+		"party_size": 3,
+		"placement": {
+			"cells": [
+				{
+					"x": 1,
+					"y": -1
+				},
+				{
+					"x": -1,
+					"y": 1
+				},
+				{
+					"x": 1,
+					"y": 1
+				},
+				{
+					"x": -5,
+					"y": 3
+				},
+				{
+					"x": -3,
+					"y": 3
+				},
+				{
+					"x": -1,
+					"y": 3
+				},
+				{
+					"x": 1,
+					"y": 3
+				},
+				{
+					"x": -7,
+					"y": 5
+				},
+				{
+					"x": -5,
+					"y": 5
+				},
+				{
+					"x": -3,
+					"y": 5
+				},
+				{
+					"x": -1,
+					"y": 5
+				},
+				{
+					"x": 1,
+					"y": 5
+				},
+				{
+					"x": 3,
+					"y": 5
+				},
+				{
+					"x": -9,
+					"y": 7
+				},
+				{
+					"x": -7,
+					"y": 7
+				},
+				{
+					"x": -5,
+					"y": 7
+				},
+				{
+					"x": -3,
+					"y": 7
+				},
+				{
+					"x": -1,
+					"y": 7
+				},
+				{
+					"x": 1,
+					"y": 7
+				},
+				{
+					"x": 3,
+					"y": 7
+				},
+				{
+					"x": -13,
+					"y": 9
+				},
+				{
+					"x": -11,
+					"y": 9
+				},
+				{
+					"x": -9,
+					"y": 9
+				},
+				{
+					"x": -7,
+					"y": 9
+				},
+				{
+					"x": -5,
+					"y": 9
+				},
+				{
+					"x": -3,
+					"y": 9
+				},
+				{
+					"x": -1,
+					"y": 9
+				},
+				{
+					"x": 1,
+					"y": 9
+				},
+				{
+					"x": 3,
+					"y": 9
+				},
+				{
+					"x": -15,
+					"y": 11
+				},
+				{
+					"x": -13,
+					"y": 11
+				},
+				{
+					"x": -11,
+					"y": 11
+				},
+				{
+					"x": -9,
+					"y": 11
+				},
+				{
+					"x": -7,
+					"y": 11
+				},
+				{
+					"x": -5,
+					"y": 11
+				},
+				{
+					"x": -3,
+					"y": 11
+				},
+				{
+					"x": -1,
+					"y": 11
+				},
+				{
+					"x": 1,
+					"y": 11
+				},
+				{
+					"x": 3,
+					"y": 11
+				},
+				{
+					"x": 5,
+					"y": 11
+				},
+				{
+					"x": -19,
+					"y": 13
+				},
+				{
+					"x": -17,
+					"y": 13
+				},
+				{
+					"x": -15,
+					"y": 13
+				},
+				{
+					"x": -13,
+					"y": 13
+				},
+				{
+					"x": -11,
+					"y": 13
+				},
+				{
+					"x": -9,
+					"y": 13
+				},
+				{
+					"x": -7,
+					"y": 13
+				},
+				{
+					"x": -5,
+					"y": 13
+				},
+				{
+					"x": -3,
+					"y": 13
+				},
+				{
+					"x": -1,
+					"y": 13
+				},
+				{
+					"x": 1,
+					"y": 13
+				},
+				{
+					"x": 3,
+					"y": 13
+				},
+				{
+					"x": 5,
+					"y": 13
+				},
+				{
+					"x": -21,
+					"y": 15
+				},
+				{
+					"x": -19,
+					"y": 15
+				},
+				{
+					"x": -17,
+					"y": 15
+				},
+				{
+					"x": -15,
+					"y": 15
+				},
+				{
+					"x": -13,
+					"y": 15
+				},
+				{
+					"x": -11,
+					"y": 15
+				},
+				{
+					"x": -9,
+					"y": 15
+				},
+				{
+					"x": -7,
+					"y": 15
+				},
+				{
+					"x": -5,
+					"y": 15
+				},
+				{
+					"x": -3,
+					"y": 15
+				},
+				{
+					"x": -1,
+					"y": 15
+				},
+				{
+					"x": 1,
+					"y": 15
+				},
+				{
+					"x": 3,
+					"y": 15
+				},
+				{
+					"x": 5,
+					"y": 15
+				},
+				{
+					"x": -23,
+					"y": 17
+				},
+				{
+					"x": -21,
+					"y": 17
+				},
+				{
+					"x": -19,
+					"y": 17
+				},
+				{
+					"x": -17,
+					"y": 17
+				},
+				{
+					"x": -15,
+					"y": 17
+				},
+				{
+					"x": -13,
+					"y": 17
+				},
+				{
+					"x": -11,
+					"y": 17
+				},
+				{
+					"x": -9,
+					"y": 17
+				},
+				{
+					"x": -7,
+					"y": 17
+				},
+				{
+					"x": -5,
+					"y": 17
+				},
+				{
+					"x": -3,
+					"y": 17
+				},
+				{
+					"x": -1,
+					"y": 17
+				},
+				{
+					"x": 1,
+					"y": 17
+				},
+				{
+					"x": 3,
+					"y": 17
+				},
+				{
+					"x": 5,
+					"y": 17
+				},
+				{
+					"x": 7,
+					"y": 17
+				},
+				{
+					"x": -27,
+					"y": 19
+				},
+				{
+					"x": -25,
+					"y": 19
+				},
+				{
+					"x": -23,
+					"y": 19
+				},
+				{
+					"x": -21,
+					"y": 19
+				},
+				{
+					"x": -19,
+					"y": 19
+				},
+				{
+					"x": -17,
+					"y": 19
+				},
+				{
+					"x": -15,
+					"y": 19
+				},
+				{
+					"x": -13,
+					"y": 19
+				},
+				{
+					"x": -11,
+					"y": 19
+				},
+				{
+					"x": -9,
+					"y": 19
+				},
+				{
+					"x": -7,
+					"y": 19
+				},
+				{
+					"x": -5,
+					"y": 19
+				},
+				{
+					"x": -3,
+					"y": 19
+				},
+				{
+					"x": -1,
+					"y": 19
+				},
+				{
+					"x": 1,
+					"y": 19
+				},
+				{
+					"x": 3,
+					"y": 19
+				},
+				{
+					"x": 5,
+					"y": 19
+				}
+			],
+			"clear_margin_px": 64.0,
+			"method": "row_major_used_rect",
+			"off_plan_count": 0,
+			"off_plan_examples": [],
+			"stride": {
+				"x": 2,
+				"y": 2
+			}
+		},
+		"runtime_nodes_after_synthesis": 933,
+		"runtime_nodes_before_synthesis": 333,
+		"session_active": true,
+		"session_size_requested": 100,
+		"synthesis_ms": 139.287,
+		"synthesized_hostile_count": 100
+	},
+	"schema_version": "1.0",
+	"status": "ok",
+	"transition_ms": 1074.269,
+	"variant": "none"
+}

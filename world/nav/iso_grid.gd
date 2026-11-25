@@ -60,11 +60,28 @@ var _static_solid: Dictionary = {}  ## Vector2i -> true
 var _occupancy: Dictionary = {}  ## Vector2i -> Object
 var _occupant_cells: Dictionary = {}  ## Object -> Vector2i
 
+## Grows on every write that can change a path answer: a solid flag or weight that changes, an
+## occupant that moves or leaves, a rebuild or an obstacle refresh (#642). A search that opens a
+## cell and closes it again (`probe_open()`) is not a write.
+var revision: int = 0
+## Grows on the writes that can change any cell: a build, an obstacle refresh, clearing every
+## occupant. The other writes name their cells in `cell_revision()`.
+var structure_revision: int = 0
+## Cell -> `revision` at the last write that named it.
+var _cell_revisions: Dictionary = {}
+
 ## Hex mode (see the header). Set before `build()`; a test may turn it on for one grid.
 var hex_mode: bool = hex_enabled()
 var _layout: HexLayout
 var _hex_in_region: Dictionary = {}  ## Vector2i hex -> bool, filled on demand
 var _hex_static: Dictionary = {}  ## Vector2i hex -> bool, filled on demand
+## Hex -> [its open neighbours, their costs] for `append_hex_steps()`, leaving out only what the
+## region, static walls and edge walls close; cleared with them and on any weight change (#642).
+var _hex_steps: Dictionary = {}
+## Vector4i(from, to) -> bool: `_is_hex_edge_walled()` answers, filled on demand. Like
+## `_hex_static` they read only the painted obstacles and the layout, so they are forgotten
+## with it (#642: five map lookups per edge were most of a hex reach search).
+var _hex_edge_walls: Dictionary = {}
 var _hex_solid: Dictionary = {}  ## Vector2i hex -> true: solid by occupancy or a caller
 var _hex_weights: Dictionary = {}  ## Vector2i hex -> float
 var _hex_astar: AStar2D = null
@@ -116,6 +133,8 @@ func build(
 	static_clearance_cells: int = 0,
 	project_blocking_to_ground: bool = false
 ) -> void:
+	revision += 1
+	structure_revision += 1
 	if is_instance_valid(_blocking) and _blocking.changed.is_connected(_refresh_obstacles):
 		_blocking.changed.disconnect(_refresh_obstacles)
 	# A hex rebuild over the same ground keeps its path graph and patches it: click-to-move
@@ -160,6 +179,8 @@ func build(
 ## caller re-derives each formerly solid hex once the obstacles are baked again.
 func _clear_hex_marks() -> void:
 	_hex_static.clear()
+	_hex_edge_walls.clear()
+	_hex_steps.clear()
 	for hex: Vector2i in _hex_weights:
 		if _hex_ids.has(hex):
 			_hex_astar.set_point_weight_scale(int(_hex_ids[hex]), 1.0)
@@ -172,6 +193,8 @@ func _clear_hex_marks() -> void:
 func _reset_hex_state() -> void:
 	_hex_in_region.clear()
 	_hex_static.clear()
+	_hex_edge_walls.clear()
+	_hex_steps.clear()
 	_hex_solid.clear()
 	_hex_weights.clear()
 	_hex_astar = null
@@ -190,17 +213,23 @@ func _refresh_obstacles() -> void:
 		return
 	if _ground.tile_set == null or _blocking.tile_set == null:
 		return
+	revision += 1
+	structure_revision += 1
 	var before: Dictionary = _static_solid.duplicate()
 	for cell: Vector2i in _static_solid:
 		_astar.set_point_solid(cell, false)
 	_bake_obstacles()
 	_hex_static.clear()
+	_hex_edge_walls.clear()
+	_hex_steps.clear()
 	_reapply_occupancy()
 	_sync_hex_solids(before)
 
 
 func _bake_obstacles() -> void:
 	_static_solid.clear()
+	_hex_edge_walls.clear()
+	_hex_steps.clear()
 	if _blocking == null:
 		return
 	# Blocking can have a different transform from Ground (Dom's expanded
@@ -398,7 +427,94 @@ func path_world(from: Vector2, to: Vector2, mover: Object = null) -> PackedVecto
 ## through this — do not reach into the underlying AStarGrid2D from outside this class.
 func set_point_solid(cell: Vector2i, solid: bool = true) -> void:
 	if _in_region(cell):
+		if _raw_solid(cell) != solid:
+			revision += 1
+			_cell_revisions[cell] = revision
 		_set_solid_raw(cell, solid)
+
+
+## The square grid's steps out of `cell` for a shortest-path walk, appended in row-major order:
+## each in-bounds open neighbour, skipping a diagonal that cuts a solid corner, with its search
+## cost (octile length times the neighbour's weight). The same answers as `is_in_bounds()`,
+## `is_point_solid()` and `get_point_weight_scale()` asked per neighbour; one call per cell where
+## the battlefield model's walk made about fifty (#642). Square grids only.
+func append_square_steps(cell: Vector2i, cells: Array[Vector2i], costs: Array[float]) -> void:
+	for y_offset in range(-1, 2):
+		for x_offset in range(-1, 2):
+			if x_offset == 0 and y_offset == 0:
+				continue
+			var next := cell + Vector2i(x_offset, y_offset)
+			if not _astar.is_in_boundsv(next) or _astar.is_point_solid(next):
+				continue
+			if x_offset != 0 and y_offset != 0:
+				var across := cell + Vector2i(x_offset, 0)
+				var down := cell + Vector2i(0, y_offset)
+				if (
+					(_astar.is_in_boundsv(across) and _astar.is_point_solid(across))
+					or (_astar.is_in_boundsv(down) and _astar.is_point_solid(down))
+				):
+					continue
+				costs.append(sqrt(2.0) * _astar.get_point_weight_scale(next))
+			else:
+				costs.append(1.0 * _astar.get_point_weight_scale(next))
+			cells.append(next)
+
+
+## `HexMath.DIRECTIONS` by row, then column: the row-major order of the six neighbours on any
+## grid at least three columns wide.
+const _HEX_STEP_ORDER: Array[Vector2i] = [
+	Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(0, 1),
+]
+
+
+## The hex grid's steps out of `cell` for a shortest-path walk, appended in row-major order:
+## each neighbour `is_in_bounds()`, not `is_point_solid()` and not `is_edge_walled()` from
+## `cell`, with its search cost (one step times `get_point_weight_scale()`). The same answers
+## asked per neighbour; one call per cell (#642). Hex grids only.
+func append_hex_steps(cell: Vector2i, cells: Array[Vector2i], costs: Array[float]) -> void:
+	# The region, the static walls and the weights hold still between searches; only the solids
+	# a combatant or an obstacle marks (`_hex_solid`) are asked again each time.
+	var known: Variant = _hex_steps.get(cell)
+	if known == null:
+		var open_cells: Array[Vector2i] = []
+		var open_costs: Array[float] = []
+		for offset: Vector2i in _HEX_STEP_ORDER:
+			var hex := cell + offset
+			if not _in_region(hex) or _is_static(hex) or _is_hex_edge_walled(cell, hex):
+				continue
+			open_cells.append(hex)
+			open_costs.append(1.0 * float(_hex_weights.get(hex, 1.0)))
+		known = [open_cells, open_costs]
+		_hex_steps[cell] = known
+	var step_cells: Array[Vector2i] = known[0]
+	var step_costs: Array[float] = known[1]
+	for i: int in step_cells.size():
+		var hex := step_cells[i]
+		if not _hex_solid.has(hex):
+			cells.append(hex)
+			costs.append(step_costs[i])
+
+
+## `revision` at the last write that named `cell`, or -1. A reader that saw `revision` R and
+## `structure_revision` S still reads every cell as it did while the structure revision is S
+## and no cell it read has a revision past R.
+func cell_revision(cell: Vector2i) -> int:
+	return int(_cell_revisions.get(cell, -1))
+
+
+## Opens `cell` for a search that will close it again with `probe_close()`: an actor's own cell
+## is solid, and a path search has to start from it. Not a write: no revision moves. Returns
+## what `probe_close()` restores.
+func probe_open(cell: Vector2i) -> bool:
+	var was_solid := is_point_solid(cell)
+	if _in_region(cell):
+		_set_solid_raw(cell, false)
+	return was_solid
+
+
+func probe_close(cell: Vector2i, was_solid: bool) -> void:
+	if _in_region(cell):
+		_set_solid_raw(cell, was_solid)
 
 
 func is_point_solid(cell: Vector2i) -> bool:
@@ -411,9 +527,14 @@ func is_point_solid(cell: Vector2i) -> bool:
 func set_point_weight_scale(cell: Vector2i, weight_scale: float) -> void:
 	if not _in_region(cell):
 		return
+	if get_point_weight_scale(cell) != weight_scale:
+		revision += 1
+		_cell_revisions[cell] = revision
 	if not hex_mode:
 		_astar.set_point_weight_scale(cell, weight_scale)
 		return
+	if float(_hex_weights.get(cell, 1.0)) != weight_scale:
+		_hex_steps.clear()
 	_hex_weights[cell] = weight_scale
 	if _hex_astar != null and _hex_ids.has(cell):
 		_hex_astar.set_point_weight_scale(int(_hex_ids[cell]), weight_scale)
@@ -439,7 +560,10 @@ func set_occupant(occupant: Object, cell: Vector2i) -> void:
 	var previous: Variant = _occupant_cells.get(occupant)
 	if previous != null and previous == cell:
 		return
+	revision += 1
+	_cell_revisions[cell] = revision
 	if previous != null:
+		_cell_revisions[previous] = revision
 		_vacate(previous)
 	_occupancy[cell] = occupant
 	_occupant_cells[occupant] = cell
@@ -450,11 +574,15 @@ func clear_occupant(occupant: Object) -> void:
 	var cell: Variant = _occupant_cells.get(occupant)
 	if cell == null:
 		return
+	revision += 1
+	_cell_revisions[cell] = revision
 	_occupant_cells.erase(occupant)
 	_vacate(cell)
 
 
 func clear_all_occupants() -> void:
+	revision += 1
+	structure_revision += 1
 	for cell: Vector2i in _occupancy.keys():
 		_set_solid_raw(cell, _is_static(cell))
 	_occupancy.clear()
@@ -763,6 +891,15 @@ func _ensure_hex_astar() -> void:
 func _is_hex_edge_walled(from: Vector2i, to: Vector2i) -> bool:
 	if _static_solid.is_empty():
 		return false
+	var key := Vector4i(from.x, from.y, to.x, to.y)
+	var known: Variant = _hex_edge_walls.get(key)
+	if known == null:
+		known = _hex_edge_crosses_wall(from, to)
+		_hex_edge_walls[key] = known
+	return bool(known)
+
+
+func _hex_edge_crosses_wall(from: Vector2i, to: Vector2i) -> bool:
 	var a := _layout.hex_to_world(from)
 	var b := _layout.hex_to_world(to)
 	var middle := a.lerp(b, 0.5)

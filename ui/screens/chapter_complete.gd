@@ -65,6 +65,8 @@ func _build() -> void:
 
 	var continue_button := _menu_button(vbox, "Continue Exploring — Open Loamroot", _continue)
 	continue_button.theme_type_variation = "BronzeButton"
+	var ng_plus_button := _menu_button(vbox, "Begin Mock NG+", begin_mock_ng_plus)
+	ng_plus_button.name = "BeginMockNgPlus"
 	_menu_button(vbox, "Return to Title", _return_to_title)
 
 
@@ -77,6 +79,27 @@ func _continue() -> void:
 func _return_to_title() -> void:
 	SaveGame.save()
 	GameFlow.send_event("to_main_menu")
+
+
+## #652 gap 5, owner item 48(c): a mock NG+ rollover. The FR-801 Mirror Shop is M10 work, so
+## this carries only what exists today: the chapter's style points and a completion marker. The
+## marker is what wakes the NG+ echo lines (`NGPlus.is_active`). This run is saved first, as
+## Return to Title does; the title's New Game then starts over carrying the block.
+## The pause menu offers the same rollover once the chapter is in free roam (owner, 2026-11-20),
+## because Continue Exploring never brings this screen back.
+static func begin_mock_ng_plus() -> void:
+	SaveGame.save()
+	SaveGame.arm_ng_plus(mock_ng_plus_block())
+	GameFlow.send_event("to_main_menu")
+
+
+static func mock_ng_plus_block() -> Dictionary:
+	var block := NGPlus.normalize(SaveGame.ng_plus)
+	var metadata: Dictionary = block["completion_metadata"]
+	metadata["chapter_completions"] = int(metadata.get("chapter_completions", 0)) + 1
+	metadata["mock"] = true
+	block["completion_metadata"] = metadata
+	return block
 
 
 func _ledger_text() -> String:
@@ -98,6 +121,7 @@ func _ledger_text() -> String:
 				roundi(Reputation.standing("ironbrand-sentinels")),
 			]
 		)
+		+ "STYLE POINTS  %d\n" % int(NGPlus.normalize(SaveGame.ng_plus)["style_points"])
 		+ "ELAPSED  %s" % _format_time(SaveGame.elapsed_seconds())
 	)
 

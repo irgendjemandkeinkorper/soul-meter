@@ -12,6 +12,9 @@ const WALL_TILE := Vector2i.ZERO
 const WALL_ALTERNATIVE := 1
 
 @export var cover_cells: Array[Vector2i] = []
+## On the painted maps (`SolidFootprints.PAINTED_MAPS`) the two elevation lists are written by
+## tools/paint_blocking.gd from climbable outcrops (`ArtBases.CLIMB_META`, owner item 48d); never
+## by hand there.
 @export var elevation_one_cells: Array[Vector2i] = []
 @export var elevation_two_cells: Array[Vector2i] = []
 ## Walk-in building walls less their windows (owner list item 35): a fight's line of fire cannot

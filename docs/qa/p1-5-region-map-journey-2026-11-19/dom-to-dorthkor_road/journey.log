@@ -1,0 +1,24 @@
+route under test: dom -> dorthkor_road
+setup: at starting_town.tscn, dorthkor_road discovered=true (stands in for one earlier walk there)
+party cell at origin: (14, 111) in walking grid=false blocked=false
+capture 01-origin.jpg: OK
+capture 02-pause-menu.jpg: OK
+capture 03-region-map.jpg: OK
+selected dorthkor_road: button 'BEGIN JOURNEY' disabled=false | ROUTE  ·  12 STEPS | TRAVEL TIME  ·  3 PHASES | ENCOUNTER RISK  ·  MODERATE
+registry route dom-dorthkor_road: steps=12 phases_cost=3 risk=moderate encounters=1-2
+capture 04-route-selected.jpg: OK
+journey committed: dom -> dorthkor_road, 12 steps, 1 scheduled encounter(s) at steps [9]
+capture 05-journey-underway.jpg: OK
+capture 06-ambush-prompt.jpg: OK
+AVOID at step 9 (slot 0, dorthkor-vanguard): plan now IN_BATTLE
+party cell at ambush: (14, 111) in walking grid=false blocked=false
+capture 07-stranded-map.jpg: OK
+stranded, map open: prompt visible=false, CONTINUE visible=false, CANCEL visible=true
+GameFlow.cancel_journey() on the stranded plan: plan IN_BATTLE
+map closed: top screen 'res://ui/screens/pause_menu.tscn', plan IN_BATTLE, battle session false
+capture 08-stranded-field.jpg: OK
+capture 09-pause-menu.jpg: OK
+capture 10-region-map.jpg: OK
+map reopened: prompt visible=false, CONTINUE visible=false, CANCEL visible=false, BEGIN disabled=false
+JOURNEY-CAPTURE: FAILED — the failed avoid set the plan IN_BATTLE but no fight opened — a dead end
+JOURNEY-CAPTURE: FAILED

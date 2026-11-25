@@ -74,6 +74,13 @@ a test asserts identity.
   and tests). `_on_battle_exited()` mirrors it with `exit_combat()`.
   `Paused` (the pause menu) keeps pausing the tree as today; pausing from `Battle` is
   allowed and returns to `Battle`.
+  **Amended 2026-11-19 (#649):** the region map opens only from the pause menu, so a journey
+  runs with the chart in `Paused`. `Paused —enter_battle→ Battle` (guard
+  `can_fight_here and not editor_open and not resume_to_battle`) lets a failed avoid open its
+  fight, and `Paused —travel→ Loading` (guard `not editor_open and not resume_to_battle`) lets
+  arrival or CANCEL load the scene. Leaving `Paused` closes the menu stack and unpauses the
+  tree. A fight paused under the menu (`resume_to_battle`) refuses every journey call
+  (`GameFlow.journey_refusal()`), so the paused session is never replaced.
 - Guards, not ifs: `enter_battle` carries an `ExpressionGuard` on `can_fight_here`
   (mirrored by GameFlow the way `rep_<faction>` is).
 
@@ -260,6 +267,19 @@ Scavenger) author `Hostile` nodes; `dorthkor-muster` and the Wound Lip post stay
 set-pieces. Evidence: `docs/qa/same-map-2026-09-19/`. The log-hidden Bog Wight acceptance is
 **not yet met** (stacked seating, no visible action beat) — see that README.
 
+**Amended 2026-11-20 (#652).** `d06a2ab8` (2026-10-02, the rest of D4) made both of them
+`Hostile`s too, so their fights became ambient sessions. A session carries no encounter
+definition (`_definition` is `{"battlefield": "grid", "use_charge_time": true}` and
+`encounter_id` is empty), so the muster's two resolution routes ("Speak Its Muster-Name",
+"Release the Bound Soldier") never loaded and the Bloodbellow could only end `slain`. Repair:
+when an authored group's first member joins a session, its `EncounterCatalog` context actions
+join too (`Battle._register_group_context_actions()`, `CombatController.add_actions()`), with
+the same `action_refusal()` gates as a set-piece. A resolution resolves **that group** with its
+own outcome, flags, message and ledger entry; its standing members go `DOWNED` instead of back
+to `IDLE`. The resolution still ends the whole session, as it ends a set-piece: any other group
+in the fight settles per D7 (standing hostiles return to `IDLE`). Speech hooks are not carried
+yet (#652 gap 4).
+
 ### Set-pieces fought on the field — 2026-10-03 (`port/424-unique`)
 
 `Battle.start_set_piece(field, encounter)` no longer wraps a zone-battlefield `start()`. The
@@ -299,6 +319,14 @@ otherwise reads the current scene's location. `CombatLab.resolve_weather()` gain
 
 Still open in step 8: `EncounterCatalog` losing `_FIELD_GRID_DATA`, `battlefield` and
 `use_charge_time`.
+
+**Amended 2026-11-20 (#652 gap 2): "always CT" is now true in play.** Until this date only
+ambient sessions ran CT; every set-piece opened by `Battle.start_set_piece()` (the Trial Hall
+warden and keeper, the class demo, the Combat Lab) still read `use_charge_time` from its
+definition, found none, and ran AP. `Battle.start()` now forces CT while a set-piece is opening.
+The definition flag steers only a bare `start()`, which no game scene calls, so the AP
+scheduler stays reachable for tests as D8 intends. Dropping the field from `EncounterCatalog`
+is still open.
 
 ## 4. Owner rulings (ruled 2026-09-04)
 1. **Flee rule** (D7): **accepted as proposed.** Session ends `FLED` when no living hostile

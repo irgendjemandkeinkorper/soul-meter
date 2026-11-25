@@ -405,6 +405,35 @@ func test_hovered_move_quote_names_ct_and_remaining_charge_under_charge_time() -
 	assert_str(stage.hovered_move_quote()).is_equal("3 AP")
 
 
+## #642: the controller hands out one read-only reach per priced board. The stage keeps those
+## rows as given (no copy), reads the same array once, and reads it again for a new budget.
+func test_frozen_reach_rows_are_kept_as_given_and_read_once() -> void:
+	var runner := scene_runner("res://ui/hud/regions/stage/battle_stage_region.tscn")
+	var stage := runner.scene() as BattleStageRegion
+	var cells: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0)]
+	cells.make_read_only()
+	var row := {"destination": &"c:1,0,0", "ap_cost": 1, "ct_cost": 60, "path_cells": cells}
+	row.make_read_only()
+	var rows: Array[Dictionary] = [row]
+	rows.make_read_only()
+	# A marker left in the index survives only an event whose rows were not read again.
+	var marker := Vector2i(-7, -7)
+	for step: Array in [[100, false], [100, true], [70, false]]:
+		var budget: int = step[0]
+		var event := CombatEvent.new()
+		event.data = {"snapshot": {
+			"scheduler_mode": "",
+			"tiles": [{"x": 0, "y": 0}, {"x": 1, "y": 0}],
+			"movement": {"ct_budget": budget, "reachable": rows},
+		}}
+		stage.consume_event(event)
+		assert_bool(stage._reachable.has(marker)).is_equal(bool(step[1]))
+		stage._reachable[marker] = {}
+		assert_bool(is_same(stage._reachable[Vector2i(1, 0)], row)).is_true()
+		stage._hovered = Vector2i(1, 0)
+		assert_str(stage.hovered_move_quote()).is_equal("60 CT · %d CT LEFT" % (budget - 60))
+
+
 ## #473: without a field overlay every event is presented as it arrives, so the stage's beat
 ## cursor is the latest event and `beat_presented` fires once per event, in order.
 func test_stage_without_a_field_presents_each_event_as_its_beat() -> void:

@@ -144,6 +144,12 @@ func test_opening_arc_reaches_the_elder_and_starts_the_driving_journey() -> void
 	)
 	var elder_dialogue: DialogueResource = route.get("resource") as DialogueResource
 	assert_object(elder_dialogue).is_not_null()
+	# Owner item 48(b): without a company Gaath sends the player to the Four Arms first.
+	assert_bool(GameState.has_selected_companions()).is_false()
+	await _choose_response(elder_dialogue, "start", "carry the Council's charge")
+	assert_bool(QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD)).is_false()
+	var candidates := GameState.recruitable_candidates()
+	GameState.set_companions([candidates[0], candidates[1]])
 	await _choose_response(elder_dialogue, "start", "carry the Council's charge")
 	assert_bool(QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD)).is_true()
 	assert_str(QuestRegistry.DORTHKOR_ROAD.quest_giver).is_equal("Themka Gaath")
@@ -200,6 +206,8 @@ func test_council_elder_checked_route_also_offers_the_driving_quest() -> void:
 	member.skill_tiers["undertone"] = "untrained"
 	member.skill_percentages["undertone"] = 95.0
 	SkillCheck.random_number_generator.seed = _winning_percentile_seed()
+	var candidates := GameState.recruitable_candidates()
+	GameState.set_companions([candidates[0], candidates[1]])
 	var resource := load(COUNCIL_ELDER_DIALOGUE_PATH) as DialogueResource
 
 	await _choose_response(resource, "start", "Ask what truth matters")
@@ -1133,3 +1141,30 @@ func _json(path: String) -> Dictionary:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	assert_bool(parsed is Dictionary).is_true()
 	return parsed as Dictionary
+
+
+## Owner item 48(b), 2026-11-20: Gaath's charge needs two companions, as Coiljaw's commission
+## does. Without them neither charge option starts the road; Gaath names the Four Arms instead.
+func test_council_elder_sends_a_lone_player_to_the_four_arms() -> void:
+	var lone: Array[PartyMember] = []
+	if GameState.protagonist() != null:
+		lone.append(GameState.protagonist())
+	GameState.set_party(lone)
+	assert_bool(GameState.has_selected_companions()).is_false()
+	var resource := load(COUNCIL_ELDER_DIALOGUE_PATH) as DialogueResource
+	var line := await _line_with_responses(resource, "start")
+	var texts: Array[String] = []
+	for response: DialogueResponse in line.responses:
+		if response.is_allowed:
+			texts.append(response.text)
+	assert_array(texts).not_contains(["Ask what truth matters before taking the road."])
+
+	var refusal: DialogueLine = null
+	for response: DialogueResponse in line.responses:
+		if response.is_allowed and response.text.contains("carry the Council's charge"):
+			refusal = await DialogueManager.get_next_dialogue_line(resource, response.next_id)
+			break
+	assert_object(refusal).is_not_null()
+	assert_str(refusal.character).is_equal("Themka Gaath")
+	assert_str(refusal.text).contains("Four Arms")
+	assert_bool(QuestRegistry.is_active(QuestRegistry.DORTHKOR_ROAD)).is_false()

@@ -249,6 +249,28 @@ func test_warden_trigger_starts_once_and_victory_opens_the_next_beat() -> void:
 	assert_bool(GameState.flag_is_true("tutorial_warden_cleared")).is_true()
 
 
+## D8 / #652 gap 2: a set-piece fought on the map runs charge time, like every ambient session.
+## Before this the warden and keeper ran AP, which the Gate T protocol calls retired.
+func test_the_warden_set_piece_runs_charge_time() -> void:
+	var hall: Node = auto_free((load(SCENE_PATH) as PackedScene).instantiate())
+	add_child(hall)
+	hall.request_warden_encounter()
+	assert_str(Battle.encounter_id).is_equal("trial-warden")
+	assert_bool(Battle.controller.rules.use_charge_time).is_true()
+	assert_str(Battle.controller.scheduler.get_script().resource_path).ends_with(
+		"charge_time_scheduler.gd"
+	)
+	Battle._finish(BattleResult.State.FLED, &"fled")
+
+
+## A bare `start()` (tests only; no game scene calls it) still follows the definition: the AP
+## scheduler stays reachable as the scheduler seam's alternate implementation (D8).
+func test_a_bare_start_keeps_the_definitions_scheduler() -> void:
+	Battle.start(&"trial-warden")
+	assert_bool(Battle.controller.rules.use_charge_time).is_false()
+	Battle._finish(BattleResult.State.FLED, &"fled")
+
+
 func test_fled_warden_encounter_can_be_retried() -> void:
 	var hall: Node = auto_free((load(SCENE_PATH) as PackedScene).instantiate())
 	add_child(hall)

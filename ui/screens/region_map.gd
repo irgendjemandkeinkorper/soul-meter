@@ -6,6 +6,7 @@ const ATLAS_TEXTURE_PATH := "res://assets/generated/backgrounds/ui/waning-marche
 const MARKER_SIZE := Vector2(148.0, 44.0)
 const PARTY_MARKER_SIZE := Vector2(88.0, 30.0)
 const JOURNEY_STEP_SECONDS := 0.5
+const AMBUSH_REFUSED_STATUS := "NO GROUND TO MEET THE AMBUSH HERE  ·  CANCEL TO TURN BACK"
 const THINNING_WORDS: Array[String] = ["HELD", "FRAYING", "THINNING", "NEAR THE WOUND"]
 
 var _locations: Array[Dictionary] = []
@@ -392,7 +393,10 @@ func _travel_selected() -> void:
 		return
 	var destination_id := StringName(_selected["id"])
 	if not GameFlow.start_journey(_origin_id, destination_id):
-		_status_label.text = "The selected route could not be opened."
+		var refusal: String = GameFlow.journey_refusal()
+		_status_label.text = (
+			refusal if not refusal.is_empty() else "The selected route could not be opened."
+		)
 		return
 	_show_live_plan(true)
 
@@ -473,6 +477,10 @@ func _on_journey_tick() -> void:
 		&"arrived":
 			_journey_timer.stop()
 			close()
+		&"refused":
+			_journey_timer.stop()
+			_sync_live_plan()
+			_status_label.text = str(result.get("message", ""))
 		_:
 			_journey_timer.stop()
 
@@ -504,6 +512,11 @@ func _resolve_encounter(avoid: bool) -> void:
 		_journey_timer.stop()
 	else:
 		_sync_live_plan()
+		if event == &"battle_refused":
+			# No fight could form where the party stands; the prompt stays and CANCEL works.
+			_status_label.text = AMBUSH_REFUSED_STATUS
+		elif event == &"refused":
+			_status_label.text = str(result.get("message", ""))
 
 
 func _cancel_journey() -> void:

@@ -76,6 +76,15 @@ const FLEE_RADIUS_FACTOR := 1.5
 const FLEE_MEASURES := 2
 var _measures_out_of_reach := 0
 var _resolved_groups: Dictionary = {}  ## StringName (group_id) -> true once its ledger fired
+## Ambient sessions only (#652). A field fight carries no encounter definition, so an authored
+## group's resolution actions (the Bloodbellow's named and released routes) come from that
+## group's own `EncounterCatalog` row when its first member joins. Action id -> CombatAction,
+## and action id -> the group it resolves.
+var _group_context_actions: Dictionary = {}
+var _context_action_groups: Dictionary = {}
+## The group a RESOLUTION action was just submitted for. `_finish_ambient()` resolves it with
+## that action's outcome; empty outside that one `use_action()` call.
+var _resolving_group: StringName = &""
 var _session_spoils: Array[Dictionary] = []
 var _session_xp := 0
 var _session_levels: Dictionary = {}  ## member id -> levels gained, summed across groups
@@ -145,7 +154,15 @@ func start(encounter: Variant) -> void:
 		push_error("Cannot start an empty encounter: %s" % encounter_id)
 		return
 	var rules := (load("res://data/combat/combat_rules.tres") as CombatRules).duplicate(true) as CombatRules
-	rules.use_charge_time = bool(_definition.get("use_charge_time", rules.use_charge_time))
+	# D8 ("always CT now", #652 gap 2): a set-piece fought on a map runs charge time like every
+	# ambient session, and so does a Combat Lab session, which opens through the same door. The
+	# definition's flag only steers a bare `start()`, which no game scene calls; it keeps the AP
+	# scheduler reachable as the scheduler seam's alternate implementation (D8).
+	rules.use_charge_time = (
+		true
+		if _set_piece_pending
+		else bool(_definition.get("use_charge_time", rules.use_charge_time))
+	)
 	var battlefield := _battlefield_for_definition(rules)
 	if not _set_piece_seat_failure.is_empty():
 		# A set-piece that cannot seat everyone by the party does not open (2026-11-04). The
@@ -302,6 +319,7 @@ func start_session(field: FieldMap, first: Hostile) -> Dictionary:
 	_session_field = field
 	_session_hostiles.clear()
 	_resolved_groups.clear()
+	_clear_group_context_actions()
 	_session_spoils = []
 	_session_xp = 0
 	_session_levels = {}
@@ -396,6 +414,7 @@ func start_set_piece(field: FieldMap, encounter: StringName) -> Dictionary:
 	_ambient_session = false
 	_session_hostiles.clear()
 	_resolved_groups.clear()
+	_clear_group_context_actions()
 	_measures_out_of_reach = 0
 	_spawn_set_piece_hostiles(field)
 	if not _set_piece_seats.is_empty():
@@ -468,6 +487,7 @@ func _track_session_hostile(hostile: Hostile, actor: BattleActor) -> void:
 	hostile.combat_id = actor.combat_id
 	hostile.mark_in_combat()
 	_session_hostiles[actor.combat_id] = hostile
+	_register_group_context_actions(hostile)
 
 
 ## F0 ruling 5: chain alerts spread one hop per `measure_started`, and on nothing else. The
@@ -555,6 +575,30 @@ func _settle_session_hostiles() -> void:
 			hostile.release_from_session()
 
 
+## #652: a resolution action ended the fight. Its group resolves with that action's outcome
+## (named, released) rather than the default, and its standing members go down where they
+## stand: the binding is broken, so they must not return to IDLE when the session settles.
+## The result carries the outcome's own message and cause.
+func _resolve_group_by_action(group_id: StringName, result: BattleResult) -> void:
+	if _resolved_groups.has(group_id):
+		return
+	var members: Array = []
+	for tracked: Variant in _session_hostiles.values():
+		# A typed loop variable would throw on a freed node before any validity check ran.
+		if not is_instance_valid(tracked):
+			continue
+		var hostile := tracked as Hostile
+		if hostile.group_id != group_id or hostile.battle_actor() == null:
+			continue
+		members.append(hostile.battle_actor())
+		hostile.mark_downed()
+	_resolve_group(group_id, members, result.outcome_id)
+	var outcome := EncounterCatalog.outcome(group_id, result.outcome_id)
+	result.encounter_id = group_id
+	result.message = str(outcome.get("message", result.message))
+	result.cause = str(outcome.get("cause", result.cause))
+
+
 ## D7: the ledger fires per `group_id` the moment that group's last admitted member is
 ## downed, not at session end. Idempotent per group and per session; `defeated_flag` keeps
 ## the cross-session `already_resolved` dedupe, so a group the party already cleared once
@@ -591,9 +635,13 @@ func _resolve_downed_groups() -> void:
 			_resolve_group(group_id, members)
 
 
-func _resolve_group(group_id: StringName, members: Array) -> void:
+func _resolve_group(
+	group_id: StringName, members: Array, resolved_outcome: StringName = &""
+) -> void:
 	_resolved_groups[group_id] = true
-	var outcome_id := EncounterCatalog.default_outcome(group_id)
+	var outcome_id := (
+		resolved_outcome if resolved_outcome != &"" else EncounterCatalog.default_outcome(group_id)
+	)
 	var outcome := EncounterCatalog.outcome(group_id, outcome_id)
 	var defeated_flag := EncounterCatalog.defeated_flag(group_id)
 	var already_resolved := not defeated_flag.is_empty() and GameState.flag_is_true(defeated_flag)
@@ -990,12 +1038,11 @@ func available_actions(include_enemy_actions: bool = false) -> Array[CombatActio
 	var result: Array[CombatAction] = (
 		CombatActionCatalog.all() if include_enemy_actions else CombatActionCatalog.player_actions()
 	)
-	var rules := load("res://data/combat/combat_rules.tres") as CombatRules
 	for row in EncounterCatalog.context_actions(encounter_id):
-		var action := CombatAction.from_context_row(row)
-		if action.ap_cost <= 0:
-			action.ap_cost = rules.context_resolution_ap_cost
-		result.append(action)
+		result.append(_context_action(row))
+	for action_id: StringName in _group_context_actions:
+		if not _resolved_groups.has(_context_action_groups[action_id]):
+			result.append(_group_context_actions[action_id])
 	if not include_enemy_actions and not _speech_hook().is_empty():
 		var speech := CombatActionCatalog.by_id(ACTION_SPEECH)
 		if speech != null:
@@ -1038,6 +1085,40 @@ static func is_positional_refusal(refusal: Dictionary) -> bool:
 func action_lock_reason(action: CombatAction) -> String:
 	var refusal := action_lock(action)
 	return "" if bool(refusal.get("allowed", false)) else str(refusal.get("message", "Action unavailable."))
+
+
+func _context_action(row: Dictionary) -> CombatAction:
+	var action := CombatAction.from_context_row(row)
+	if action.ap_cost <= 0:
+		var rules := load("res://data/combat/combat_rules.tres") as CombatRules
+		action.ap_cost = rules.context_resolution_ap_cost
+	return action
+
+
+## #652: the first time an authored group joins an ambient session, its context actions join
+## the session too: the controller learns them and `available_actions()` offers them until the
+## group resolves. The gates (Soul, enemy rounds, Balance window) are the same `action_refusal()`
+## checks a set-piece runs. A spawn-slot group is not an encounter and has no row, so it adds
+## nothing.
+func _register_group_context_actions(hostile: Hostile) -> void:
+	if not _ambient_session or controller == null or hostile.group_id == &"":
+		return
+	var added: Array[CombatAction] = []
+	for row: Dictionary in EncounterCatalog.context_actions(hostile.group_id):
+		var action := _context_action(row)
+		if _group_context_actions.has(action.id):
+			continue
+		_group_context_actions[action.id] = action
+		_context_action_groups[action.id] = hostile.group_id
+		added.append(action)
+	if not added.is_empty():
+		controller.add_actions(added)
+
+
+func _clear_group_context_actions() -> void:
+	_group_context_actions.clear()
+	_context_action_groups.clear()
+	_resolving_group = &""
 
 
 func _availability_options(action: CombatAction) -> Dictionary:
@@ -1133,7 +1214,13 @@ func use_action(
 		GameState.set_soul_meter_with_cause(
 			GameState.soul_meter - action.soul_cost, "battle:soul_cost:%s" % action.id
 		)
+	_resolving_group = (
+		_context_action_groups.get(action.id, &"")
+		if action.kind == CombatAction.Kind.RESOLUTION
+		else &""
+	)
 	var outcome := controller.submit_action(action_id, target, resolved_options)
+	_resolving_group = &""
 	return bool(outcome.get("allowed", false))
 
 
@@ -1256,6 +1343,7 @@ func abandon() -> void:
 	last_speech_option = &""
 	last_speech_succeeded = false
 	_resolved_groups.clear()
+	_clear_group_context_actions()
 	_session_spoils.clear()
 	_session_xp = 0
 	_session_levels.clear()
@@ -1389,9 +1477,11 @@ func _finish(state: BattleResult.State, outcome_id: StringName) -> void:
 func _finish_ambient(result: BattleResult) -> void:
 	match result.state:
 		BattleResult.State.VICTORY:
-			_resolve_downed_groups()
 			result.message = "The field is quiet again."
 			result.cause = "Cleared the field"
+			if _resolving_group != &"":
+				_resolve_group_by_action(_resolving_group, result)
+			_resolve_downed_groups()
 		BattleResult.State.DEFEAT:
 			result.message = "The company falls back and recovers to half strength."
 			result.cause = "Overrun on the field"
