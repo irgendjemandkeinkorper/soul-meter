@@ -74,8 +74,14 @@ func action_points_for(actor: BattleActor) -> int:
 ## Charge gained per tick. Deterministic — no RNG anywhere in the CT path, which is what makes
 ## replay and the forecast the same code path.
 func charge_speed_for(actor: BattleActor) -> int:
+	return charge_speed_at(actor.attribute_value(charge_speed_attribute))
+
+
+## Charge gained per tick at `value` of `charge_speed_attribute` — chargen and the sheet read the
+## number through here, so the readout and a fight cannot disagree.
+func charge_speed_at(value: int) -> int:
 	var divisor := maxi(1, attribute_points_per_speed)
-	var derived := base_charge_speed + actor.attribute_value(charge_speed_attribute) / divisor
+	var derived := base_charge_speed + value / divisor
 	return clampi(derived, maximum_of(minimum_charge_speed, 1), maximum_charge_speed)
 
 

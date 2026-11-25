@@ -22,6 +22,16 @@ var pending_breath_refunds: float = 0.0
 var struck_actor_ids: Array[String] = []
 
 
+## The Breath one name pays: BREATH_REFUND plus the patron measure, Decorum — canon's "Name-Ledger
+## effectiveness" (calling-and-measures S1, PROVISIONAL): 4 at Decorum 4, 5 at Decorum 5.
+func breath_refund() -> int:
+	return BREATH_REFUND + measure_bonus()
+
+
+func measure_readout() -> String:
+	return "Each name pays %d Breath" % breath_refund()
+
+
 func record_name(name: String, _saved: bool) -> bool:
 	var normalized := name.strip_edges()
 	if normalized.is_empty() or recorded_names.has(normalized):
@@ -112,7 +122,7 @@ func on_any_action(
 func _refund_actor(actor_id: StringName, fell: bool = false) -> void:
 	if actor_id.is_empty() or actor_id in refunded_actor_ids:
 		return
-	var amount := BREATH_REFUND * maxi(recorded_actor_ids.count(String(actor_id)), 1)
+	var amount := breath_refund() * maxi(recorded_actor_ids.count(String(actor_id)), 1)
 	var multiplier := perk_total("first_payer_multiplier")
 	if refunded_actor_ids.is_empty() and multiplier > 1:
 		amount *= multiplier
@@ -128,10 +138,12 @@ func _refund_actor(actor_id: StringName, fell: bool = false) -> void:
 	_queue_refund(amount, carried)
 
 
-func _queue_refund(amount: int = BREATH_REFUND, carried: Array[String] = []) -> void:
+func _queue_refund(amount: int = -1, carried: Array[String] = []) -> void:
+	if amount < 0:
+		amount = breath_refund()
 	var writes: Array = [{"kind": "breath", "target_id": String(owner_id), "amount": amount}]
 	for ally_id: String in carried:
-		writes.append({"kind": "breath", "target_id": ally_id, "amount": BREATH_REFUND})
+		writes.append({"kind": "breath", "target_id": ally_id, "amount": breath_refund()})
 	enqueue_deferred({"writes": writes}, {"delay_rounds": 0}, &"name_ledger_refund")
 
 

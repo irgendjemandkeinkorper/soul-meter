@@ -427,13 +427,22 @@ func test_the_hotbar_fills_by_role_and_number_keys_fire_its_slots() -> void:
 	var roles: Dictionary = {}
 	var last_role := -1
 	for id: StringName in ids:
-		var role := CombatBar._slot_role(CombatActionCatalog.by_id(id))
+		var role := HotbarFill.slot_role(CombatActionCatalog.by_id(id))
 		roles[role] = int(roles.get(role, 0)) + 1
-		if int(CombatBar.ROLE_QUOTA.get(role, 0)) > 0:
+		if int(HotbarFill.ROLE_QUOTA.get(role, 0)) > 0:
 			assert_int(role).override_failure_message("role order broken in %s" % [ids]).is_greater_equal(last_role)
 			last_role = role
-	assert_int(int(roles.get(CombatBar.SlotRole.WEAPON_ART, 0))).is_less_equal(2)
-	assert_int(int(roles.get(CombatBar.SlotRole.SPELL, 0))).is_less_equal(2)
+	assert_int(int(roles.get(HotbarFill.SlotRole.WEAPON_ART, 0))).is_less_equal(2)
+	assert_int(int(roles.get(HotbarFill.SlotRole.SPELL, 0))).is_less_equal(2)
+	# Chargen's "In a fight" row previews this exact bar for the same member.
+	var acting := Battle.current_ally()
+	if acting != null and acting.source_member != null:
+		var preview: Array[StringName] = []
+		for action: CombatAction in KitPreview.hotbar(acting.source_member):
+			preview.append(action.id)
+		assert_array(preview).override_failure_message(
+			"chargen preview %s vs battle bar %s (patron %s)" % [preview, ids, acting.source_member.patron]
+		).is_equal(ids)
 
 	# Key 2 is Guard, but not while a text field holds focus.
 	var ally := Battle.controller.active_actor()

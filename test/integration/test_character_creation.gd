@@ -145,6 +145,41 @@ func test_ability_tiles_come_from_the_kit_preview_and_show_their_card() -> void:
 	screen.queue_free()
 
 
+## The entry column's "In a fight" row (chargen plan, deferred until #556): the bar the
+## battle slots for this entry, following the class and keeping inside the column at 1080p.
+func test_the_entry_shows_the_fight_hotbar_and_it_follows_the_class() -> void:
+	var size_before := get_tree().root.size
+	get_tree().root.size = Vector2i(1920, 1080)
+	var runner := scene_runner("res://ui/screens/character_creation.tscn")
+	await runner.simulate_frames(2)
+	var screen := runner.scene() as CharacterCreationScreen
+	screen.select_discipline("thamshaper")
+	var frame := Rect2(Vector2.ZERO, Vector2(1920, 1080))
+	var seen: Dictionary = {}
+	for class_id: String in ["ironbrand", "lensbearer"]:
+		screen.select_class(class_id)
+		await runner.simulate_frames(2)
+		var expected: Array[StringName] = []
+		for action: CombatAction in KitPreview.hotbar(screen.build.scratch_member()):
+			expected.append(action.id)
+		var ids := screen.fight_hotbar_ids()
+		assert_array(ids).override_failure_message(class_id).is_equal(expected)
+		assert_int(ids.size()).is_equal(HotbarFill.SIZE)
+		assert_str(String(ids[0])).is_equal("strike")
+		seen[class_id] = ids
+		var row := screen.find_child("FightHotbar", true, false) as Control
+		var column := screen.find_child("EntryColumn", true, false) as Control
+		assert_bool(frame.encloses(row.get_global_rect())).override_failure_message("row off screen").is_true()
+		assert_float(row.get_global_rect().end.y).is_less_equal(column.get_global_rect().end.y)
+	assert_array(seen.values()[0]).is_not_equal(seen.values()[1])
+
+	var slot := screen.find_child("Slot_1", true, false) as Button
+	slot.mouse_entered.emit()
+	assert_str(str(screen.ability_card_text()["title"])).is_equal("Strike")
+	slot.mouse_exited.emit()
+	get_tree().root.size = size_before
+
+
 func test_every_class_fits_its_tiles_inside_the_1080p_tab_panel() -> void:
 	var size_before := get_tree().root.size
 	get_tree().root.size = Vector2i(1920, 1080)
@@ -166,6 +201,26 @@ func test_every_class_fits_its_tiles_inside_the_1080p_tab_panel() -> void:
 		var button := screen.find_child(name, true, false) as Control
 		assert_bool(frame.encloses(button.get_global_rect())).override_failure_message(name).is_true()
 	get_tree().root.size = size_before
+
+
+func test_measures_show_live_numbers_and_the_class_names_its_measure() -> void:
+	var screen := await _open_screen()
+	screen.select_class("lensbearer")
+	_reset_measures(screen)
+	screen.set_attribute("grit", 3)
+	screen.set_attribute("reason", 4)
+	var grit_now := screen.find_child("Effects_grit", true, false).get_node("Now") as Label
+	var grit_next := screen.find_child("Effects_grit", true, false).get_node("Next") as Label
+	assert_str(grit_now.text).contains("HP %d" % DramgidDerived.max_hp(3))
+	assert_str(grit_next.text).contains("HP %d" % DramgidDerived.max_hp(4))
+	var reason_now := screen.find_child("Effects_reason", true, false).get_node("Now") as Label
+	assert_str(reason_now.text).contains("Lensbearer: 4 Clarity each battle")
+	assert_str((screen.find_child("PatronMeasureHeading", true, false) as Label).text).contains("REASON")
+	assert_str((screen.find_child("PatronMeasure", true, false) as Label).text).contains("Reason 4 now: 4 Clarity")
+	screen.set_attribute("reason", 5)
+	assert_str((screen.find_child("PatronMeasure", true, false) as Label).text).contains("Reason 5 now: 5 Clarity")
+	assert_str(screen._vitals_lbl.text).contains("SPEED %d" % MeasureEffects.turn_speed(5))
+	screen.queue_free()
 
 
 func test_player_chargen_boots_from_main_menu_and_writes_every_field() -> void:
@@ -435,3 +490,17 @@ func _find_button_with_text(node: Node, text: String) -> Button:
 		if found != null:
 			return found
 	return null
+
+
+func test_suggest_spreads_the_measures_the_way_the_class_leans() -> void:
+	var screen := await _open_screen()
+	screen.select_class("stormbearer")
+	_reset_measures(screen)
+	var button := screen.find_child("SuggestMeasuresButton", true, false) as Button
+	assert_str(button.text).is_equal("SUGGEST FOR STORMBEARER")
+	button.pressed.emit()
+	assert_int(int(screen.build.attributes["intuition"])).is_equal(DramgidSchema.ATTRIBUTE_CAP)
+	assert_int(screen.build.remaining_attribute_points()).is_equal(0)
+	var now := screen.find_child("Effects_intuition", true, false).get_node("Now") as Label
+	assert_str(now.text).contains("Stormbearer: Storm rows deal")
+	screen.queue_free()

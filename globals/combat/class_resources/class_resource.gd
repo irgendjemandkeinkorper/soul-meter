@@ -48,6 +48,41 @@ func _on_perks_applied() -> void:
 	pass
 
 
+## Calling and measures S1 (docs/design/calling-and-measures-2026-11-25.md §4, PROVISIONAL): the
+## owner's patron measure — the DRAMGID attribute its class row names (`ClassCatalog` `measure`)
+## — set by the controller when attached, before the perks. 0 means unknown (an authored
+## companion with no attribute map, a test dummy) and pays nothing, like a measure of 2 or 3.
+var measure_value: int = 0
+
+
+func apply_measure(value: int) -> void:
+	measure_value = maxi(value, 0)
+	_on_measure_applied()
+
+
+## What the patron measure adds to this class's loop: 0 at 3 or below, +1 at 4, +2 at 5.
+func measure_bonus() -> int:
+	return ClassCatalog.measure_bonus(measure_value)
+
+
+## Override to move state that tracks a cap the measure raises.
+func _on_measure_applied() -> void:
+	pass
+
+
+## One line for chargen and the sheet: what the loop is worth at the applied measure, written
+## from the same function combat uses, so the two cannot disagree. "" for a class whose loop the
+## measure does not change.
+func measure_readout() -> String:
+	return ""
+
+
+## A line the forecast adds after a class command's authored description when the measure
+## changes what the command does ("Reason 5: this Sentence deals 10."). "" otherwise.
+func command_note(_action_id: StringName) -> String:
+	return ""
+
+
 ## Fires after every `action_resolved` event whose actor is the owner. `event.data` carries the
 ## full outcome dict (action_id, verb, resolution, ...). Use it to consume one-shot flags.
 func on_action(_event: CombatEvent) -> void:
@@ -236,7 +271,10 @@ func snapshot() -> Dictionary:
 
 ## Serialization — round-trips through `from_dict()`. Subclasses extend both.
 func to_dict() -> Dictionary:
-	return {"patron_id": String(patron_id), "owner_id": String(owner_id), "perk_ids": Array(perk_ids)}
+	return {
+		"patron_id": String(patron_id), "owner_id": String(owner_id), "perk_ids": Array(perk_ids),
+		"measure_value": measure_value,
+	}
 
 
 ## Perks are read BEFORE a subclass clamps its own state against a cap a perk raises. A save
@@ -247,6 +285,9 @@ func from_dict(data: Dictionary) -> void:
 	perk_ids = PackedStringArray()
 	for value: Variant in data.get("perk_ids", []):
 		perk_ids.append(str(value))
+	# Read before a subclass clamps against a cap the measure raises; an older save has none
+	# and the controller reads it off the member (`restore_class_resources`).
+	measure_value = maxi(int(data.get("measure_value", 0)), 0)
 
 
 func is_null() -> bool:

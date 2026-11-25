@@ -248,10 +248,25 @@ func _build_summary(page: VBoxContainer, member: PartyMember) -> void:
 				DramgidSchema.attribute_label(attribute_id),
 				member.attribute_value(StringName(attribute_id)),
 			]
-			cell.tooltip_text = ChargenData.attribute_hint(attribute_id)
+			var value := member.attribute_value(StringName(attribute_id))
+			cell.tooltip_text = "%s\n%s" % [
+				ChargenData.attribute_hint(attribute_id),
+				MeasureEffects.summary(attribute_id, value, member.class_id),
+			]
 			cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			attribute_grid.add_child(cell)
 		main_column.add_child(attribute_grid)
+		# Calling and measures S2: the class's measure and what it buys, on the page, not a tooltip.
+		var measure := ClassCatalog.patron_measure(member.class_id)
+		var ladder := "" if measure.is_empty() else MeasureEffects.patron_ladder(
+			member.class_id, member.attribute_value(StringName(measure)))
+		if not ladder.is_empty():
+			var patron_measure := Label.new()
+			patron_measure.name = "PatronMeasure"
+			patron_measure.theme_type_variation = "MutedLabel"
+			patron_measure.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			patron_measure.text = "Patron measure  ·  %s" % ladder
+			main_column.add_child(patron_measure)
 
 	var calling_bits: Array[String] = []
 	for pair: Array in [

@@ -10,9 +10,14 @@ var guaranteed_cast_armed: bool = false
 ## Second Casting (#285 slice 4, ruled 2026-10-26): spent once a fizzle was converted.
 var second_casting_used: bool = false
 
-## The live cap: MAX_TOKENS plus any picked `cap_delta` perk (Third Lesson, #285 slice 2).
+## The live cap: MAX_TOKENS plus any picked `cap_delta` perk (Third Lesson, #285 slice 2), plus
+## the patron measure, Reason (calling-and-measures S1, PROVISIONAL): +1 at Reason 4, +2 at 5.
 func max_tokens() -> int:
-	return MAX_TOKENS + perk_total("cap_delta")
+	return MAX_TOKENS + perk_total("cap_delta") + measure_bonus()
+
+
+func measure_readout() -> String:
+	return "Up to %d Failure Tokens" % max_tokens()
 
 
 ## Spectacular Failure (#285 slice 3, ruled 2026-10-26): with a living ally within 2 cells,

@@ -169,3 +169,58 @@ func _named(display_name: String) -> ChargenBuild:
 	var build := ChargenBuild.new()
 	build.display_name = display_name
 	return build
+
+
+## Calling and measures S5: a rolled character usually reads as their class.
+func test_rolled_measures_lean_toward_the_class_without_forcing_it() -> void:
+	var leaned := 0
+	var rolls := 300
+	var at_floor := 0
+	for seed_value in rolls:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed_value
+		var build := ChargenRandomizer.roll(rng, ChargenBuild.new())
+		var measure := ClassCatalog.patron_measure(build.class_id)
+		var value := int(build.attributes[measure])
+		var others := 0.0
+		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+			if attribute_id != measure:
+				others += float(build.attributes[attribute_id])
+		if float(value) > others / 6.0:
+			leaned += 1
+		if value == DramgidSchema.ATTRIBUTE_FLOOR:
+			at_floor += 1
+		assert_int(build.remaining_attribute_points()).is_equal(0)
+	assert_int(leaned).override_failure_message("patron measure above the average in %d of %d" % [leaned, rolls]).is_greater(rolls * 3 / 4)
+	assert_int(at_floor).override_failure_message("weighted, never forced").is_greater(0)
+
+
+func test_suggest_places_the_patron_measure_at_the_cap_and_the_kit_measure_at_four() -> void:
+	for row: Dictionary in ClassCatalog.ALL:
+		var build := ChargenBuild.new()
+		build.select_class(str(row["id"]))
+		var kits: Array = row["kit_skills"]
+		build.select_kit(str(kits[0]))
+		ChargenRandomizer.suggest_measures(build)
+		var measure := ClassCatalog.patron_measure(str(row["id"]))
+		var kit_measure := DramgidSchema.governing_attribute(build.kit_skill)
+		assert_int(int(build.attributes[measure])).override_failure_message(str(row["id"])).is_equal(DramgidSchema.ATTRIBUTE_CAP)
+		if kit_measure != measure:
+			assert_int(int(build.attributes[kit_measure])).override_failure_message(str(row["id"])).is_equal(4)
+		assert_int(build.remaining_attribute_points()).override_failure_message(str(row["id"])).is_equal(0)
+		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+			assert_int(int(build.attributes[attribute_id])).is_between(DramgidSchema.ATTRIBUTE_FLOOR, DramgidSchema.ATTRIBUTE_CAP)
+
+
+func test_roll_tab_measures_leans_toward_the_builds_own_class() -> void:
+	var leaned := 0
+	for seed_value in 100:
+		var build := ChargenBuild.new()
+		build.select_class("lensbearer")
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed_value
+		var rolled := ChargenRandomizer.roll_tab(rng, build, &"measures")
+		assert_str(rolled.class_id).is_equal("lensbearer")
+		if int(rolled.attributes["reason"]) >= 4:
+			leaned += 1
+	assert_int(leaned).is_greater(50)

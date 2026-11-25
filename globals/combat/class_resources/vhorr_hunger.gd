@@ -17,9 +17,14 @@ var pending_breath_refunds: float = 0.0
 var pending_dot_targets: Array[String] = []
 
 
-## The live cap: MAX_HUNGER plus any picked `cap_delta` perk (Patient Hunger, #285 slice 2).
+## The live cap: MAX_HUNGER plus any picked `cap_delta` perk (Patient Hunger, #285 slice 2), plus
+## the patron measure, Muster (calling-and-measures S1, PROVISIONAL): +1 at Muster 4, +2 at 5.
 func max_hunger() -> int:
-	return MAX_HUNGER + perk_total("cap_delta")
+	return MAX_HUNGER + perk_total("cap_delta") + measure_bonus()
+
+
+func measure_readout() -> String:
+	return "Hunger builds to %d" % max_hunger()
 
 
 func on_action(event: CombatEvent) -> void:

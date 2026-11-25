@@ -1225,7 +1225,7 @@ func _price_reachable(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
 	if scheduler != null and not bool(scheduler.can_act(actor).get("allowed", false)):
 		_last_reach_stamp = {"board_free": true}
 		return reachable
-	var ct_budget := int(float(raw_budget) / CombatInjury.move_cost_multiplier(actor))
+	var ct_budget := int(float(raw_budget) / maxf(_move_cost_multiplier(actor), 0.01))
 	# Every quote below starts from the actor's cell: one shared search, not one per cell (#282).
 	var memo := battlefield.has_method("begin_path_memo")
 	if memo:
@@ -1654,6 +1654,7 @@ static func calculate_damage(
 			"last_cast_element": attacker.last_cast_element,
 			"hit": bool(attacker.defining_effects.get("hit", false)),
 		}
+	unit_context.merge(arms_terms(attacker))
 	if resolution_context.has("weakness_id"):
 		unit_context["weakness_id"] = resolution_context["weakness_id"]
 		unit_context["weakness"] = resolution_context.get("weakness", {}).duplicate(true)
@@ -2338,7 +2339,7 @@ func _enemy_position_score(
 func _enemy_move_budget(actor: BattleActor) -> int:
 	return int(
 		float(rules.maximum_action_ct_cost if rules != null else 0)
-		/ CombatInjury.move_cost_multiplier(actor)
+		/ maxf(_move_cost_multiplier(actor), 0.01)
 	)
 
 
@@ -2539,7 +2540,7 @@ func _quote_move(
 		"ap_cost": priced_action.ap_cost,
 		"ct_cost": priced_action.ct_cost,
 		"affordability": _can_afford(actor, priced_action),
-		"modifiers": CombatInjury.move_cost_modifiers(actor),
+		"modifiers": _move_cost_modifiers(actor),
 	}
 	if in_pass:
 		_move_quotes[key] = quote
@@ -2549,7 +2550,21 @@ func _quote_move(
 func _injured_move_ct(actor: BattleActor, path_ct: int) -> int:
 	if actor == null:
 		return path_ct
-	return maxi(1, ceili(float(path_ct) * CombatInjury.move_cost_multiplier(actor)))
+	return maxi(1, ceili(float(path_ct) * _move_cost_multiplier(actor)))
+
+
+## Injuries and the Discipline's footwork (S4) price a path together; NPCs pay the same rule.
+func _move_cost_modifiers(actor: BattleActor) -> Array[Dictionary]:
+	var modifiers := CombatInjury.move_cost_modifiers(actor)
+	modifiers.append_array(DisciplineProfile.move_cost_modifiers(actor))
+	return modifiers
+
+
+func _move_cost_multiplier(actor: BattleActor) -> float:
+	var percent := 0
+	for modifier: Dictionary in _move_cost_modifiers(actor):
+		percent += int(modifier["percent"])
+	return maxf(0.0, 1.0 + float(percent) / 100.0)
 
 
 func _apply_action(
@@ -3100,6 +3115,28 @@ func _attack_message(
 	return "%s uses %s for %d damage." % [actor.display_name, action.display_name, damage]
 
 
+## Calling and measures S3 (F3c §4.1): the Kit's ARMS skill for a weapon attack, as
+## `{"arms_percent", "arms_label"}`; {} for a unit without one (enemies, authored companions,
+## a member whose attributes were never set), which therefore hits as every fight did before.
+## `service` is the controller's SkillCheckService; the static legacy path finds the autoload
+## through the tree, and with none (a `--script` harness) the term is left out.
+static func arms_terms(actor: BattleActor, service: SkillCheckService = null) -> Dictionary:
+	var member := actor.source_member if actor != null else null
+	if member == null or member.kit_weapon_skill.is_empty() or member.attributes.is_empty():
+		return {}
+	if service == null:
+		var main_loop := Engine.get_main_loop()
+		if main_loop is SceneTree:
+			service = (main_loop as SceneTree).root.get_node_or_null("SkillCheck") as SkillCheckService
+	if service == null:
+		return {}
+	var percent := service.preview(member.kit_weapon_skill, member)
+	return {
+		"arms_percent": percent,
+		"arms_label": "%s %d%%" % [DramgidSchema.skill_label(member.kit_weapon_skill), roundi(percent)],
+	}
+
+
 ## #209 forecast parity: the same Resolution context an actual strike will use — same
 ## power arithmetic, same tile/weather/facing terms — minus the to-hit roll (a forecast
 ## shows the on-hit number). Region D's only calculator is Resolution.resolve(); feeding
@@ -3173,6 +3210,8 @@ func forecast_context(
 		ability_context["breath_cost"] = action.breath_cost
 	if action.no_damage:
 		ability_context["no_damage"] = true
+	# A weapon attack is the branch whose power is the actor's attack: no spell, no cast.
+	var weapon_terms := arms_terms(actor, skill_check_service) if not ability_context.has("is_spell") else {}
 	var target_height := 0
 	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
 	if target_position.has("elevation"):
@@ -3198,7 +3237,7 @@ func forecast_context(
 			"concealed": concealed_until_round >= round_number and actor.side == concealed_side,
 			"last_cast_element": actor.last_cast_element,
 			"hit": bool(actor.defining_effects.get("hit", false)),
-		},
+		}.merged(weapon_terms),
 		"ability": ability_context,
 		"target": {
 			"id": String(target.combat_id),
@@ -3278,6 +3317,12 @@ func forecast_context(
 		injury_modifiers.append_array(CombatInjury.sight_accuracy_modifiers(actor))
 	if not injury_modifiers.is_empty():
 		context["attacker_injury_modifiers"] = injury_modifiers
+	# S4: the Thamshaper's footing, signed so a foe attacking up at one pays it too.
+	if bool(context.get("to_hit_enabled", false)) and battlefield.has_method("elevation_delta"):
+		var footing := DisciplineProfile.footing_modifiers(
+			actor, target, -int(battlefield.call("elevation_delta", actor, target)))
+		if not footing.is_empty():
+			context["discipline_accuracy_modifiers"] = footing
 	if not aim_location.is_empty():
 		context["aim"] = _query_aim(actor, target, action, aim_location)
 		if bool(context["aim"].get("allowed", false)) and context["aim"].has("injury"):
@@ -3307,10 +3352,18 @@ func forecast_action(
 	if not bool(gate.get("allowed", false)):
 		return gate
 	if not action.class_resource_action.is_empty():
+		var description := action.description
+		var commander := active_actor()
+		if commander != null and commander.class_resource != null:
+			# Calling and measures S1: the authored text names the B11 number; say what this
+			# actor's patron measure makes of it.
+			var note := commander.class_resource.command_note(action.class_resource_action)
+			if not note.is_empty():
+				description = "%s %s" % [description, note]
 		return _allowed({
 			"action_id": action.id, "class_command": true,
 			"ap_cost": action.ap_cost, "ct_cost": action.ct_cost, "soul_cost": action.soul_cost,
-			"damage": 0, "description": action.description,
+			"damage": 0, "description": description,
 		})
 	var actor := active_actor()
 	if gate.has("object"):
@@ -3538,9 +3591,19 @@ func _positional_resolution_context(actor: BattleActor, target: BattleActor) -> 
 	}
 
 
+## A cell's terrain for resolution. Inside a Hushwarden's field (DisciplineProfile, S4) the
+## copy is hushed; the board's own TileState is never written.
 func _tile_context(cell: Vector2i) -> Dictionary:
 	var tile := tile_state_at(cell)
-	return tile.to_dict() if tile != null else {}
+	if tile == null:
+		return {}
+	var data := tile.to_dict()
+	if not bool(data.get("hush", false)) and (
+		DisciplineProfile.is_hushed(cell, allies, battlefield)
+		or DisciplineProfile.is_hushed(cell, enemies, battlefield)
+	):
+		data["hush"] = true
+	return data
 
 
 func _resolve_defining_strike(
@@ -4098,6 +4161,8 @@ func _attach_class_resources(group: Array[BattleActor]) -> void:
 			var patron: String = actor.source_member.patron if actor.source_member != null else ""
 			actor.class_resource = ClassResourceRegistry.for_patron(patron)
 			if actor.source_member != null:
+				# The patron measure first: a perk that seeds a start value reads the raised cap.
+				actor.class_resource.apply_measure(ClassCatalog.patron_measure_value(actor.source_member))
 				actor.class_resource.apply_perks(actor.source_member.perk_ids)
 				actor.class_resource.receive_carry(actor.source_member.carried_resource)
 				actor.source_member.carried_resource = {}
@@ -6031,6 +6096,10 @@ func restore_class_resources(data: Dictionary) -> void:
 			# directly, not through apply_perks(): restored state must not be reset.
 			if not (entry as Dictionary).has("perk_ids") and actor.source_member != null:
 				actor.class_resource.perk_ids = actor.source_member.perk_ids.duplicate()
+			# Likewise a save from before the patron measure (calling-and-measures S1): set
+			# directly, so restored state is not reset to a fresh start.
+			if not (entry as Dictionary).has("measure_value") and actor.source_member != null:
+				actor.class_resource.measure_value = ClassCatalog.patron_measure_value(actor.source_member)
 			actor.class_resource.owner_id = actor.combat_id
 			actor.class_resource.host = self
 	var queue: Variant = data.get(DEFERRED_SAVE_KEY, {})

@@ -28,12 +28,7 @@ static func roll(rng: RandomNumberGenerator, current: ChargenBuild) -> ChargenBu
 	var held := result.held_elements()
 	result.select_mastery(held[rng.randi_range(0, held.size() - 1)])
 
-	while result.remaining_attribute_points() > 0:
-		var available: PackedStringArray = []
-		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
-			if int(result.attributes[attribute_id]) < DramgidSchema.ATTRIBUTE_CAP:
-				available.append(attribute_id)
-		result.step_attribute(available[rng.randi_range(0, available.size() - 1)], 1)
+	roll_measures(rng, result)
 	result.select_background(str(ChargenData.BACKGROUNDS[rng.randi_range(0, ChargenData.BACKGROUNDS.size() - 1)]["id"]))
 
 	result.display_name = current.display_name
@@ -67,10 +62,10 @@ static func roll_tab(rng: RandomNumberGenerator, current: ChargenBuild, tab_id: 
 			result.set_elements(fresh.major_element, fresh.minor_element)
 			result.select_mastery(fresh.mastery_element)
 		&"measures":
+			# Rolled for this build's own class (the fresh roll drew a class of its own).
 			for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
 				result.set_attribute(attribute_id, DramgidSchema.ATTRIBUTE_FLOOR)
-			for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
-				result.set_attribute(attribute_id, int(fresh.attributes[attribute_id]))
+			roll_measures(rng, result)
 			for skill_id: String in result.creation_buys.keys():
 				while result.steps_bought(skill_id) > 0:
 					result.refund(skill_id)
@@ -80,6 +75,85 @@ static func roll_tab(rng: RandomNumberGenerator, current: ChargenBuild, tab_id: 
 			var likenesses := _likenesses_for(ancestry_name)
 			result.likeness_id = str(likenesses[rng.randi_range(0, likenesses.size() - 1)]["id"])
 	return result
+
+
+## Calling and measures S5: what a class leans on, strongest first — its patron measure, then
+## the measure behind its Kit skill, then Intuition (every class casts its held tones).
+static func class_leanings(class_id: String, kit_skill: String) -> PackedStringArray:
+	var leanings := PackedStringArray()
+	for attribute_id: String in [
+		ClassCatalog.patron_measure(class_id),
+		DramgidSchema.governing_attribute(kit_skill) if not kit_skill.is_empty() else "",
+		String(DramgidSchema.ATTR_INTUITION),
+	]:
+		if not attribute_id.is_empty() and attribute_id not in leanings:
+			leanings.append(attribute_id)
+	return leanings
+
+
+## Roll weights (PROVISIONAL): the leanings 4, 3 and 2 in order, every other measure 1, so a
+## rolled character usually reads as their class without ever being forced to.
+const LEANING_WEIGHTS: Array[int] = [4, 3, 2]
+
+
+## Spends the unplaced measure points one at a time, weighted toward the class's leanings.
+static func roll_measures(rng: RandomNumberGenerator, result: ChargenBuild) -> void:
+	var leanings := class_leanings(result.class_id, result.kit_skill)
+	while result.remaining_attribute_points() > 0:
+		var available: PackedStringArray = []
+		var weights: PackedInt32Array = []
+		var total := 0
+		for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+			if int(result.attributes[attribute_id]) >= DramgidSchema.ATTRIBUTE_CAP:
+				continue
+			var rank := leanings.find(attribute_id)
+			var weight := LEANING_WEIGHTS[rank] if rank >= 0 and rank < LEANING_WEIGHTS.size() else 1
+			available.append(attribute_id)
+			weights.append(weight)
+			total += weight
+		var pick := rng.randi_range(0, total - 1)
+		for index in available.size():
+			pick -= weights[index]
+			if pick < 0:
+				result.step_attribute(available[index], 1)
+				break
+
+
+## The SUGGEST spread: the patron measure to the cap, the Kit's measure to 4, then one point at
+## a time to 3 across Intuition, Grit, Alacrity, Reason, Decorum, Muster and Doctrine. Placed
+## from the floor; the player's other picks are untouched.
+const SUGGEST_ORDER: PackedStringArray = [
+	"intuition", "grit", "alacrity", "reason", "decorum", "muster", "doctrine",
+]
+
+
+static func suggest_measures(result: ChargenBuild) -> void:
+	for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
+		result.set_attribute(attribute_id, DramgidSchema.ATTRIBUTE_FLOOR)
+	var leanings := class_leanings(result.class_id, result.kit_skill)
+	var patron := ClassCatalog.patron_measure(result.class_id)
+	if not patron.is_empty():
+		_raise_toward(result, patron, DramgidSchema.ATTRIBUTE_CAP)
+	if not result.kit_skill.is_empty():
+		_raise_toward(result, DramgidSchema.governing_attribute(result.kit_skill), 4)
+	var placed := true
+	while result.remaining_attribute_points() > 0 and placed:
+		placed = false
+		for attribute_id: String in SUGGEST_ORDER:
+			if result.remaining_attribute_points() <= 0:
+				break
+			if int(result.attributes[attribute_id]) < 3 and result.step_attribute(attribute_id, 1):
+				placed = true
+	# Anything still unplaced (a spread whose leanings already sit at 3+) tops up in order.
+	for attribute_id: String in leanings + SUGGEST_ORDER:
+		while result.remaining_attribute_points() > 0 and result.step_attribute(attribute_id, 1):
+			pass
+
+
+static func _raise_toward(result: ChargenBuild, attribute_id: String, target: int) -> void:
+	while int(result.attributes[attribute_id]) < target and result.remaining_attribute_points() > 0:
+		if not result.step_attribute(attribute_id, 1):
+			return
 
 
 ## Spends whatever creation points are left on random legal buys (the roll's last step; the

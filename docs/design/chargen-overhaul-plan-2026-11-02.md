@@ -149,7 +149,12 @@ What changed from the plan above while building, and why:
    depends on Var Harmony in battle, so the tile stays open. The card reads "A chord working:
    Var Harmony N or higher in battle." Only signature commands without their perk are dimmed.
 
-Still deferred: the "In a fight" hotbar row (it needs #556's fill on `main`).
+~~Still deferred: the "In a fight" hotbar row (it needs #556's fill on `main`).~~ Built
+2026-11-14: the battle bar's fill is now `HotbarFill` (`globals/combat/hotbar_fill.gd`, no
+behaviour change), `KitPreview.hotbar()` runs it over the kit as a fresh fight would, and the
+entry column ends with the eight slots under "IN A FIGHT". `test_combat_bar.gd` checks the
+preview against the live bar. Captures: `docs/qa/chargen-fight-row-2026-11-14/`. No new
+player-facing strings beyond the plan's own "IN A FIGHT" label.
 
 Code: `globals/combat/kit_gate.gd` (the shared gate), `globals/chargen/kit_preview.gd`,
 `ChargenSteps.TABS`, `ChargenBuild.copy()`, `ChargenRandomizer.roll_tab()` and

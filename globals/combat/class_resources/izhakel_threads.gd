@@ -5,6 +5,9 @@ extends ClassResource
 ## Conditions are data. Seam v2 broadcasts every resolved action so all actors can be watched.
 
 const MAX_THREADS := 3  # B11, ratified 2026-10-25 (owner item 6).
+## Calling and measures S1 (PROVISIONAL): each point of the patron measure, Decorum, above 3 adds
+## this much to a Hostility payoff (6 → 8 → 10). The Unspoken Term keeps its ruled payload.
+const MEASURE_DAMAGE_PER_POINT := 2
 const KIND_HOSTILITY := &"hostility"
 const KIND_WITNESS := &"witness"
 const KIND_DAYLIGHT := &"daylight"
@@ -21,6 +24,26 @@ func max_threads() -> int:
 
 func commands() -> Array[StringName]:
 	return [&"bind_hostility", &"bind_witness", &"bind_cast", &"cash_in"]
+
+
+## The damage a Hostility contract pays: the authored payload plus the patron measure's share.
+func hostility_damage(authored: int) -> int:
+	return authored + measure_bonus() * MEASURE_DAMAGE_PER_POINT
+
+
+func measure_readout() -> String:
+	return "A Hostility payoff deals %d" % hostility_damage(_authored_hostility_damage())
+
+
+func command_note(action_id: StringName) -> String:
+	if action_id != &"bind_hostility" or measure_bonus() <= 0:
+		return ""
+	return "Decorum %d: the payoff deals %d." % [measure_value, hostility_damage(_authored_hostility_damage())]
+
+
+static func _authored_hostility_damage() -> int:
+	var action := load("res://data/combat/actions/25_bind_hostility.tres") as CombatAction
+	return int(action.class_resource_payload.get("amount", 6)) if action != null else 6
 
 
 func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
@@ -64,7 +87,7 @@ func execute_command(action_id: StringName, target_id: StringName, payload: Dict
 			}, KIND_HOSTILITY_CAST)
 		KIND_HOSTILITY:
 			bind_thread(target_id, {"verb": CombatAction.Verb.ATTACK}, {
-				"writes": [{"kind": "hp", "target_id": String(target_id), "amount": int(payload.amount)}],
+				"writes": [{"kind": "hp", "target_id": String(target_id), "amount": hostility_damage(int(payload.amount))}],
 			}, KIND_HOSTILITY)
 		KIND_WITNESS:
 			# Witness Weaver Tier 1: the payoff is information, never damage — Exposed on the

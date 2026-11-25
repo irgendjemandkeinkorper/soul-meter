@@ -31,6 +31,7 @@ const ENTRY_WIDTH := 420.0
 const CLASS_TILE_SIZE := Vector2(0, 72)
 const ABILITY_TILE_SIZE := Vector2(104, 76)
 const CARD_WIDTH := 400.0
+const HOTBAR_SLOT_SIZE := Vector2(0, 46)
 
 ## The tavern sets RECRUIT after the screen opens, so a change re-checks the header.
 var mode: Mode = Mode.PLAYER:
@@ -57,6 +58,8 @@ var _cancel_btn: Button
 var _randomize_btn: Button
 var _quick_start_btn: Button
 var _roll_tab_btn: Button
+## Calling and measures S5: places the Seven Measures the way the chosen class leans.
+var _suggest_btn: Button
 var _flash_rect: ColorRect
 
 var _portrait: TextureRect
@@ -64,6 +67,8 @@ var _name_edit: LineEdit
 var _identity_lbl: Label
 var _vitals_lbl: Label
 var _measure_value_lbls: Dictionary = {}
+var _hotbar_grid: GridContainer
+var _hotbar_key := ""
 
 var _ancestry_rows: Dictionary = {}
 var _ancestry_art: TextureRect
@@ -79,6 +84,9 @@ var _resource_heading: Label
 var _resource_lbl: Label
 var _signature_heading: Label
 var _signature_lbl: Label
+## Calling and measures S2: the class's patron measure and what each point of it buys.
+var _measure_heading: Label
+var _measure_lbl: Label
 var _major_option: OptionButton
 var _minor_option: OptionButton
 var _mastery_option: OptionButton
@@ -98,6 +106,9 @@ var _card_lock: Label
 var _points_lbl: Label
 var _attribute_bars: Dictionary = {}
 var _attribute_value_lbls: Dictionary = {}
+## Calling and measures S2: each row's live numbers and what the next point buys.
+var _attribute_effect_lbls: Dictionary = {}
+var _attribute_next_lbls: Dictionary = {}
 var _attribute_tweens: Dictionary = {}
 var _attribute_readout: Label
 var _skills_form: VBoxContainer
@@ -298,6 +309,16 @@ func _build_entry_column() -> Control:
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		stack.add_child(value)
 		_measure_value_lbls[attribute_id] = value
+
+	var fight_heading := Label.new()
+	fight_heading.text = "IN A FIGHT"
+	fight_heading.theme_type_variation = "EyebrowLabel"
+	column.add_child(fight_heading)
+	_hotbar_grid = GridContainer.new()
+	_hotbar_grid.name = "FightHotbar"
+	_hotbar_grid.theme_type_variation = "ChargenHotbarGrid"
+	_hotbar_grid.columns = HotbarFill.SIZE
+	column.add_child(_hotbar_grid)
 	return frame
 
 
@@ -307,11 +328,66 @@ func _refresh_entry() -> void:
 		_name_edit.text = build.display_name
 	_identity_lbl.text = _identity_line()
 	var scratch := build.scratch_member()
-	_vitals_lbl.text = "HP %d  ·  BREATH %d" % [scratch.max_hp, scratch.breath_max]
+	_vitals_lbl.text = "HP %d  ·  BREATH %d  ·  SPEED %d" % [
+		scratch.max_hp, scratch.breath_max,
+		MeasureEffects.turn_speed(int(build.attributes.get(String(DramgidSchema.ATTR_REASON), DramgidSchema.ATTRIBUTE_FLOOR))),
+	]
 	for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
 		(_measure_value_lbls[attribute_id] as Label).text = str(
 			int(build.attributes.get(attribute_id, DramgidSchema.ATTRIBUTE_FLOOR))
 		)
+	_rebuild_hotbar(scratch)
+
+
+## The "In a fight" row: the bar the battle slots for this entry (KitPreview.hotbar, the
+## battle's own fill). Rebuilt only when its inputs can have changed.
+func _rebuild_hotbar(member: PartyMember) -> void:
+	var key := "%s|%s|%s|%s|%d|%d" % [
+		build.class_id, member.major_element, member.minor_element, ",".join(member.perk_ids),
+		member.breath_max, member.attribute_value(&"harmony"),
+	]
+	if key == _hotbar_key:
+		return
+	_hotbar_key = key
+	if _card_source != null and _card_source.get_parent() == _hotbar_grid:
+		_hide_card(_card_source)
+	for child: Node in _hotbar_grid.get_children():
+		_hotbar_grid.remove_child(child)
+		child.queue_free()
+	var bar := KitPreview.hotbar(member)
+	for slot: int in bar.size():
+		var action := bar[slot]
+		var tile := Button.new()
+		tile.name = "Slot_%d" % (slot + 1)
+		tile.theme_type_variation = "ChargenHotbarSlot"
+		tile.icon = _action_icon(action)
+		tile.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tile.expand_icon = false
+		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tile.custom_minimum_size = HOTBAR_SLOT_SIZE
+		tile.set_meta("action_id", action.id)
+		var key_lbl := Label.new()
+		key_lbl.theme_type_variation = "ChargenTileCost"
+		key_lbl.text = str(slot + 1)
+		key_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		key_lbl.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, DS.SPACE_1)
+		tile.add_child(key_lbl)
+		var entry := {"action": action, "lock": ""}
+		tile.mouse_entered.connect(_show_card.bind(tile, entry))
+		tile.focus_entered.connect(_show_card.bind(tile, entry))
+		tile.mouse_exited.connect(_hide_card.bind(tile))
+		tile.focus_exited.connect(_hide_card.bind(tile))
+		_hotbar_grid.add_child(tile)
+
+
+## The "In a fight" row's action ids, slot 1 first (tests and captures).
+func fight_hotbar_ids() -> Array[StringName]:
+	var ids: Array[StringName] = []
+	for child: Node in _hotbar_grid.get_children():
+		if child.is_queued_for_deletion():
+			continue
+		ids.append(StringName(child.get_meta("action_id", &"")))
+	return ids
 
 
 func _identity_line() -> String:
@@ -462,6 +538,10 @@ func _build_calling_tab() -> Control:
 	_resource_lbl = _blurb(detail)
 	_signature_heading = _eyebrow(detail, "")
 	_signature_lbl = _blurb(detail)
+	_measure_heading = _eyebrow(detail, "")
+	_measure_heading.name = "PatronMeasureHeading"
+	_measure_lbl = _blurb(detail)
+	_measure_lbl.name = "PatronMeasure"
 
 	_eyebrow(detail, "TONES  ·  MAJOR AND MINOR BEGIN TRAINED")
 	var tones := HBoxContainer.new()
@@ -537,6 +617,10 @@ func _refresh_calling() -> void:
 	_resource_lbl.text = str(entry["resource_blurb"])
 	_signature_heading.text = "SIGNATURE  ·  %s" % str(entry["signature"]).to_upper()
 	_signature_lbl.text = str(entry["signature_blurb"])
+	var measure := ClassCatalog.patron_measure(build.class_id)
+	_measure_heading.text = "PATRON MEASURE  ·  %s" % DramgidSchema.attribute_label(measure).to_upper()
+	_measure_lbl.text = MeasureEffects.patron_ladder(
+		build.class_id, int(build.attributes.get(measure, DramgidSchema.ATTRIBUTE_FLOOR)))
 
 	_major_option.select(_wheel_index(build.major_element) + 1)
 	_minor_option.select(_wheel_index(build.minor_element) + 1)
@@ -563,8 +647,9 @@ func _refresh_calling() -> void:
 	for id: String in _discipline_chips:
 		(_discipline_chips[id] as Button).set_pressed_no_signal(id == build.discipline_id)
 	var discipline: Dictionary = ChargenData.discipline_by_id(build.discipline_id)
-	_discipline_lbl.text = "" if discipline.is_empty() else "%s  %s  Favours %s." % [
+	_discipline_lbl.text = "" if discipline.is_empty() else "%s  %s  Favours %s.  %s" % [
 		discipline["blurb"], discipline["verbs"], _wheel_name(str(discipline["favours"])),
+		DisciplineProfile.summary(build.discipline_id),
 	]
 	var pairing := build.validate(&"patron")
 	if not bool(pairing["valid"]):
@@ -756,11 +841,21 @@ func _build_measures_tab() -> Control:
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var measures := _form_column(page, "THE SEVEN MEASURES  ·  FIXED AT CREATION")
+	var points_row := HBoxContainer.new()
+	points_row.theme_type_variation = "ChargenTabBar"
+	measures.add_child(points_row)
 	_points_lbl = Label.new()
 	_points_lbl.theme_type_variation = "StatLabel"
-	measures.add_child(_points_lbl)
+	_points_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_points_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	points_row.add_child(_points_lbl)
+	_suggest_btn = _menu_button(points_row, "SUGGEST", suggest_measures)
+	_suggest_btn.name = "SuggestMeasuresButton"
+	_suggest_btn.theme_type_variation = "ChargenChoiceButton"
 	_attribute_bars.clear()
 	_attribute_value_lbls.clear()
+	_attribute_effect_lbls.clear()
+	_attribute_next_lbls.clear()
 	for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
 		measures.add_child(_build_attribute_row(attribute_id))
 	_attribute_readout = Label.new()
@@ -803,21 +898,39 @@ func _build_attribute_row(attribute_id: String) -> Control:
 	bar.max_value = DramgidSchema.ATTRIBUTE_CAP
 	info.add_child(bar)
 	_attribute_bars[attribute_id] = bar
+	# Two wrapping lines under the bar: what the measure does now, and (gilded) what one more
+	# point would change. Both wrap, so neither sets the column's width.
+	var effects := VBoxContainer.new()
+	effects.name = "Effects_%s" % attribute_id
+	info.add_child(effects)
+	for part: String in ["Now", "Next"]:
+		var lbl := Label.new()
+		lbl.name = part
+		lbl.theme_type_variation = "ChargenSummaryText"
+		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		effects.add_child(lbl)
+	(effects.get_node("Next") as Label).modulate = DS.GILD_2
+	_attribute_effect_lbls[attribute_id] = effects.get_node("Now")
+	_attribute_next_lbls[attribute_id] = effects.get_node("Next")
 	var minus_btn := Button.new()
 	minus_btn.name = "Minus_%s" % attribute_id
 	minus_btn.text = "−"
 	minus_btn.pressed.connect(_on_attribute_step.bind(attribute_id, -1))
+	minus_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(minus_btn)
 	var value_lbl := Label.new()
 	value_lbl.theme_type_variation = "StatLabel"
 	value_lbl.custom_minimum_size = Vector2(32, 0)
 	value_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(value_lbl)
 	_attribute_value_lbls[attribute_id] = value_lbl
 	var plus_btn := Button.new()
 	plus_btn.name = "Plus_%s" % attribute_id
 	plus_btn.text = "+"
 	plus_btn.pressed.connect(_on_attribute_step.bind(attribute_id, 1))
+	plus_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(plus_btn)
 	return row
 
@@ -859,13 +972,20 @@ func _refresh_measures() -> void:
 		if not _attribute_tweens.has(attribute_id) or not (_attribute_tweens[attribute_id] as Tween).is_running():
 			(_attribute_bars[attribute_id] as ProgressBar).value = value
 		(_attribute_value_lbls[attribute_id] as Label).text = str(value)
+		(_attribute_effect_lbls[attribute_id] as Label).text = MeasureEffects.summary(attribute_id, value, build.class_id)
+		var next := MeasureEffects.next_point(attribute_id, value, build.class_id)
+		(_attribute_next_lbls[attribute_id] as Label).text = "+1 → %s" % next if not next.is_empty() else ""
+	var class_entry: Dictionary = ClassCatalog.by_id(build.class_id)
+	_suggest_btn.text = "SUGGEST FOR %s" % str(class_entry["name"]).to_upper() if not class_entry.is_empty() else "SUGGEST"
+	_suggest_btn.disabled = class_entry.is_empty()
 	var remaining := build.remaining_attribute_points()
 	_points_lbl.text = "%d MEASURE POINTS UNSPENT" % remaining if remaining > 0 else "EVERY MEASURE POINT PLACED"
 	_points_lbl.modulate = DS.GILD_2 if remaining > 0 else DS.STATE_CONSTANT
 	var lines: PackedStringArray = []
 	if not build.kit_skill.is_empty():
-		lines.append("%s (Kit): %d%%" % [DramgidSchema.skill_label(build.kit_skill),
-			roundi(build.preview_percent(build.kit_skill))])
+		var kit_percent := build.preview_percent(build.kit_skill)
+		lines.append("%s (Kit): %d%%  ·  weapon hits %+d%%" % [DramgidSchema.skill_label(build.kit_skill),
+			roundi(kit_percent), Resolution.arms_bonus(kit_percent)])
 	for tone_id: String in build.held_tones():
 		lines.append("%s: %d%%" % [DramgidSchema.skill_label(tone_id), roundi(build.preview_percent(tone_id))])
 	var ancestry: Dictionary = ChargenData.ancestry_by_id(build.ancestry_id)
@@ -1122,6 +1242,14 @@ func randomize_character() -> void:
 	_kill_attribute_tweens()
 	_rolled_purchases = true
 	build = ChargenRandomizer.roll(_random_rng, build)
+	_refresh_all()
+
+
+## SUGGEST: the class's spread (ChargenRandomizer.suggest_measures). Measures only; creation
+## purchases the change refunds stay unspent, as a hand-placed change leaves them.
+func suggest_measures() -> void:
+	_kill_attribute_tweens()
+	ChargenRandomizer.suggest_measures(build)
 	_refresh_all()
 
 

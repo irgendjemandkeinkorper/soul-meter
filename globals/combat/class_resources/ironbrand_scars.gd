@@ -21,9 +21,14 @@ var debt_target_id: StringName = &""
 const DEBT_HP := 6
 
 
-## The live cap: MAX_SCARS plus any picked `cap_delta` perk (Thick Hide, #285 slice 2).
+## The live cap: MAX_SCARS plus any picked `cap_delta` perk (Thick Hide, #285 slice 2), plus the
+## patron measure, Grit (calling-and-measures S1, PROVISIONAL): +1 at Grit 4, +2 at Grit 5.
 func max_scars() -> int:
-	return MAX_SCARS + perk_total("cap_delta")
+	return MAX_SCARS + perk_total("cap_delta") + measure_bonus()
+
+
+func measure_readout() -> String:
+	return "Scars bank up to %d" % max_scars()
 
 
 ## First Blood (#285 slice 3): the first Scar each battle is banked when combat starts.

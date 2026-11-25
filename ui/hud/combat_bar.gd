@@ -89,18 +89,12 @@ const SLOT_ROW := 30
 const TILE_SIZE := Vector2(84, 64)
 ## The hover card's width: one short paragraph of effect text per line set.
 const CARD_WIDTH := 300.0
-## Owner 2026-11-01: an eight-slot hotbar, auto-filled; keys 1–8 fire the slots and every
-## other command waits behind MORE.
-const HOTBAR_SIZE := 8
+## Owner 2026-11-01: an eight-slot hotbar, auto-filled (HotbarFill); keys 1–8 fire the slots
+## and every other command waits behind MORE.
+const HOTBAR_SIZE := HotbarFill.SIZE
 ## Refusals that mean "not this member's command": another class's action, an unowned perk.
 ## Any other lock is momentary, so a slotted command keeps its slot, dimmed, with the reason.
 const NOT_IN_KIT: Array[StringName] = [&"class_resource", &"perk_missing"]
-## Fill order: one command per role, then the two cheapest usable weapon arts and spells.
-enum SlotRole { STRIKE, GUARD, SIGNATURE, DEFINING, WEAPON_ART, SPELL, OTHER }
-const ROLE_QUOTA := {
-	SlotRole.STRIKE: 1, SlotRole.GUARD: 1, SlotRole.SIGNATURE: 1, SlotRole.DEFINING: 1,
-	SlotRole.WEAPON_ART: 2, SlotRole.SPELL: 2,
-}
 
 
 func _ready() -> void:
@@ -842,7 +836,8 @@ func _place_action(index: int, home: Container) -> void:
 ## The showing member's slots for this refresh, as catalog indices in slot order. Slots stick
 ## for the battle, so a key always fires the same command: a slotted command keeps its slot
 ## while it is in the member's kit, dimmed when momentarily locked. Empty slots fill by role
-## (`_default_fill`); a resolution, Defining Strike or parley that opens up joins on its own.
+## (`HotbarFill.default_fill`); a resolution, Defining Strike or parley that opens up joins on
+## its own.
 func _update_hotbar(
 	actions: Array[CombatAction], ready: Array[bool], in_kit: Array[bool]
 ) -> Array[int]:
@@ -859,7 +854,7 @@ func _update_hotbar(
 		if i >= 0 and in_kit[i]:
 			slots.append(id)
 	if ally != null:
-		slots.append_array(_default_fill(actions.slice(0, count), ready, in_kit, slots))
+		slots.append_array(HotbarFill.default_fill(actions.slice(0, count), ready, in_kit, slots))
 	_slots[_hotbar_owner] = slots
 	if ally != null:
 		# Commands surfacing together protect each other, so two openers never trade one slot
@@ -875,73 +870,6 @@ func _update_hotbar(
 	for id: StringName in slots:
 		indices.append(int(index_of[id]))
 	return indices
-
-
-## Fills the open slots: Strike, Guard, the class signature and Defining Strike, then the two
-## cheapest usable weapon arts and the two cheapest usable spells; any slot still open takes
-## the cheapest usable command left. Strike and the signature hold their slot while locked
-## (out of reach, nothing banked yet); every other role needs a command usable now.
-func _default_fill(
-	actions: Array[CombatAction], ready: Array[bool], in_kit: Array[bool], taken: Array[StringName]
-) -> Array[StringName]:
-	var picked: Array[StringName] = []
-	var room := HOTBAR_SIZE - taken.size()
-	if room <= 0:
-		return picked
-	var filled: Dictionary = {}
-	var candidates: Array[int] = []
-	for i: int in actions.size():
-		if taken.has(actions[i].id):
-			var role := _slot_role(actions[i])
-			filled[role] = int(filled.get(role, 0)) + 1
-		elif in_kit[i]:
-			candidates.append(i)
-	candidates.sort_custom(func(a: int, b: int) -> bool:
-		var role_a := _slot_role(actions[a])
-		var role_b := _slot_role(actions[b])
-		if role_a != role_b:
-			return role_a < role_b
-		if actions[a].ap_cost != actions[b].ap_cost:
-			return actions[a].ap_cost < actions[b].ap_cost
-		return a < b
-	)
-	for i: int in candidates:
-		if picked.size() >= room:
-			return picked
-		var role := _slot_role(actions[i])
-		if int(filled.get(role, 0)) >= int(ROLE_QUOTA.get(role, 0)):
-			continue
-		if not ready[i] and role != SlotRole.STRIKE and role != SlotRole.SIGNATURE:
-			continue
-		picked.append(actions[i].id)
-		filled[role] = int(filled.get(role, 0)) + 1
-	candidates.sort_custom(func(a: int, b: int) -> bool:
-		if actions[a].ap_cost != actions[b].ap_cost:
-			return actions[a].ap_cost < actions[b].ap_cost
-		return a < b
-	)
-	for i: int in candidates:
-		if picked.size() >= room:
-			break
-		if ready[i] and not picked.has(actions[i].id):
-			picked.append(actions[i].id)
-	return picked
-
-
-static func _slot_role(action: CombatAction) -> SlotRole:
-	if action.id == Battle.ACTION_STRIKE:
-		return SlotRole.STRIKE
-	if action.kind == CombatAction.Kind.GUARD:
-		return SlotRole.GUARD
-	if not action.class_resource_action.is_empty():
-		return SlotRole.SIGNATURE
-	if action.kind == CombatAction.Kind.DEFINING_STRIKE:
-		return SlotRole.DEFINING
-	if action.spell:
-		return SlotRole.SPELL
-	if action.kind == CombatAction.Kind.ATTACK:
-		return SlotRole.WEAPON_ART
-	return SlotRole.OTHER
 
 
 ## Commands that open up mid-fight and must never hide behind MORE.
