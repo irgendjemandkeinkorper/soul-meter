@@ -3115,24 +3115,32 @@ func _attack_message(
 	return "%s uses %s for %d damage." % [actor.display_name, action.display_name, damage]
 
 
-## #209 forecast parity: the same Resolution context an actual strike will use — same
-## power arithmetic, same tile/weather/facing terms — minus the to-hit roll (a forecast
-## shows the on-hit number). Region D's only calculator is Resolution.resolve(); feeding
-## it this context keeps forecast == resolution by construction.
 ## Calling and measures S3 (F3c §4.1): the Kit's ARMS skill for a weapon attack, as
 ## `{"arms_percent", "arms_label"}`; {} for a unit without one (enemies, authored companions,
 ## a member whose attributes were never set), which therefore hits as every fight did before.
-static func arms_terms(actor: BattleActor) -> Dictionary:
+## `service` is the controller's SkillCheckService; the static legacy path finds the autoload
+## through the tree, and with none (a `--script` harness) the term is left out.
+static func arms_terms(actor: BattleActor, service: SkillCheckService = null) -> Dictionary:
 	var member := actor.source_member if actor != null else null
 	if member == null or member.kit_weapon_skill.is_empty() or member.attributes.is_empty():
 		return {}
-	var percent := SkillCheck.preview(member.kit_weapon_skill, member)
+	if service == null:
+		var main_loop := Engine.get_main_loop()
+		if main_loop is SceneTree:
+			service = (main_loop as SceneTree).root.get_node_or_null("SkillCheck") as SkillCheckService
+	if service == null:
+		return {}
+	var percent := service.preview(member.kit_weapon_skill, member)
 	return {
 		"arms_percent": percent,
 		"arms_label": "%s %d%%" % [DramgidSchema.skill_label(member.kit_weapon_skill), roundi(percent)],
 	}
 
 
+## #209 forecast parity: the same Resolution context an actual strike will use — same
+## power arithmetic, same tile/weather/facing terms — minus the to-hit roll (a forecast
+## shows the on-hit number). Region D's only calculator is Resolution.resolve(); feeding
+## it this context keeps forecast == resolution by construction.
 func forecast_context(
 	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary = {}
 ) -> Dictionary:
@@ -3203,7 +3211,7 @@ func forecast_context(
 	if action.no_damage:
 		ability_context["no_damage"] = true
 	# A weapon attack is the branch whose power is the actor's attack: no spell, no cast.
-	var weapon_terms := arms_terms(actor) if not ability_context.has("is_spell") else {}
+	var weapon_terms := arms_terms(actor, skill_check_service) if not ability_context.has("is_spell") else {}
 	var target_height := 0
 	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
 	if target_position.has("elevation"):

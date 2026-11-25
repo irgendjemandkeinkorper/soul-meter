@@ -139,7 +139,7 @@ static func _value(
 		var value := controller.attack_value(actor, target, action, options)
 		if value < 0.0:
 			return 0.0
-		if not action.effect_id.is_empty():
+		if not action.effect_id.is_empty() and not _effect_already_on(action, target):
 			value += PROVISIONAL_EFFECT_VALUE
 		var context := controller.forecast_context(actor, target, action, options)
 		if not context.is_empty() and controller.forecast_damage_on_hit(context, target) >= target.hp:
@@ -156,6 +156,14 @@ static func _value(
 	if action.effect_id == &"veil":
 		return PROVISIONAL_EFFECT_VALUE if target.hp * 5 < target.max_hp * 3 else 0.0
 	return 0.0
+
+
+## A status that refreshes and never stacks adds nothing to a foe that already carries it:
+## Blinded (M24). Without this a no-damage Blinding Throw kept its value against a Blinded foe,
+## and four survivors could trade throws forever (hex demo, seed 33, found by the calling and
+## measures sprint once Disciplines moved the fight).
+static func _effect_already_on(action: CombatAction, target: BattleActor) -> bool:
+	return action.effect_id == &"blinding_throw" and LightField.is_blinded(target)
 
 
 static func _cell_value(controller: CombatController, actor: BattleActor, options: Dictionary) -> float:

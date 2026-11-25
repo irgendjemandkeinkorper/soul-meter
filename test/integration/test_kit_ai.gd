@@ -128,3 +128,22 @@ func _grid_model(width: int, height: int) -> GridBattlefieldModel:
 	model.configure(load("res://data/combat/combat_rules.tres") as CombatRules)
 	model.build_grid(ground)
 	return model
+
+
+## Blinded refreshes and never stacks (M24): a no-damage Blinding Throw at a foe already
+## Blinded adds nothing, so the AI must not keep valuing it (hex demo seed 33 stalemate).
+func test_a_blinding_throw_is_worth_nothing_against_a_blinded_foe() -> void:
+	var throw := load("res://data/combat/actions/%s" % _action_file("blinding_throw")) as CombatAction
+	var foe := BattleActor.new()
+	assert_bool(KitAI._effect_already_on(throw, foe)).is_false()
+	LightField.apply_blinded(foe, &"test")
+	assert_bool(KitAI._effect_already_on(throw, foe)).is_true()
+	var strike := CombatAction.make(&"plain", "Plain", CombatAction.Kind.ATTACK)
+	assert_bool(KitAI._effect_already_on(strike, foe)).is_false()
+
+
+func _action_file(effect_id: String) -> String:
+	for file: String in DirAccess.get_files_at("res://data/combat/actions"):
+		if file.ends_with(".tres") and file.contains(effect_id):
+			return file
+	return ""

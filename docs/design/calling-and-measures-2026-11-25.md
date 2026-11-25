@@ -90,6 +90,15 @@ Every number below is PROVISIONAL and listed in owner item 51. Evidence frames:
 | S4 | `DisciplineProfile`; `CombatController._move_cost_modifiers()`, `_tile_context()`, `discipline_accuracy_modifiers` | Chordblade: every path costs 20% less. Thamshaper: +4% to hit from higher ground, and a foe attacking up at one pays 4%. Hushwarden: cells within 1 are hushed (no tile charge feeds or takes a Song). The CALLING card says so. | `test_disciplines_in_combat.gd` |
 | S5 | `ChargenRandomizer.class_leanings()`, `roll_measures()`, `suggest_measures()`; SUGGEST button | RANDOMIZE and QUICK START weight points 4/3/2/1 toward the patron measure, the Kit's measure, then Intuition. ROLL THIS TAB on MEASURES rolls for the build's own class. SUGGEST FOR <CLASS> places patron measure 5, Kit measure 4, then 3s. | `test_chargen_randomizer.gd`, `test_character_creation.gd` |
 
+**Fixes the sprint's changes forced**
+
+- `CombatController.arms_terms()` takes the controller's SkillCheckService and finds the autoload
+  through the tree otherwise. Naming the `SkillCheck` autoload directly broke every `--script`
+  harness that loads the controller (Gate T-2 returned empty results).
+- KitAI: a Blinding Throw at a foe already Blinded is worth nothing (`KitAI._effect_already_on`;
+  Blinded refreshes, never stacks, M24). Once Disciplines moved the hex demo, seed 33 left four
+  survivors trading throws until the 4000-step limit.
+
 **Not built, and why**
 
 - Hushwarden's fizzle tax: canon gives the field one, but who it taxes is open (vault
