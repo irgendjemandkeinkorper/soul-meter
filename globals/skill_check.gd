@@ -8,6 +8,8 @@ extends Node
 ## this same service without a second dialogue-only implementation.
 
 const MAX_EFFECTIVE_PERCENT := 95.0
+## Ratified resolution (character-creation.md): a skill's base is its governing attribute x 8.
+const PERCENT_PER_ATTRIBUTE_POINT := 8.0
 const FIZZLE_FLOOR_PERCENT := 5.0  # PROVISIONAL — B11 owns the floor
 const MIN_ROLL := 1
 const MAX_ROLL := 100
@@ -64,7 +66,7 @@ func preview(
 	var tier_bonus := float(TIER_BONUS.get(tier_name, 0.0))
 	var advancement_percent := float(subject.skill_percentages.get(normalized_skill, 0.0))
 	return clampf(
-		attribute_value * 8.0 + tier_bonus + advancement_percent + situational_modifiers
+		attribute_value * PERCENT_PER_ATTRIBUTE_POINT + tier_bonus + advancement_percent + situational_modifiers
 			+ karma_bonus(normalized_skill),
 		0.0,
 		MAX_EFFECTIVE_PERCENT
@@ -267,7 +269,7 @@ func fizzle_percent(
 	var breadth_add := float(fizzle_table.breadth_add.get(breadth_key, 0.0))
 	var strain_add := float(fizzle_table.strain_add.get(str(strain_steps), 0.0))
 	var multiplier := float(fizzle_table.magnitude_multiplier.get(magnitude_key, 1.0))
-	var intuition_reduction := maxi(intuition - 2, 0) * 2.0
+	var intuition_reduction := intuition_fizzle_reduction(intuition)
 	var tone_reduction := float(floori(maxf(tone_bonus, 0.0) / TONE_BONUS_DIVISOR))
 	var mastery_reduction := 0.0
 	if mastery and magnitude_key in ["note", "phrase"]:
@@ -282,6 +284,11 @@ func fizzle_percent(
 	if _is_fickah_or_locksmirk(patron):
 		return maxf(FIZZLE_FLOOR_PERCENT, rounded)
 	return rounded
+
+
+## Canon base fizzle reduction from Intuition: 2 points of fizzle per point above 2.
+static func intuition_fizzle_reduction(intuition: int) -> float:
+	return maxi(intuition - 2, 0) * 2.0
 
 
 ## FR-506 thinning gradient: adapts a zone's Harmonic Accord (Agreement Integrity

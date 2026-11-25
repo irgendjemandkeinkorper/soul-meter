@@ -82,6 +82,9 @@ var _resource_heading: Label
 var _resource_lbl: Label
 var _signature_heading: Label
 var _signature_lbl: Label
+## Calling and measures S2: the class's patron measure and what each point of it buys.
+var _measure_heading: Label
+var _measure_lbl: Label
 var _major_option: OptionButton
 var _minor_option: OptionButton
 var _mastery_option: OptionButton
@@ -101,6 +104,9 @@ var _card_lock: Label
 var _points_lbl: Label
 var _attribute_bars: Dictionary = {}
 var _attribute_value_lbls: Dictionary = {}
+## Calling and measures S2: each row's live numbers and what the next point buys.
+var _attribute_effect_lbls: Dictionary = {}
+var _attribute_next_lbls: Dictionary = {}
 var _attribute_tweens: Dictionary = {}
 var _attribute_readout: Label
 var _skills_form: VBoxContainer
@@ -320,7 +326,10 @@ func _refresh_entry() -> void:
 		_name_edit.text = build.display_name
 	_identity_lbl.text = _identity_line()
 	var scratch := build.scratch_member()
-	_vitals_lbl.text = "HP %d  ·  BREATH %d" % [scratch.max_hp, scratch.breath_max]
+	_vitals_lbl.text = "HP %d  ·  BREATH %d  ·  SPEED %d" % [
+		scratch.max_hp, scratch.breath_max,
+		MeasureEffects.turn_speed(int(build.attributes.get(String(DramgidSchema.ATTR_REASON), DramgidSchema.ATTRIBUTE_FLOOR))),
+	]
 	for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
 		(_measure_value_lbls[attribute_id] as Label).text = str(
 			int(build.attributes.get(attribute_id, DramgidSchema.ATTRIBUTE_FLOOR))
@@ -527,6 +536,10 @@ func _build_calling_tab() -> Control:
 	_resource_lbl = _blurb(detail)
 	_signature_heading = _eyebrow(detail, "")
 	_signature_lbl = _blurb(detail)
+	_measure_heading = _eyebrow(detail, "")
+	_measure_heading.name = "PatronMeasureHeading"
+	_measure_lbl = _blurb(detail)
+	_measure_lbl.name = "PatronMeasure"
 
 	_eyebrow(detail, "TONES  ·  MAJOR AND MINOR BEGIN TRAINED")
 	var tones := HBoxContainer.new()
@@ -602,6 +615,10 @@ func _refresh_calling() -> void:
 	_resource_lbl.text = str(entry["resource_blurb"])
 	_signature_heading.text = "SIGNATURE  ·  %s" % str(entry["signature"]).to_upper()
 	_signature_lbl.text = str(entry["signature_blurb"])
+	var measure := ClassCatalog.patron_measure(build.class_id)
+	_measure_heading.text = "PATRON MEASURE  ·  %s" % DramgidSchema.attribute_label(measure).to_upper()
+	_measure_lbl.text = MeasureEffects.patron_ladder(
+		build.class_id, int(build.attributes.get(measure, DramgidSchema.ATTRIBUTE_FLOOR)))
 
 	_major_option.select(_wheel_index(build.major_element) + 1)
 	_minor_option.select(_wheel_index(build.minor_element) + 1)
@@ -826,6 +843,8 @@ func _build_measures_tab() -> Control:
 	measures.add_child(_points_lbl)
 	_attribute_bars.clear()
 	_attribute_value_lbls.clear()
+	_attribute_effect_lbls.clear()
+	_attribute_next_lbls.clear()
 	for attribute_id: String in DramgidSchema.ATTRIBUTE_IDS:
 		measures.add_child(_build_attribute_row(attribute_id))
 	_attribute_readout = Label.new()
@@ -868,21 +887,39 @@ func _build_attribute_row(attribute_id: String) -> Control:
 	bar.max_value = DramgidSchema.ATTRIBUTE_CAP
 	info.add_child(bar)
 	_attribute_bars[attribute_id] = bar
+	# Two wrapping lines under the bar: what the measure does now, and (gilded) what one more
+	# point would change. Both wrap, so neither sets the column's width.
+	var effects := VBoxContainer.new()
+	effects.name = "Effects_%s" % attribute_id
+	info.add_child(effects)
+	for part: String in ["Now", "Next"]:
+		var lbl := Label.new()
+		lbl.name = part
+		lbl.theme_type_variation = "ChargenSummaryText"
+		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		effects.add_child(lbl)
+	(effects.get_node("Next") as Label).modulate = DS.GILD_2
+	_attribute_effect_lbls[attribute_id] = effects.get_node("Now")
+	_attribute_next_lbls[attribute_id] = effects.get_node("Next")
 	var minus_btn := Button.new()
 	minus_btn.name = "Minus_%s" % attribute_id
 	minus_btn.text = "−"
 	minus_btn.pressed.connect(_on_attribute_step.bind(attribute_id, -1))
+	minus_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(minus_btn)
 	var value_lbl := Label.new()
 	value_lbl.theme_type_variation = "StatLabel"
 	value_lbl.custom_minimum_size = Vector2(32, 0)
 	value_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(value_lbl)
 	_attribute_value_lbls[attribute_id] = value_lbl
 	var plus_btn := Button.new()
 	plus_btn.name = "Plus_%s" % attribute_id
 	plus_btn.text = "+"
 	plus_btn.pressed.connect(_on_attribute_step.bind(attribute_id, 1))
+	plus_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(plus_btn)
 	return row
 
@@ -924,6 +961,9 @@ func _refresh_measures() -> void:
 		if not _attribute_tweens.has(attribute_id) or not (_attribute_tweens[attribute_id] as Tween).is_running():
 			(_attribute_bars[attribute_id] as ProgressBar).value = value
 		(_attribute_value_lbls[attribute_id] as Label).text = str(value)
+		(_attribute_effect_lbls[attribute_id] as Label).text = MeasureEffects.summary(attribute_id, value, build.class_id)
+		var next := MeasureEffects.next_point(attribute_id, value, build.class_id)
+		(_attribute_next_lbls[attribute_id] as Label).text = "+1 → %s" % next if not next.is_empty() else ""
 	var remaining := build.remaining_attribute_points()
 	_points_lbl.text = "%d MEASURE POINTS UNSPENT" % remaining if remaining > 0 else "EVERY MEASURE POINT PLACED"
 	_points_lbl.modulate = DS.GILD_2 if remaining > 0 else DS.STATE_CONSTANT

@@ -203,6 +203,26 @@ func test_every_class_fits_its_tiles_inside_the_1080p_tab_panel() -> void:
 	get_tree().root.size = size_before
 
 
+func test_measures_show_live_numbers_and_the_class_names_its_measure() -> void:
+	var screen := await _open_screen()
+	screen.select_class("lensbearer")
+	_reset_measures(screen)
+	screen.set_attribute("grit", 3)
+	screen.set_attribute("reason", 4)
+	var grit_now := screen.find_child("Effects_grit", true, false).get_node("Now") as Label
+	var grit_next := screen.find_child("Effects_grit", true, false).get_node("Next") as Label
+	assert_str(grit_now.text).contains("HP %d" % DramgidDerived.max_hp(3))
+	assert_str(grit_next.text).contains("HP %d" % DramgidDerived.max_hp(4))
+	var reason_now := screen.find_child("Effects_reason", true, false).get_node("Now") as Label
+	assert_str(reason_now.text).contains("Lensbearer: 4 Clarity each battle")
+	assert_str((screen.find_child("PatronMeasureHeading", true, false) as Label).text).contains("REASON")
+	assert_str((screen.find_child("PatronMeasure", true, false) as Label).text).contains("Reason 4 now: 4 Clarity")
+	screen.set_attribute("reason", 5)
+	assert_str((screen.find_child("PatronMeasure", true, false) as Label).text).contains("Reason 5 now: 5 Clarity")
+	assert_str(screen._vitals_lbl.text).contains("SPEED %d" % MeasureEffects.turn_speed(5))
+	screen.queue_free()
+
+
 func test_player_chargen_boots_from_main_menu_and_writes_every_field() -> void:
 	var runner := scene_runner("res://ui/screens/main_menu.tscn")
 	await runner.simulate_frames(3)

@@ -389,3 +389,19 @@ func test_a_member_without_a_patron_class_has_no_perks() -> void:
 	await runner.simulate_frames(2)
 	assert_object(runner.find_child("NoPerks", true, false)).is_not_null()
 	assert_object(runner.find_child("PerkChoice", true, false)).is_null()
+
+
+func test_the_sheet_names_the_patron_measure_and_what_it_buys() -> void:
+	var vex := _vex()
+	vex.class_id = "ironbrand"
+	vex.patron = "Kero"
+	vex.attributes = {"grit": 5, "reason": 3}
+	GameState.party = [vex]
+	var runner := scene_runner("res://ui/screens/character_sheet.tscn")
+	await runner.simulate_frames(2)
+	var line := runner.find_child("PatronMeasure", true, false) as Label
+	assert_object(line).is_not_null()
+	assert_str(line.text).contains("Grit 5 now: Scars bank up to 5")
+	var grid := runner.find_child("AttributeGrid", true, false) as GridContainer
+	var grit_cell := grid.get_child(DramgidSchema.ATTRIBUTE_IDS.find("grit")) as Label
+	assert_str(grit_cell.tooltip_text).contains("HP %d" % DramgidDerived.max_hp(5))
