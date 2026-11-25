@@ -79,8 +79,28 @@ and gain nothing.
 
 ## 5. As built
 
-Filled in slice by slice below.
+Every number below is PROVISIONAL and listed in owner item 51. Evidence frames:
+`docs/qa/calling-measures-2026-11-25/`.
+
+| Slice | Code | What a player sees | Tests |
+|---|---|---|---|
+| S1 | `ClassResource.apply_measure()` / `measure_bonus()`; `ClassCatalog` `measure` column and `patron_measure_value()`; the ten resources; `CombatController._attach_class_resources()` | Each loop plays its B11 number at measure ≤3 and grows at 4 and 5 (§4 table). A filed Sentence, a bound Hostility and a Jam say the measure's share in their forecast. | `test_patron_measures.gd` |
+| S2 | `MeasureEffects` (pure; reads DramgidDerived, `CombatRules.charge_speed_at()`, Resolution, `SkillCheckService.intuition_fizzle_reduction()`, the class resource) | MEASURES rows: live numbers, then in gold what +1 changes. CALLING card: PATRON MEASURE with the loop now and at 4 and 5. Entry column: SPEED. Sheet: patron measure line; attribute tooltips carry the numbers. | `test_measure_effects.gd`, `test_character_creation.gd`, `test_character_sheet.gd` |
+| S3 | `Resolution.arms_bonus()` and the `arms` modifier; `CombatController.arms_terms()` in both context builders | A weapon attack's hit chance carries the Kit skill: (ARMS % − 40) / 2. The forecast lists it as "Heft 57% +8 pp"; MEASURES shows "weapon hits +8%". Spells, enemies and authored companions carry no term. | `test_arms_in_combat.gd` |
+| S4 | `DisciplineProfile`; `CombatController._move_cost_modifiers()`, `_tile_context()`, `discipline_accuracy_modifiers` | Chordblade: every path costs 20% less. Thamshaper: +4% to hit from higher ground, and a foe attacking up at one pays 4%. Hushwarden: cells within 1 are hushed (no tile charge feeds or takes a Song). The CALLING card says so. | `test_disciplines_in_combat.gd` |
+| S5 | `ChargenRandomizer.class_leanings()`, `roll_measures()`, `suggest_measures()`; SUGGEST button | RANDOMIZE and QUICK START weight points 4/3/2/1 toward the patron measure, the Kit's measure, then Intuition. ROLL THIS TAB on MEASURES rolls for the build's own class. SUGGEST FOR <CLASS> places patron measure 5, Kit measure 4, then 3s. | `test_chargen_randomizer.gd`, `test_character_creation.gd` |
+
+**Not built, and why**
+
+- Hushwarden's fizzle tax: canon gives the field one, but who it taxes is open (vault
+  `ten-patron-classes.md`). Item 51 (d).
+- Enemy ARMS: §4.1 names a Pandora `Combatants` column `Arms Percent` (default 40). Pandora owns
+  data, so enemies stay at the neutral baseline until the column is added. Item 51 (b).
+- Rendered battle frame of the Arms and footing terms: proven headless through the forecast
+  and commit; no battle capture was taken.
+- The class demo (5v5) still places measures evenly; it was left alone so its balance tests
+  hold. Item 51 (m).
 
 ## 6. Questions for the owner
 
-Collected in `docs/owner-decisions.md` item 51 when the sprint stops.
+`docs/owner-decisions.md` item 51.

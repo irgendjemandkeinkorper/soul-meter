@@ -58,6 +58,8 @@ var _cancel_btn: Button
 var _randomize_btn: Button
 var _quick_start_btn: Button
 var _roll_tab_btn: Button
+## Calling and measures S5: places the Seven Measures the way the chosen class leans.
+var _suggest_btn: Button
 var _flash_rect: ColorRect
 
 var _portrait: TextureRect
@@ -645,8 +647,9 @@ func _refresh_calling() -> void:
 	for id: String in _discipline_chips:
 		(_discipline_chips[id] as Button).set_pressed_no_signal(id == build.discipline_id)
 	var discipline: Dictionary = ChargenData.discipline_by_id(build.discipline_id)
-	_discipline_lbl.text = "" if discipline.is_empty() else "%s  %s  Favours %s." % [
+	_discipline_lbl.text = "" if discipline.is_empty() else "%s  %s  Favours %s.  %s" % [
 		discipline["blurb"], discipline["verbs"], _wheel_name(str(discipline["favours"])),
+		DisciplineProfile.summary(build.discipline_id),
 	]
 	var pairing := build.validate(&"patron")
 	if not bool(pairing["valid"]):
@@ -838,9 +841,17 @@ func _build_measures_tab() -> Control:
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var measures := _form_column(page, "THE SEVEN MEASURES  ·  FIXED AT CREATION")
+	var points_row := HBoxContainer.new()
+	points_row.theme_type_variation = "ChargenTabBar"
+	measures.add_child(points_row)
 	_points_lbl = Label.new()
 	_points_lbl.theme_type_variation = "StatLabel"
-	measures.add_child(_points_lbl)
+	_points_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_points_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	points_row.add_child(_points_lbl)
+	_suggest_btn = _menu_button(points_row, "SUGGEST", suggest_measures)
+	_suggest_btn.name = "SuggestMeasuresButton"
+	_suggest_btn.theme_type_variation = "ChargenChoiceButton"
 	_attribute_bars.clear()
 	_attribute_value_lbls.clear()
 	_attribute_effect_lbls.clear()
@@ -964,13 +975,17 @@ func _refresh_measures() -> void:
 		(_attribute_effect_lbls[attribute_id] as Label).text = MeasureEffects.summary(attribute_id, value, build.class_id)
 		var next := MeasureEffects.next_point(attribute_id, value, build.class_id)
 		(_attribute_next_lbls[attribute_id] as Label).text = "+1 → %s" % next if not next.is_empty() else ""
+	var class_entry: Dictionary = ClassCatalog.by_id(build.class_id)
+	_suggest_btn.text = "SUGGEST FOR %s" % str(class_entry["name"]).to_upper() if not class_entry.is_empty() else "SUGGEST"
+	_suggest_btn.disabled = class_entry.is_empty()
 	var remaining := build.remaining_attribute_points()
 	_points_lbl.text = "%d MEASURE POINTS UNSPENT" % remaining if remaining > 0 else "EVERY MEASURE POINT PLACED"
 	_points_lbl.modulate = DS.GILD_2 if remaining > 0 else DS.STATE_CONSTANT
 	var lines: PackedStringArray = []
 	if not build.kit_skill.is_empty():
-		lines.append("%s (Kit): %d%%" % [DramgidSchema.skill_label(build.kit_skill),
-			roundi(build.preview_percent(build.kit_skill))])
+		var kit_percent := build.preview_percent(build.kit_skill)
+		lines.append("%s (Kit): %d%%  ·  weapon hits %+d%%" % [DramgidSchema.skill_label(build.kit_skill),
+			roundi(kit_percent), Resolution.arms_bonus(kit_percent)])
 	for tone_id: String in build.held_tones():
 		lines.append("%s: %d%%" % [DramgidSchema.skill_label(tone_id), roundi(build.preview_percent(tone_id))])
 	var ancestry: Dictionary = ChargenData.ancestry_by_id(build.ancestry_id)
@@ -1227,6 +1242,14 @@ func randomize_character() -> void:
 	_kill_attribute_tweens()
 	_rolled_purchases = true
 	build = ChargenRandomizer.roll(_random_rng, build)
+	_refresh_all()
+
+
+## SUGGEST: the class's spread (ChargenRandomizer.suggest_measures). Measures only; creation
+## purchases the change refunds stay unspent, as a hand-placed change leaves them.
+func suggest_measures() -> void:
+	_kill_attribute_tweens()
+	ChargenRandomizer.suggest_measures(build)
 	_refresh_all()
 
 

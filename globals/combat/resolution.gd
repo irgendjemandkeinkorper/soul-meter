@@ -26,6 +26,11 @@ const PROVISIONAL_TO_HIT := {
 	# owner 2026-08-24: + (attacker Edge - defender Edge) x 2%. The stat kept the
 	# ruling's magnitude and lost its name: DRAMGID calls it Alacrity (#283).
 	"alacrity_mod_per_point": 2,
+	# F3c §4.1 (docs/architecture-chargen-dramgid.md), built in calling and measures S3: a weapon
+	# attack adds (ARMS % − 40) / 2, rounded down. 40 is the implicit baseline every fight played
+	# at before, so a unit without a Kit skill (enemies, authored companions) adds nothing.
+	"arms_baseline_percent": 40,
+	"arms_percent_per_point": 2,
 	"clamp_lo": 5,
 	"clamp_hi": 95,
 	# PROVISIONAL physical visibility terms (called-shots design, 2026-09-19). Applied only when
@@ -59,6 +64,14 @@ static func critical_damage(mitigated: int, critical: bool) -> int:
 
 ## Data-only explanation of the existing curve. Values are percentage points,
 ## not damage multipliers; constructing this record never rolls or mutates state.
+## The weapon-skill term of a weapon attack's hit chance (F3c §4.1): 0 at the 40% baseline.
+static func arms_bonus(arms_percent: float) -> int:
+	return floori(
+		(arms_percent - float(PROVISIONAL_TO_HIT["arms_baseline_percent"]))
+		/ float(PROVISIONAL_TO_HIT["arms_percent_per_point"])
+	)
+
+
 static func accuracy_breakdown(context: Dictionary) -> Dictionary:
 	var enabled := bool(context.get("to_hit_enabled", false))
 	var unit := _dictionary(context.get("unit", {}))
@@ -78,6 +91,10 @@ static func accuracy_breakdown(context: Dictionary) -> Dictionary:
 			{"id": "height", "label": "Height", "percentage_points":
 				int(context.get("height_advantage_steps", 0)) * int(PROVISIONAL_TO_HIT["height_mod_per_step"])},
 		]
+		# The Kit's ARMS skill, on weapon attacks only; a unit without one carries no key.
+		if unit.has("arms_percent") and not bool(_dictionary(context.get("ability", {})).get("is_spell", false)):
+			modifiers.append({"id": "arms", "label": str(unit.get("arms_label", "Arms")),
+				"percentage_points": arms_bonus(float(unit["arms_percent"]))})
 		var visibility := _dictionary(context.get("visibility", {}))
 		var level := StringName(str(visibility.get("level", "clear")))
 		if bool(visibility.get("applies", false)) and level != &"clear":
@@ -87,6 +104,10 @@ static func accuracy_breakdown(context: Dictionary) -> Dictionary:
 		if not aim.is_empty() and bool(aim.get("allowed", false)):
 			modifiers.append({"id": "aim", "label": "Aim: %s" % str(aim.get("display_name", "")),
 				"percentage_points": -int(aim.get("accuracy_penalty", 0))})
+		# Discipline footing (S4, DisciplineProfile): the controller lists it only for this height.
+		for footing_term: Variant in context.get("discipline_accuracy_modifiers", []):
+			if footing_term is Dictionary:
+				modifiers.append((footing_term as Dictionary).duplicate())
 		# Attacker injuries: action-specific terms the controller lists only for eligible attacks.
 		for injury_term: Variant in context.get("attacker_injury_modifiers", []):
 			if injury_term is Dictionary:

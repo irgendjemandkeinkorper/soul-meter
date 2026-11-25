@@ -1225,7 +1225,7 @@ func _price_reachable(actor: BattleActor, raw_budget: int) -> Array[Dictionary]:
 	if scheduler != null and not bool(scheduler.can_act(actor).get("allowed", false)):
 		_last_reach_stamp = {"board_free": true}
 		return reachable
-	var ct_budget := int(float(raw_budget) / CombatInjury.move_cost_multiplier(actor))
+	var ct_budget := int(float(raw_budget) / maxf(_move_cost_multiplier(actor), 0.01))
 	# Every quote below starts from the actor's cell: one shared search, not one per cell (#282).
 	var memo := battlefield.has_method("begin_path_memo")
 	if memo:
@@ -1654,6 +1654,7 @@ static func calculate_damage(
 			"last_cast_element": attacker.last_cast_element,
 			"hit": bool(attacker.defining_effects.get("hit", false)),
 		}
+	unit_context.merge(arms_terms(attacker))
 	if resolution_context.has("weakness_id"):
 		unit_context["weakness_id"] = resolution_context["weakness_id"]
 		unit_context["weakness"] = resolution_context.get("weakness", {}).duplicate(true)
@@ -2338,7 +2339,7 @@ func _enemy_position_score(
 func _enemy_move_budget(actor: BattleActor) -> int:
 	return int(
 		float(rules.maximum_action_ct_cost if rules != null else 0)
-		/ CombatInjury.move_cost_multiplier(actor)
+		/ maxf(_move_cost_multiplier(actor), 0.01)
 	)
 
 
@@ -2539,7 +2540,7 @@ func _quote_move(
 		"ap_cost": priced_action.ap_cost,
 		"ct_cost": priced_action.ct_cost,
 		"affordability": _can_afford(actor, priced_action),
-		"modifiers": CombatInjury.move_cost_modifiers(actor),
+		"modifiers": _move_cost_modifiers(actor),
 	}
 	if in_pass:
 		_move_quotes[key] = quote
@@ -2549,7 +2550,21 @@ func _quote_move(
 func _injured_move_ct(actor: BattleActor, path_ct: int) -> int:
 	if actor == null:
 		return path_ct
-	return maxi(1, ceili(float(path_ct) * CombatInjury.move_cost_multiplier(actor)))
+	return maxi(1, ceili(float(path_ct) * _move_cost_multiplier(actor)))
+
+
+## Injuries and the Discipline's footwork (S4) price a path together; NPCs pay the same rule.
+func _move_cost_modifiers(actor: BattleActor) -> Array[Dictionary]:
+	var modifiers := CombatInjury.move_cost_modifiers(actor)
+	modifiers.append_array(DisciplineProfile.move_cost_modifiers(actor))
+	return modifiers
+
+
+func _move_cost_multiplier(actor: BattleActor) -> float:
+	var percent := 0
+	for modifier: Dictionary in _move_cost_modifiers(actor):
+		percent += int(modifier["percent"])
+	return maxf(0.0, 1.0 + float(percent) / 100.0)
 
 
 func _apply_action(
@@ -3104,6 +3119,20 @@ func _attack_message(
 ## power arithmetic, same tile/weather/facing terms — minus the to-hit roll (a forecast
 ## shows the on-hit number). Region D's only calculator is Resolution.resolve(); feeding
 ## it this context keeps forecast == resolution by construction.
+## Calling and measures S3 (F3c §4.1): the Kit's ARMS skill for a weapon attack, as
+## `{"arms_percent", "arms_label"}`; {} for a unit without one (enemies, authored companions,
+## a member whose attributes were never set), which therefore hits as every fight did before.
+static func arms_terms(actor: BattleActor) -> Dictionary:
+	var member := actor.source_member if actor != null else null
+	if member == null or member.kit_weapon_skill.is_empty() or member.attributes.is_empty():
+		return {}
+	var percent := SkillCheck.preview(member.kit_weapon_skill, member)
+	return {
+		"arms_percent": percent,
+		"arms_label": "%s %d%%" % [DramgidSchema.skill_label(member.kit_weapon_skill), roundi(percent)],
+	}
+
+
 func forecast_context(
 	actor: BattleActor, target: BattleActor, action: CombatAction, options: Dictionary = {}
 ) -> Dictionary:
@@ -3173,6 +3202,8 @@ func forecast_context(
 		ability_context["breath_cost"] = action.breath_cost
 	if action.no_damage:
 		ability_context["no_damage"] = true
+	# A weapon attack is the branch whose power is the actor's attack: no spell, no cast.
+	var weapon_terms := arms_terms(actor) if not ability_context.has("is_spell") else {}
 	var target_height := 0
 	var target_position: Dictionary = battlefield.describe_position(battlefield.position_of(target))
 	if target_position.has("elevation"):
@@ -3198,7 +3229,7 @@ func forecast_context(
 			"concealed": concealed_until_round >= round_number and actor.side == concealed_side,
 			"last_cast_element": actor.last_cast_element,
 			"hit": bool(actor.defining_effects.get("hit", false)),
-		},
+		}.merged(weapon_terms),
 		"ability": ability_context,
 		"target": {
 			"id": String(target.combat_id),
@@ -3278,6 +3309,12 @@ func forecast_context(
 		injury_modifiers.append_array(CombatInjury.sight_accuracy_modifiers(actor))
 	if not injury_modifiers.is_empty():
 		context["attacker_injury_modifiers"] = injury_modifiers
+	# S4: the Thamshaper's footing, signed so a foe attacking up at one pays it too.
+	if bool(context.get("to_hit_enabled", false)) and battlefield.has_method("elevation_delta"):
+		var footing := DisciplineProfile.footing_modifiers(
+			actor, target, -int(battlefield.call("elevation_delta", actor, target)))
+		if not footing.is_empty():
+			context["discipline_accuracy_modifiers"] = footing
 	if not aim_location.is_empty():
 		context["aim"] = _query_aim(actor, target, action, aim_location)
 		if bool(context["aim"].get("allowed", false)) and context["aim"].has("injury"):
@@ -3546,9 +3583,19 @@ func _positional_resolution_context(actor: BattleActor, target: BattleActor) -> 
 	}
 
 
+## A cell's terrain for resolution. Inside a Hushwarden's field (DisciplineProfile, S4) the
+## copy is hushed; the board's own TileState is never written.
 func _tile_context(cell: Vector2i) -> Dictionary:
 	var tile := tile_state_at(cell)
-	return tile.to_dict() if tile != null else {}
+	if tile == null:
+		return {}
+	var data := tile.to_dict()
+	if not bool(data.get("hush", false)) and (
+		DisciplineProfile.is_hushed(cell, allies, battlefield)
+		or DisciplineProfile.is_hushed(cell, enemies, battlefield)
+	):
+		data["hush"] = true
+	return data
 
 
 func _resolve_defining_strike(

@@ -13,6 +13,23 @@ its slice prefix.
 | `s2-04-calling-ironbrand-grit-5.jpg` | The Ironbrand card: "Grit 5 now: Scars bank up to 5. The most a measure reaches at creation." |
 | `s2-05-measures-1366x768.jpg` | The MEASURES tab at 1366×768: rows wrap inside the column, buttons stay centred on their rows. |
 
+The S2 frames were re-rendered after S5, so the MEASURES frames also show the SUGGEST button.
+
+## S4 — Disciplines live
+
+| File | What it shows |
+|---|---|
+| `s4-07-calling-stormbearer-chordblade.jpg` | The DISCIPLINE line ends with what it does in a fight: "every path costs 20% less." |
+
+The fight effects themselves (footwork price, footing term, hushed cells) are proven headless in
+`test/integration/test_disciplines_in_combat.gd`; no battle frame was taken.
+
+## S5 — class-shaped rolls
+
+| File | What it shows |
+|---|---|
+| `s5-06-measures-stormbearer-suggested.jpg` | SUGGEST FOR STORMBEARER placed Intuition 5 (patron measure), Muster 4 (the Heft Kit's measure), then 3s. The Intuition row carries "Stormbearer: Storm rows deal +3 to +8"; the Kit line reads "Heft (Kit): 52% · weapon hits +6%" (S3). |
+
 ## How they were made
 
 ```bash

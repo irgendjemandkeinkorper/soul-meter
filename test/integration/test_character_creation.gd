@@ -490,3 +490,17 @@ func _find_button_with_text(node: Node, text: String) -> Button:
 		if found != null:
 			return found
 	return null
+
+
+func test_suggest_spreads_the_measures_the_way_the_class_leans() -> void:
+	var screen := await _open_screen()
+	screen.select_class("stormbearer")
+	_reset_measures(screen)
+	var button := screen.find_child("SuggestMeasuresButton", true, false) as Button
+	assert_str(button.text).is_equal("SUGGEST FOR STORMBEARER")
+	button.pressed.emit()
+	assert_int(int(screen.build.attributes["intuition"])).is_equal(DramgidSchema.ATTRIBUTE_CAP)
+	assert_int(screen.build.remaining_attribute_points()).is_equal(0)
+	var now := screen.find_child("Effects_intuition", true, false).get_node("Now") as Label
+	assert_str(now.text).contains("Stormbearer: Storm rows deal")
+	screen.queue_free()

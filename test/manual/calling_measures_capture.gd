@@ -58,6 +58,18 @@ func test_the_register_shows_what_measures_and_class_buy() -> void:
 	await _frames(8)
 	await _capture("05-measures-1366x768")
 
+	# S4 and S5: a Stormbearer on Chordblade, measures placed by SUGGEST.
+	get_tree().root.size = Vector2i(1920, 1080)
+	screen.select_discipline("chordblade")
+	screen.select_class("stormbearer")
+	screen.go_to_tab(&"measures")
+	(screen.find_child("SuggestMeasuresButton", true, false) as Button).pressed.emit()
+	await _frames(8)
+	await _capture("06-measures-stormbearer-suggested")
+	screen.go_to_tab(&"calling")
+	await _frames(6)
+	await _capture("07-calling-stormbearer-chordblade")
+
 
 ## Every measure to the floor, then the named ones up; the rest of the budget lands on Decorum
 ## and Doctrine so every point is placed.
