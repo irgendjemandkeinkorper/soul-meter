@@ -22,6 +22,23 @@ var last_effect_revealed: bool = false
 var redraw_spent: bool = false
 
 
+## The table the storm draws from at the applied patron measure, Intuition (calling and
+## measures S1, PROVISIONAL): every row +1 damage at Intuition 4, +2 at 5. The order of the rows,
+## and so the lowest/highest-row perks, is unchanged; the forecast and the commit read this one copy.
+func effect_rows() -> Array:
+	var rows: Array = EFFECT_TABLE.duplicate(true)
+	var bonus := measure_bonus()
+	if bonus > 0:
+		for row: Dictionary in rows:
+			row["bonus_damage"] = int(row["bonus_damage"]) + bonus
+	return rows
+
+
+func measure_readout() -> String:
+	var rows := effect_rows()
+	return "Storm rows deal +%d to +%d" % [int(rows[0]["bonus_damage"]), int(rows[rows.size() - 1]["bonus_damage"])]
+
+
 func on_cast_forecast(context: Dictionary) -> Dictionary:
 	var ability: Dictionary = context.get("ability", {})
 	if not bool(ability.get("is_spell", false)):
@@ -29,7 +46,7 @@ func on_cast_forecast(context: Dictionary) -> Dictionary:
 	return {"hidden_draw": {
 		"table_id": "ofshutje_attribution",
 		"seed_key": "ofshutje",
-		"rows": EFFECT_TABLE.duplicate(true),
+		"rows": effect_rows(),
 		# Resolution redraws a lowest-row result once; the forecast carries the same flag, so
 		# the forecast and the commit still draw the same row.
 		"redraw_lowest": not redraw_spent and perk_total("redraw_lowest_once") > 0,

@@ -6,6 +6,9 @@ extends ClassResource
 const UNBALANCED_AFTER_STREAK := 2 # B11, ratified 2026-10-25 (owner item 6).
 const UNBALANCED_DAMAGE_MULTIPLIER := 1.25 # B11, ratified 2026-10-25 (owner item 6).
 const UNBALANCED_FIZZLE_INTEGRITY_PENALTY := 15.0 # B11, ratified 2026-10-25 (owner item 6).
+## Calling and measures S1 (PROVISIONAL): each point of the patron measure, Alacrity, above 3 adds
+## this to the Unbalanced multiplier (×1.25 → ×1.35 → ×1.45). The fizzle penalty is unchanged.
+const MEASURE_MULTIPLIER_PER_POINT := 0.10
 
 var last_side: StringName = &""
 var side_streak: int = 0
@@ -24,6 +27,15 @@ var reflection_used: bool = false
 
 func commands() -> Array[StringName]:
 	return [&"reflection"]
+
+
+## The Unbalanced damage multiplier at the applied patron measure.
+func unbalanced_multiplier() -> float:
+	return UNBALANCED_DAMAGE_MULTIPLIER + float(measure_bonus()) * MEASURE_MULTIPLIER_PER_POINT
+
+
+func measure_readout() -> String:
+	return "Unbalanced hits deal ×%.2f" % unbalanced_multiplier()
 
 
 func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
@@ -119,7 +131,7 @@ func on_cast_forecast(context: Dictionary) -> Dictionary:
 		return {}
 	var unit: Dictionary = (context.get("unit", {}) as Dictionary).duplicate(true)
 	var fizzle: Dictionary = (context.get("fizzle", {}) as Dictionary).duplicate(true)
-	unit["attack_scale"] = UNBALANCED_DAMAGE_MULTIPLIER
+	unit["attack_scale"] = unbalanced_multiplier()
 	var accord := maxf(
 		float(fizzle.get("harmonic_accord", fizzle.get("agreement_integrity", 100.0)))
 		- UNBALANCED_FIZZLE_INTEGRITY_PENALTY,

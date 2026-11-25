@@ -6,6 +6,9 @@ extends ClassResource
 ## the patron id in the forecast context. A refused Jam is retried when this owner next turns.
 
 const FIZZLE_FLOOR_PERCENT := SkillCheckService.FIZZLE_FLOOR_PERCENT
+## Calling and measures S1 (PROVISIONAL): each point of the patron measure, Alacrity, above 3 makes
+## every Jam also push its target this many CT late (10 at Alacrity 4, 20 at 5).
+const MEASURE_DELAY_PER_POINT := 10
 
 var jam_target_id: StringName = &""
 ## Pocketed Gear (#285 slice 3, ruled 2026-10-26): a Jam that cancelled something makes the
@@ -33,6 +36,22 @@ func on_command(action_id: StringName, target_id: StringName) -> void:
 		jam_the_gears(target_id)
 
 
+## The CT a Jam pushes its target late by, from the patron measure alone.
+func jam_delay() -> int:
+	return measure_bonus() * MEASURE_DELAY_PER_POINT
+
+
+func measure_readout() -> String:
+	var delay := jam_delay()
+	return "Each Jam also delays its target %d CT" % delay if delay > 0 else "A Jam delays nothing on its own"
+
+
+func command_note(action_id: StringName) -> String:
+	if action_id != &"jam_the_gears" or jam_delay() <= 0:
+		return ""
+	return "Alacrity %d: the target is also pushed %d CT late." % [measure_value, jam_delay()]
+
+
 func waives_soul_cost(action_id: StringName) -> bool:
 	return action_id == &"jam_the_gears" and free_jam_banked
 
@@ -42,6 +61,8 @@ func jam_the_gears(target_id: StringName) -> bool:
 		return false
 	# The controller skipped the Soul for this Jam if one was banked; it is spent now.
 	free_jam_banked = false
+	if jam_delay() > 0 and host != null:
+		host.delay_actor(target_id, jam_delay())
 	var result: Dictionary = request_cancel(target_id, &"any")
 	var blocked_by: StringName = StringName(str(result.get("blocked_by", "")))
 	if not bool(result.get("allowed", false)) and (

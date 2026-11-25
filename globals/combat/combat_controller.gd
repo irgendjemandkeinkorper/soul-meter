@@ -3307,10 +3307,18 @@ func forecast_action(
 	if not bool(gate.get("allowed", false)):
 		return gate
 	if not action.class_resource_action.is_empty():
+		var description := action.description
+		var commander := active_actor()
+		if commander != null and commander.class_resource != null:
+			# Calling and measures S1: the authored text names the B11 number; say what this
+			# actor's patron measure makes of it.
+			var note := commander.class_resource.command_note(action.class_resource_action)
+			if not note.is_empty():
+				description = "%s %s" % [description, note]
 		return _allowed({
 			"action_id": action.id, "class_command": true,
 			"ap_cost": action.ap_cost, "ct_cost": action.ct_cost, "soul_cost": action.soul_cost,
-			"damage": 0, "description": action.description,
+			"damage": 0, "description": description,
 		})
 	var actor := active_actor()
 	if gate.has("object"):
@@ -4098,6 +4106,8 @@ func _attach_class_resources(group: Array[BattleActor]) -> void:
 			var patron: String = actor.source_member.patron if actor.source_member != null else ""
 			actor.class_resource = ClassResourceRegistry.for_patron(patron)
 			if actor.source_member != null:
+				# The patron measure first: a perk that seeds a start value reads the raised cap.
+				actor.class_resource.apply_measure(ClassCatalog.patron_measure_value(actor.source_member))
 				actor.class_resource.apply_perks(actor.source_member.perk_ids)
 				actor.class_resource.receive_carry(actor.source_member.carried_resource)
 				actor.source_member.carried_resource = {}
@@ -6031,6 +6041,10 @@ func restore_class_resources(data: Dictionary) -> void:
 			# directly, not through apply_perks(): restored state must not be reset.
 			if not (entry as Dictionary).has("perk_ids") and actor.source_member != null:
 				actor.class_resource.perk_ids = actor.source_member.perk_ids.duplicate()
+			# Likewise a save from before the patron measure (calling-and-measures S1): set
+			# directly, so restored state is not reset to a fresh start.
+			if not (entry as Dictionary).has("measure_value") and actor.source_member != null:
+				actor.class_resource.measure_value = ClassCatalog.patron_measure_value(actor.source_member)
 			actor.class_resource.owner_id = actor.combat_id
 			actor.class_resource.host = self
 	var queue: Variant = data.get(DEFERRED_SAVE_KEY, {})

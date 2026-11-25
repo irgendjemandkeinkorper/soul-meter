@@ -7,6 +7,9 @@ extends ClassResource
 ## this resource only records its entries and completion events.
 
 const MAX_ENTRIES := 3  # B11, ratified 2026-10-25 (owner item 6).
+## Calling and measures S1 (PROVISIONAL): each point of the patron measure, Reason, above 3 adds
+## this much to a filed Sentence (6 → 8 → 10). Sequenced Verdict keeps its ruled payload.
+const MEASURE_DAMAGE_PER_POINT := 2
 
 var entries: Array[Dictionary] = []
 var ready: Array[Dictionary] = []
@@ -21,6 +24,26 @@ func max_entries() -> int:
 
 func commands() -> Array[StringName]:
 	return [&"file_sentence", &"sequenced_verdict"]
+
+
+## The damage a Sentence carries: the authored payload plus the patron measure's share.
+func sentence_damage(authored: int) -> int:
+	return authored + measure_bonus() * MEASURE_DAMAGE_PER_POINT
+
+
+func measure_readout() -> String:
+	return "A Sentence deals %d" % sentence_damage(_authored_sentence_damage())
+
+
+func command_note(action_id: StringName) -> String:
+	if action_id != &"file_sentence" or measure_bonus() <= 0:
+		return ""
+	return "Reason %d: this Sentence deals %d." % [measure_value, sentence_damage(_authored_sentence_damage())]
+
+
+static func _authored_sentence_damage() -> int:
+	var action := load("res://data/combat/actions/23_file_sentence.tres") as CombatAction
+	return int(action.class_resource_payload.get("amount", 6)) if action != null else 6
 
 
 func query_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> Dictionary:
@@ -45,8 +68,11 @@ func query_command(action_id: StringName, target_id: StringName, payload: Dictio
 func execute_command(action_id: StringName, target_id: StringName, payload: Dictionary = {}) -> void:
 	if not bool(query_command(action_id, target_id, payload).allowed):
 		return
+	var amount := int(payload.amount)
+	if action_id == &"file_sentence":
+		amount = sentence_damage(amount)
 	var filed := queue_effect(action_id, int(payload.delay_rounds), {
-		"writes": [{"kind": "hp", "target_id": String(target_id), "amount": int(payload.amount)}],
+		"writes": [{"kind": "hp", "target_id": String(target_id), "amount": amount}],
 	})
 	if filed and action_id == &"sequenced_verdict":
 		verdict_used = true

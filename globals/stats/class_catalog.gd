@@ -17,11 +17,20 @@ extends RefCounted
 ## spiked gauntlet). `retired_disciplines` / `watch_disciplines` mirror the 3x10
 ## compatibility sheet recorded in ten-patron-classes.md (2026-08-07): Threadwalker x
 ## Chordblade is retired outright; the two watch cells are allowed with a note.
+##
+## `measure` is the class's **patron measure** (docs/design/calling-and-measures-2026-11-25.md
+## §4, PROVISIONAL): the DRAMGID attribute that strengthens its loop above MEASURE_THRESHOLD.
+## Only River-Mother's is canon-backed (Decorum governs "Name-Ledger effectiveness"); the rest
+## are the sprint's proposal and wait on owner item 51.
+
+## At or below this a patron measure adds nothing, so a build that has not invested in it plays
+## the ratified B11 numbers exactly (docs/class-resources-numbers.md).
+const MEASURE_THRESHOLD := 3
 
 const ALL: Array[Dictionary] = [
 	{
 		"id": "mirrorblade", "name": "Mirrorblade", "patron": "Maiiam", "patron_id": "maiiam",
-		"role": "Duelist", "vault_id": "maiiam",
+		"measure": "alacrity", "role": "Duelist", "vault_id": "maiiam",
 		"kit": "Paired balanced daggers, Mirrorwalking footwork.", "kit_skills": ["keen"],
 		"resource": "Balance",
 		"resource_blurb": "Alternate Strike and Guard to stay Balanced. Repeat either twice to become Unbalanced: stronger attacks, less reliable casting.",
@@ -32,7 +41,7 @@ const ALL: Array[Dictionary] = [
 	},
 	{
 		"id": "river-mother", "name": "River-Mother", "patron": "Haeren", "patron_id": "haeren",
-		"role": "Support", "vault_id": "haeren",
+		"measure": "decorum", "role": "Support", "vault_id": "haeren",
 		"kit": "Water harp, net-and-whip, hospice tools doubling as battlefield medicine.", "kit_skills": ["reach"],
 		"resource": "The Name-Ledger",
 		"resource_blurb": "Record a living ally's name, including your own. Gain 3 Breath when they fall or survive a victory; each name pays once per battle.",
@@ -43,7 +52,7 @@ const ALL: Array[Dictionary] = [
 	},
 	{
 		"id": "ironbrand", "name": "Ironbrand", "patron": "Kero", "patron_id": "kero",
-		"role": "Berserker", "vault_id": "kero",
+		"measure": "grit", "role": "Berserker", "vault_id": "kero",
 		"kit": "Greatsword or spiked gauntlet, ritual branding.", "kit_skills": ["heft", "grip"],
 		"resource": "Scars",
 		"resource_blurb": "Taking damage banks a Scar, up to three. Spend one to guarantee the hit roll of your next resolved attack or cast; spells can still fizzle.",
@@ -54,7 +63,7 @@ const ALL: Array[Dictionary] = [
 	},
 	{
 		"id": "lensbearer", "name": "Lensbearer", "patron": "Stuid", "patron_id": "stuid",
-		"role": "Buffer/Debuffer", "vault_id": "stuid",
+		"measure": "reason", "role": "Buffer/Debuffer", "vault_id": "stuid",
 		"kit": "Quarterstaff, precision monocle.", "kit_skills": ["reach"],
 		"resource": "Clarity",
 		"resource_blurb": "Start each battle with three Clarity. Spend one to reveal true spell forecast terms until your next committed cast.",
@@ -65,7 +74,7 @@ const ALL: Array[Dictionary] = [
 	},
 	{
 		"id": "husk-bearer", "name": "Husk-bearer", "patron": "Vhorr", "patron_id": "vhorr",
-		"role": "DoT controller", "vault_id": "vhorr",
+		"measure": "muster", "role": "DoT controller", "vault_id": "vhorr",
 		"kit": "Cleaver or sickle, gut-lute.", "kit_skills": ["keen"],
 		"resource": "Hunger",
 		"resource_blurb": "Successful Strikes and casts seed a recurring damage effect. Hits and damaging Hunger ticks build Hunger, up to three, strengthening later ticks.",
@@ -76,7 +85,7 @@ const ALL: Array[Dictionary] = [
 	},
 	{
 		"id": "flamebinder", "name": "Flamebinder", "patron": "Vicoar", "patron_id": "vicoar",
-		"role": "Artificer", "vault_id": "vicoar",
+		"measure": "reason", "role": "Artificer", "vault_id": "vicoar",
 		"kit": "War pick, deployable kinetic-sculpture constructs.", "kit_skills": ["heft"],
 		"resource": "Instructive Failure",
 		"resource_blurb": "A fizzled cast banks a Failure Token, up to three. Spend one to prevent your next cast from fizzling.",
@@ -87,7 +96,7 @@ const ALL: Array[Dictionary] = [
 	},
 	{
 		"id": "stormbearer", "name": "Stormbearer", "patron": "Ofshütje", "patron_id": "ofshutje",
-		"role": "Skirmisher", "vault_id": "ofshutje",
+		"measure": "intuition", "role": "Skirmisher", "vault_id": "ofshutje",
 		"kit": "Greatclub, cloud-drum call-and-response attacks.", "kit_skills": ["heft"],
 		"resource": "Attribution",
 		"resource_blurb": "Successful spells draw a hidden storm effect for 1–6 bonus damage. Revealing the forecast exposes the result.",
@@ -98,7 +107,7 @@ const ALL: Array[Dictionary] = [
 	},
 	{
 		"id": "oathclock", "name": "Oathclock", "patron": "Pazzah", "patron_id": "pazzah",
-		"role": "Controller", "vault_id": "pazzah",
+		"measure": "reason", "role": "Controller", "vault_id": "pazzah",
 		"kit": "Halberd, pendulum bell — a metronome weapon doubling as a Song-timing tool.", "kit_skills": ["reach"],
 		"resource": "The Ledger",
 		"resource_blurb": "File Sentence queues 6 damage against an enemy, due in two rounds. Keep up to three entries; a Jam can cancel them.",
@@ -110,7 +119,7 @@ const ALL: Array[Dictionary] = [
 	},
 	{
 		"id": "locksmirk", "name": "Locksmirk", "patron": "Fickah", "patron_id": "fickah",
-		"role": "Trickster", "vault_id": "fickah",
+		"measure": "alacrity", "role": "Trickster", "vault_id": "fickah",
 		"kit": "Blowgun, trap poetry, lockpicking-as-combat.", "kit_skills": ["loose"],
 		"resource": "Rule-breaker",
 		"resource_blurb": "Fickah casters never reach 0% fizzle, Mastery included; in exchange, a unique action no other class gets.",
@@ -122,7 +131,7 @@ const ALL: Array[Dictionary] = [
 	},
 	{
 		"id": "threadwalker", "name": "Threadwalker", "patron": "Izhakel", "patron_id": "izhakel",
-		"role": "Summoner/Debuffer", "vault_id": "izhakel",
+		"measure": "decorum", "role": "Summoner/Debuffer", "vault_id": "izhakel",
 		"kit": "Whip-dagger, glass chimes that passively reveal enemy resource pools.", "kit_skills": ["keen"],
 		"resource": "Threads",
 		"resource_blurb": "Touch an enemy to Bind Hostility: their next attack triggers 6 damage. Keep up to three contracts, one per enemy.",
@@ -177,6 +186,29 @@ static func display_class(class_id: String) -> String:
 	if entry.is_empty():
 		return ""
 	return "%s (%s)" % [entry["name"], entry["patron"]]
+
+
+## The class's patron measure id ("reason"); "" for an unknown class.
+static func patron_measure(class_id: String) -> String:
+	return str(by_id(class_id).get("measure", ""))
+
+
+## What a patron measure of `value` adds to the class loop: 0 at MEASURE_THRESHOLD or below
+## (and for 0, the "no attribute map" reading), +1 per point above, never above the cap's reach.
+static func measure_bonus(value: int) -> int:
+	return clampi(value - MEASURE_THRESHOLD, 0, DramgidSchema.ATTRIBUTE_CAP - MEASURE_THRESHOLD)
+
+
+## The member's patron measure value, read through either class vocabulary (class_id first,
+## then patron). 0 when the member has no class row or no attribute map.
+static func patron_measure_value(member: PartyMember) -> int:
+	if member == null:
+		return 0
+	var row := by_id(member.class_id) if not member.class_id.is_empty() else {}
+	if row.is_empty():
+		row = class_for_patron_value(member.patron)
+	var measure := str(row.get("measure", ""))
+	return member.attribute_value(StringName(measure)) if not measure.is_empty() else 0
 
 
 static func default_kit_skill(class_id: String) -> String:

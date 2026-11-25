@@ -18,9 +18,19 @@ var armed_round: int = -1
 var carried_in: int = 0
 
 
-## The live cap: MAX_CLARITY plus any picked `cap_delta` perk (Wider Lens, #285 slice 2).
+## The live cap: MAX_CLARITY plus any picked `cap_delta` perk (Wider Lens, #285 slice 2), plus the
+## patron measure, Reason (calling-and-measures S1, PROVISIONAL): +1 at Reason 4, +2 at Reason 5.
 func max_clarity() -> int:
-	return MAX_CLARITY + perk_total("cap_delta")
+	return MAX_CLARITY + perk_total("cap_delta") + measure_bonus()
+
+
+## The start tracks the cap, as it does for Wider Lens.
+func _on_measure_applied() -> void:
+	clarity = max_clarity() + carried_in
+
+
+func measure_readout() -> String:
+	return "%d Clarity each battle" % max_clarity()
 
 
 ## Kept Focus: one unspent Clarity carries into the next battle, on top of a full start.
