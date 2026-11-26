@@ -1,6 +1,7 @@
 # Quest system sprint (2026-11-26)
 
-An overnight run on the quest system, asked for in session ("focus on the quest system"). The
+An overnight run on the quest system, asked for in session ("focus on the quest system"); draft PR
+#672, owner item 52. The
 backend was already in good shape when it opened: the audit (`tools/quest_audit.gd`) reported 0
 errors and 10 warnings, with main and side read-back both at 100 %. Content is gated elsewhere:
 the six stub dispositions (R11) and the eight Kesselford/Ashlaren proposals wait on the owner in
