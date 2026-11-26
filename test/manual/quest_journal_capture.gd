@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 ## Quest-system sprint captures (docs/design/quest-system-sprint-2026-11-26.md): the journal
-## mid-chapter, with every kind of quest active and completed quests showing how they ended.
+## mid-chapter, with every kind of quest active and completed quests showing how they ended, and
+## Dom's field HUD following a tracked quest, with the field notice for a quest taken up.
 ## Writes JPGs to user://qa/quest-sprint/; copy the ones worth keeping into docs/qa/.
 
 const OUT_DIR := "user://qa/quest-sprint"
@@ -70,6 +71,8 @@ static func seed_mid_chapter() -> void:
 		quest.objective_completed = true
 		completed_rows.append({"id": quest.id, "data": quest.serialize()})
 	QuestRegistry.from_dict({"active": active_rows, "completed": completed_rows})
+	# Q3: one commission tracked, so the journal shows a toggle in each state.
+	QuestRegistry.pin(QuestRegistry.ASH_IN_THE_RAIN)
 
 
 func test_capture_journal_1080p() -> void:
@@ -95,3 +98,48 @@ func _capture_journal(resolution: Vector2i) -> void:
 	var path := "%s/journal-%dx%d.jpg" % [OUT_DIR, resolution.x, resolution.y]
 	assert_int(viewport.get_texture().get_image().save_jpg(path, 0.9)).is_equal(OK)
 	screen.free()
+
+
+func test_capture_field_tracking_1080p() -> void:
+	var window_before := get_tree().root.size
+	get_tree().root.size = Vector2i(1920, 1080)
+	var runner := scene_runner("res://world/starting_town.tscn")
+	await runner.simulate_frames(6)
+	await get_tree().create_timer(0.5).timeout
+	# A Dom commission tracked in Dom: its step, and no GO TO.
+	await _capture_viewport("field-tracked-dom-1920x1080")
+
+	# A Hollowmere quest taken up and tracked from Dom: the notice, then GO TO.
+	QuestRegistry.offer(QuestRegistry.INSTRUMENT_STAKE)
+	QuestRegistry.pin(QuestRegistry.INSTRUMENT_STAKE)
+	await get_tree().create_timer(0.6).timeout
+	await _capture_viewport("field-tracked-elsewhere-1920x1080")
+	get_tree().root.size = window_before
+
+
+func _capture_viewport(name: String) -> void:
+	# Boot leaves the title menu loaded under the test runner; it is not part of the field.
+	var hidden: Array[CanvasItem] = []
+	for child: Node in get_tree().root.get_children():
+		if child is CanvasItem and child.scene_file_path == GameFlow.MAIN_MENU_SCENE:
+			if (child as CanvasItem).visible:
+				(child as CanvasItem).visible = false
+				hidden.append(child as CanvasItem)
+		for layer: Node in child.get_children():
+			if child.scene_file_path == GameFlow.MAIN_MENU_SCENE and layer is CanvasLayer:
+				if (layer as CanvasLayer).visible:
+					(layer as CanvasLayer).visible = false
+					hidden.append(null)
+					layer.set_meta(&"capture_hidden", true)
+	RenderingServer.force_draw()
+	await RenderingServer.frame_post_draw
+	var path := "%s/%s.jpg" % [OUT_DIR, name]
+	assert_int(get_viewport().get_texture().get_image().save_jpg(path, 0.9)).is_equal(OK)
+	for item: CanvasItem in hidden:
+		if item != null:
+			item.visible = true
+	for child: Node in get_tree().root.get_children():
+		for layer: Node in child.get_children():
+			if layer.has_meta(&"capture_hidden"):
+				(layer as CanvasLayer).visible = true
+				layer.remove_meta(&"capture_hidden")

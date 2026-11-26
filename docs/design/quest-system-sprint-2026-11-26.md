@@ -73,6 +73,28 @@ Captures: `docs/qa/quest-sprint-2026-11-26/q1-journal-*.jpg` (`test/manual/quest
   ("Return to Droma Flintjaw…") is announced, since the quest is still waiting on the player.
 - Checked against the e2e chapter journey and every suite that reads the notice stack.
 
+## Q3 as built
+
+Captures: `q3-journal-tracking-1920x1080.jpg`, `q3-field-tracked-in-dom.jpg`,
+`q3-field-tracked-elsewhere-new-quest.jpg` (the last also shows a Q2 notice).
+
+- `QuestRegistry.pin(quest)` / `unpin()` / `pinned_quest()` and `pinned_quest_changed`. Only an
+  active quest can be tracked; completing it lets go. One quest at a time.
+- Journal: each active entry has a **Track** toggle on its title row (plain `Button`; Bronze stays
+  the one ceremonial control, the Standing button). It reads **Tracking** while on. No extra line.
+- Field HUD: with a quest tracked, the one objective line is `QUEST NAME · its step`, plus
+  `GO TO <place>` only when the place is in another area (U2). With nothing tracked, the line is
+  the chapter thread, unchanged.
+- `QuestRegistry.destination_for(quest)`: a side quest's place is its giver's area (from the NPC
+  placement; Droma in Dom's town hall gives "Dom"), never the building, because a step can send
+  the player to another participant in the same hub. Main and fetch quests use their authored
+  `quest_location`. A companion's quest has none: it goes where the party goes.
+- Save: optional `quests.pinned` (a quest id), written only while something is tracked, so a
+  save with nothing tracked has exactly the old shape. A missing, junk, or inactive id loads as
+  nothing tracked; tracking never fails a load. No schema bump.
+- `tracked_quest()` (unused by the game) now prefers the tracked quest.
+- A disk round trip of a tracked stub is in `test_save_game.gd`.
+
 ## New UI copy (for owner review)
 
 | Where | Text | Note |
@@ -80,3 +102,9 @@ Captures: `docs/qa/quest-sprint-2026-11-26/q1-journal-*.jpg` (`test/manual/quest
 | Journal state, suspended stub | TO BE CONTINUED | The phrase the stub's own reward reveal already uses. |
 | Field notice, quest taken up | NEW QUEST — *The Living Tag* | Same shape as "WORD OF YOU SPREADS — …". |
 | Field notice, new step | *THE BROKEN MUSTER* — *Break the demon vanguard.* | The step is the authored objective, unchanged. |
+| Journal toggle | Track / Tracking | Tooltip: "Show this quest on the field's objective line." |
+| HUD objective, tracked | *THE LIVING TAG* · *step* · GO TO *Dom* | Same shape as the chapter line. |
+
+One existing line is now slightly off: the journal's "The record changes only when the world
+does. This page changes nothing." The Track toggle changes the HUD, though nothing in the world.
+Left as written; it is approved prose.

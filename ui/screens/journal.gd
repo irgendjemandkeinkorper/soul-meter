@@ -6,6 +6,9 @@ extends Screen
 const StandingScreen := preload("res://ui/screens/standing.gd")
 const RECENT_CONSEQUENCE_LIMIT := 6
 
+## Q3: the Track toggle on each active entry, by quest id.
+var _track_buttons: Dictionary = {}
+
 
 func _uses_ledger_style() -> bool:
 	return true
@@ -18,8 +21,8 @@ func _build() -> void:
 	# The ledger shell does not scroll on its own; the journal's record can outgrow a page.
 	var scroll := ScrollContainer.new()
 	scroll.name = "JournalScroll"
-	# The first focusable is the Standing button at the foot of the record; following focus
-	# would open the journal scrolled past its own thread.
+	# Focus moves between Track toggles and the Standing button at the foot of the record;
+	# following it would scroll the journal past its own thread.
 	scroll.follow_focus = false
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -79,6 +82,7 @@ func _build() -> void:
 	standing_button.theme_type_variation = "BronzeButton"
 	standing_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_add_back_button(shell)
+	_refresh_track_buttons()
 
 
 func _add_quest_column(
@@ -152,6 +156,17 @@ func _add_quest(box: VBoxContainer, quest: Quest) -> void:
 			"PositiveLabel" if state == "READY TO REPORT" else "MutedLabel"
 		)
 		head.add_child(state_label)
+	if QuestRegistry.is_active(quest):
+		# Q3: tracking puts this quest on the field's objective line in place of the chapter.
+		var track := Button.new()
+		track.name = "TrackButton"
+		track.toggle_mode = true
+		track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		track.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		track.tooltip_text = "Show this quest on the field's objective line."
+		track.toggled.connect(_on_track_toggled.bind(quest))
+		head.add_child(track)
+		_track_buttons[quest.id] = track
 
 	# An active quest's line is its current step. A completed quest's line is how it ended: its
 	# last step is the turn-in ("Return to Droma Flintjaw and decide…"), which stops being true
@@ -208,6 +223,26 @@ func _add_recent_consequences(container: VBoxContainer) -> void:
 				renown_event.delta
 			)
 		container.add_child(event_label)
+
+
+func _on_track_toggled(pressed: bool, quest: Quest) -> void:
+	if pressed:
+		QuestRegistry.pin(quest)
+	elif QuestRegistry.pinned_quest() == quest:
+		QuestRegistry.unpin()
+	_refresh_track_buttons()
+
+
+## One quest is tracked at a time: tracking another releases the first, and every toggle shows it.
+func _refresh_track_buttons() -> void:
+	var tracked := QuestRegistry.pinned_quest()
+	for quest_id: Variant in _track_buttons:
+		var button := _track_buttons[quest_id] as Button
+		if not is_instance_valid(button):
+			continue
+		var on := tracked != null and tracked.id == int(quest_id)
+		button.set_pressed_no_signal(on)
+		button.text = "Tracking" if on else "Track"
 
 
 func _open_standing() -> void:

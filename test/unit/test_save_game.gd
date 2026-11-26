@@ -179,6 +179,22 @@ func test_spent_expert_rerolls_survive_a_disk_save_load_round_trip() -> void:
 	assert_bool(second.success).is_false()
 
 
+## Quest-system sprint (2026-11-26): a stub the player took up and is tracking comes back from
+## disk still active and still tracked. Before the sprint the stub itself was dropped on load.
+func test_a_tracked_stub_survives_a_disk_save_load_round_trip() -> void:
+	var stub: StubSideQuest = QuestRegistry.STUB_LEDGE
+	QuestRegistry.reset()
+	QuestRegistry.offer(stub)
+	assert_bool(QuestRegistry.pin(stub)).is_true()
+	assert_bool(saves.save()).is_true()
+
+	QuestRegistry.reset()
+	assert_object(QuestRegistry.pinned_quest()).is_null()
+	assert_bool(saves.load_save()).is_true()
+	assert_bool(QuestRegistry.is_active(stub)).is_true()
+	assert_object(QuestRegistry.pinned_quest()).is_same(stub)
+
+
 func test_legacy_schema_migrates_without_losing_existing_values() -> void:
 	var current: Dictionary = saves._build_payload()
 	current["version"] = SaveGameScript.FORMAT_VERSION

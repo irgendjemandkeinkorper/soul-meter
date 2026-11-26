@@ -174,6 +174,7 @@ func _ready() -> void:
 			_refresh_objective()
 	)
 	QuestSystem.quest_completed.connect(func(_quest: Quest) -> void: _refresh_objective())
+	QuestRegistry.pinned_quest_changed.connect(func(_quest: Quest) -> void: _refresh_objective())
 	GameState.flag_changed.connect(func(_flag: String, _value: Variant) -> void: _refresh_objective())
 	GameState.party_changed.connect(
 		func() -> void:
@@ -408,6 +409,11 @@ func _refresh_objective() -> void:
 		return
 	var text := "%s  ·  %s" % [ChapterOneProgress.title(), ChapterOneProgress.objective()]
 	var destination := ChapterOneProgress.destination()
+	# Q3: a tracked quest takes the line; with nothing tracked it follows the chapter thread.
+	var tracked := QuestRegistry.pinned_quest()
+	if tracked != null:
+		text = "%s  ·  %s" % [tracked.quest_name.to_upper(), QuestRegistry.objective_for(tracked)]
+		destination = QuestRegistry.destination_for(tracked)
 	if not destination.is_empty() and not destination_is_here(destination, _area_here()):
 		text += "  ·  GO TO  %s" % destination
 	_objective.text = text

@@ -12,6 +12,8 @@ signal quest_rewards_granted(summary: Dictionary)
 ## finished in the same moment: completion has its own reward reveal.
 signal quest_taken_up(quest: Quest)
 signal quest_step_reached(quest: Quest, objective: String)
+## Q3: the quest the player tracks changed; null when tracking let go.
+signal pinned_quest_changed(quest: Quest)
 
 const LOAMROOT_SPRIGS: FetchQuest = preload("res://quests/loamroot_sprigs.tres")
 const DORTHKOR_ROAD: FlagQuest = preload("res://quests/dorthkor_road.tres")
@@ -146,6 +148,9 @@ var _runtime_dialogue_resources: Dictionary = {}
 var _news_taken_up: Array[Quest] = []
 var _told_stage: Dictionary = {}
 var _news_queued := false
+## Q3: the id of the quest the player tracks, -1 for none. It rides in the save as the optional
+## `quests.pinned` key; a save without it (or with an id that is not active) tracks nothing.
+var _pinned_id := -1
 
 const BROKEN_MUSTER_RULINGS := {
 	"demons-first": {
@@ -290,6 +295,7 @@ func _ready() -> void:
 	GameState.inventory_changed.connect(_on_inventory_changed)
 	GameState.flag_changed.connect(_on_flag_changed)
 	GameState.party_changed.connect(_offer_companion_quests_for_party)
+	QuestSystem.quest_completed.connect(_on_quest_completed)
 
 
 func register_runtime_quests(
@@ -1230,7 +1236,64 @@ func flags_met(quest: FlagQuest) -> bool:
 	return true
 
 
+## Q3: track an active quest. The field HUD's objective line follows it until the player lets
+## go or the quest completes. Returns false (and changes nothing) for a quest that is not active.
+func pin(quest: Quest) -> bool:
+	if quest == null or not is_active(quest) or _quest_by_id(quest.id) != quest:
+		return false
+	if _pinned_id == quest.id:
+		return true
+	_pinned_id = quest.id
+	pinned_quest_changed.emit(quest)
+	return true
+
+
+func unpin() -> void:
+	if _pinned_id < 0:
+		return
+	_pinned_id = -1
+	pinned_quest_changed.emit(null)
+
+
+## The tracked quest while it is active; null otherwise (nothing tracked follows the chapter).
+func pinned_quest() -> Quest:
+	if _pinned_id < 0:
+		return null
+	var quest := _quest_by_id(_pinned_id)
+	return quest if quest != null and is_active(quest) else null
+
+
+func _on_quest_completed(quest: Quest) -> void:
+	if quest != null and quest.id == _pinned_id:
+		unpin()
+
+
+## Where to go for a quest, as the HUD's GO TO names it: an area or place name the field HUD
+## compares with the area it is in (`FieldHUD.destination_is_here`). A side quest is found where
+## its giver stands; the area, not the building, because a step can send the player to another
+## participant in the same hub. A companion's quest goes where the party goes, so it has none.
+func destination_for(quest: Quest) -> String:
+	if quest == null or COMPANION_QUESTS.values().has(quest):
+		return ""
+	if quest is DomSideQuest:
+		var row := NpcRoster.get_npc((quest as DomSideQuest).giver_actor_id)
+		var placement: Variant = row.get("placement", {})
+		if placement is Dictionary:
+			return LocationRegistry.area_name(str((placement as Dictionary).get("scene", "")))
+		return ""
+	if quest is FlagQuest:
+		return (quest as FlagQuest).quest_location
+	if quest is FetchQuest:
+		return (quest as FetchQuest).quest_location
+	return ""
+
+
+## The quest a single-line tracker should follow: the player's tracked quest, else the active
+## story quest, else the first active quest.
 func tracked_quest() -> Quest:
+	var pinned := pinned_quest()
+	if pinned != null:
+		return pinned
 	for quest in STORY_QUESTS:
 		if is_active(quest):
 			return quest
@@ -1239,11 +1302,17 @@ func tracked_quest() -> Quest:
 
 
 func to_dict() -> Dictionary:
-	return {
+	var data := {
 		"available": _serialize_pool(QuestSystem.get_available_quests()),
 		"active": _serialize_pool(QuestSystem.get_active_quests()),
 		"completed": _serialize_pool(QuestSystem.completed.get_all_quests()),
 	}
+	# Optional, and written only while something is tracked, so a save with nothing tracked keeps
+	# exactly the shape older builds wrote and read.
+	var pinned := pinned_quest()
+	if pinned != null:
+		data["pinned"] = pinned.id
+	return data
 
 
 func from_dict(data: Dictionary) -> void:
@@ -1254,6 +1323,7 @@ func from_dict(data: Dictionary) -> void:
 	_restore_pool(QuestSystem.active, data.get("active", []), "active")
 	_restore_pool(QuestSystem.completed, data.get("completed", []), "completed")
 	_rebaseline_quest_news()
+	_restore_pinned(data.get("pinned", null))
 
 
 func reset() -> void:
@@ -1265,6 +1335,21 @@ func reset() -> void:
 		if quest is FlagQuest:
 			quest.current_stage = 0
 	_rebaseline_quest_news()
+	unpin()
+
+
+## A JSON save brings an int back as a float. Anything that is not a whole number naming an active
+## quest restores as nothing tracked; tracking is a convenience and never fails a load.
+func _restore_pinned(value: Variant) -> void:
+	var restored := -1
+	if (value is int or value is float) and is_finite(float(value)) and float(value) == floorf(float(value)):
+		var quest := _quest_by_id(int(value))
+		if quest != null and is_active(quest):
+			restored = quest.id
+	if restored == _pinned_id:
+		return
+	_pinned_id = restored
+	pinned_quest_changed.emit(pinned_quest())
 
 
 func _serialize_pool(quests: Array[Quest]) -> Array[Dictionary]:
