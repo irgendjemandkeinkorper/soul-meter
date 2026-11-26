@@ -117,6 +117,17 @@ Audit before: 0 errors, 10 warnings. After: 0 errors, 0 warnings, 1 info. Flags 
 - `test_production_zhavar_routes_are_all_written` pinned `quest_registry.gd:551`; Q1's
   `known_quests()` moved that line. It now finds both writer lines by their text.
 
+## Found in CI: a test suite left QuestRegistry deaf
+
+CI's first run of #672 failed three new cases, and only there: a quest's step never advanced
+after its flag was set. `test/unit/test_interactive_props.gd` disconnects QuestRegistry from
+`GameState.flag_changed` and `inventory_changed` so a prop cannot move a quest, and since
+2026-08-09 it never reconnected them. In CI's one-process run, every suite after it had a
+registry that ignored flag and inventory changes. The new notice and tracking tests were the
+first to rely on the live signal. The suite now hands both connections back, and
+`test_the_registry_listens_to_flag_and_inventory_changes` names the leak if it ever returns.
+Reproduced locally (props suite, then the quest suites: red), then green with the fix.
+
 ## New UI copy (for owner review)
 
 | Where | Text | Note |

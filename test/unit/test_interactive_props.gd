@@ -9,14 +9,24 @@ const LOOT_ID := "materials/loamroot_sprig"
 var _game_state_before: Dictionary
 var _locale_before: String
 var _field_translation: Translation
+var _quest_flags_were_connected := false
+var _quest_inventory_was_connected := false
 
 
+## The props are tested without QuestRegistry listening, so a prop's flag cannot move a quest.
+## The suite hands both connections back in after_test: until 2026-11-26 it never did, and every
+## later suite in a whole-tree run had a QuestRegistry deaf to flag and inventory changes (found
+## when quest-step notices failed only in CI's one-process run).
 func before_test() -> void:
 	_game_state_before = GameState.to_dict()
 	_locale_before = TranslationServer.get_locale()
-	if GameState.flag_changed.is_connected(QuestRegistry._on_flag_changed):
+	_quest_flags_were_connected = GameState.flag_changed.is_connected(QuestRegistry._on_flag_changed)
+	_quest_inventory_was_connected = GameState.inventory_changed.is_connected(
+		QuestRegistry._on_inventory_changed
+	)
+	if _quest_flags_were_connected:
 		GameState.flag_changed.disconnect(QuestRegistry._on_flag_changed)
-	if GameState.inventory_changed.is_connected(QuestRegistry._on_inventory_changed):
+	if _quest_inventory_was_connected:
 		GameState.inventory_changed.disconnect(QuestRegistry._on_inventory_changed)
 	GameState.flags.clear()
 	GameState.inventory.clear()
@@ -28,6 +38,14 @@ func after_test() -> void:
 		_field_translation = null
 	TranslationServer.set_locale(_locale_before)
 	GameState.from_dict(_game_state_before)
+	if _quest_flags_were_connected and not GameState.flag_changed.is_connected(
+		QuestRegistry._on_flag_changed
+	):
+		GameState.flag_changed.connect(QuestRegistry._on_flag_changed)
+	if _quest_inventory_was_connected and not GameState.inventory_changed.is_connected(
+		QuestRegistry._on_inventory_changed
+	):
+		GameState.inventory_changed.connect(QuestRegistry._on_inventory_changed)
 
 
 func _translate_field_feedback(prop: SMInteractable) -> void:

@@ -522,6 +522,20 @@ func _settle() -> void:
 	await get_tree().process_frame
 
 
+## Quests advance only while the registry hears GameState. A suite that disconnects it must hand
+## the connection back (test_interactive_props.gd did not until 2026-11-26); in a whole-tree run
+## this names that leak instead of leaving a later step that silently never advances.
+func test_the_registry_listens_to_flag_and_inventory_changes() -> void:
+	assert_bool(GameState.flag_changed.is_connected(QuestRegistry._on_flag_changed)).override_failure_message(
+		"QuestRegistry is not listening to GameState.flag_changed: an earlier suite disconnected it"
+	).is_true()
+	assert_bool(
+		GameState.inventory_changed.is_connected(QuestRegistry._on_inventory_changed)
+	).override_failure_message(
+		"QuestRegistry is not listening to GameState.inventory_changed: an earlier suite disconnected it"
+	).is_true()
+
+
 func test_taking_up_a_quest_is_announced_once() -> void:
 	_listen_for_quest_news()
 	QuestRegistry.offer(QuestRegistry.LIVING_TAG)
