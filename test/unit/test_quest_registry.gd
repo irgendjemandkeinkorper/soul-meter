@@ -429,3 +429,170 @@ func test_resolve_field_debt_rejects_an_unknown_reward_id() -> void:
 
 	assert_bool(accepted).is_false()
 	assert_bool(QuestRegistry.is_done(quest)).is_false()
+
+
+## Q1 (docs/design/quest-system-sprint-2026-11-26.md): the journal asks the registry how a quest
+## ended. Each resolver's own write is the source, driven through the resolver real play uses.
+func test_resolution_record_reads_the_choice_each_resolver_wrote() -> void:
+	var empty := {"label": "", "detail": ""}
+	var side: DomSideQuest = QuestRegistry.LIVING_TAG
+	assert_dict(QuestRegistry.resolution_record(side)).is_equal(empty)
+	assert_bool(QuestRegistry.offer_side_quest(side)).is_true()
+	for flag in side.required_flags:
+		GameState.set_flag(flag, true)
+	# Active with every step met is still not an outcome.
+	assert_dict(QuestRegistry.resolution_record(side)).is_equal(empty)
+	assert_bool(QuestRegistry.resolve_side_quest(side, &"restore-the-name")).is_true()
+	assert_dict(QuestRegistry.resolution_record(side)).is_equal(
+		{"label": side.outcome_labels[1], "detail": side.outcome_readbacks[1]}
+	)
+
+	var stub: StubSideQuest = QuestRegistry.STUB_CADENCE
+	assert_bool(QuestRegistry.offer_side_quest(stub)).is_true()
+	for flag in stub.required_flags:
+		GameState.set_flag(flag, true)
+	assert_bool(QuestRegistry.suspend_stub(stub)).is_true()
+	# A suspended stub chose nothing; the journal says "TO BE CONTINUED" in its state instead.
+	assert_dict(QuestRegistry.resolution_record(stub)).is_equal(empty)
+
+	assert_bool(QuestRegistry.debug_force_complete(QuestRegistry.FIELD_DEBT)).is_true()
+	assert_dict(QuestRegistry.resolution_record(QuestRegistry.FIELD_DEBT)).is_equal(
+		{
+			"label": "Split the credit honestly.",
+			"detail": QuestRegistry.FIELD_DEBT_REWARDS["balance"]["consequence"],
+		}
+	)
+
+	_prepare_dorthkor_road_for_ruling()
+	assert_bool(QuestRegistry.resolve_broken_muster(&"dead-first")).is_true()
+	assert_str(QuestRegistry.resolution_record(QuestRegistry.DORTHKOR_ROAD)["label"]).is_equal(
+		"The Ironbrand Sentinels take the deeper investigation."
+	)
+
+	QuestRegistry.offer(QuestRegistry.UNANSWERED_ROAR)
+	GameState.set_flag("chapter_roar_measured", true)
+	QuestRegistry.UNANSWERED_ROAR.update()
+	assert_bool(QuestRegistry.resolve_unanswered_roar(&"carry-it-yourself")).is_true()
+	assert_str(QuestRegistry.resolution_record(QuestRegistry.UNANSWERED_ROAR)["label"]).is_equal(
+		"Carried the shortfall alone, where no one would see it."
+	)
+
+
+## A quest that records no choice has no outcome line, rather than one read off its turn-in step.
+func test_resolution_record_is_empty_for_quests_that_record_no_choice() -> void:
+	var empty := {"label": "", "detail": ""}
+	for quest: Quest in [
+		QuestRegistry.BELLHOUSE_REPAIR, QuestRegistry.LOAMROOT_SPRIGS, QuestRegistry.SERAI_LUN_QUEST
+	]:
+		assert_bool(QuestRegistry.debug_force_complete(quest)).is_true()
+		assert_dict(QuestRegistry.resolution_record(quest)).override_failure_message(
+			"%s recorded an outcome it never chose" % quest.quest_name
+		).is_equal(empty)
+	assert_dict(QuestRegistry.resolution_record(null)).is_equal(empty)
+
+
+# --- Q2: quest news -----------------------------------------------------------
+
+var _taken_up: Array[Quest] = []
+var _steps: Array[String] = []
+
+
+func _listen_for_quest_news() -> void:
+	_taken_up.clear()
+	_steps.clear()
+	QuestRegistry.quest_taken_up.connect(_on_taken_up)
+	QuestRegistry.quest_step_reached.connect(_on_step)
+
+
+func _stop_listening() -> void:
+	QuestRegistry.quest_taken_up.disconnect(_on_taken_up)
+	QuestRegistry.quest_step_reached.disconnect(_on_step)
+
+
+func _on_taken_up(quest: Quest) -> void:
+	_taken_up.append(quest)
+
+
+func _on_step(quest: Quest, objective: String) -> void:
+	_steps.append("%s|%s" % [quest.quest_name, objective])
+
+
+func _settle() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+## Quests advance only while the registry hears GameState. A suite that disconnects it must hand
+## the connection back (test_interactive_props.gd did not until 2026-11-26); in a whole-tree run
+## this names that leak instead of leaving a later step that silently never advances.
+func test_the_registry_listens_to_flag_and_inventory_changes() -> void:
+	assert_bool(GameState.flag_changed.is_connected(QuestRegistry._on_flag_changed)).override_failure_message(
+		"QuestRegistry is not listening to GameState.flag_changed: an earlier suite disconnected it"
+	).is_true()
+	assert_bool(
+		GameState.inventory_changed.is_connected(QuestRegistry._on_inventory_changed)
+	).override_failure_message(
+		"QuestRegistry is not listening to GameState.inventory_changed: an earlier suite disconnected it"
+	).is_true()
+
+
+func test_taking_up_a_quest_is_announced_once() -> void:
+	_listen_for_quest_news()
+	QuestRegistry.offer(QuestRegistry.LIVING_TAG)
+	QuestRegistry.offer(QuestRegistry.LIVING_TAG)
+	await _settle()
+	QuestRegistry.offer(QuestRegistry.LIVING_TAG)
+	await _settle()
+	_stop_listening()
+	assert_array(_taken_up).contains_exactly([QuestRegistry.LIVING_TAG])
+	assert_array(_steps).is_empty()
+
+
+func test_reaching_a_step_announces_the_new_objective() -> void:
+	QuestRegistry.offer(QuestRegistry.DORTHKOR_ROAD)
+	await _settle()
+	_listen_for_quest_news()
+	GameState.set_flag("chapter_dorthkor_reached", true)
+	await _settle()
+	# A flag that changes nothing about the quest says nothing.
+	GameState.set_flag("some_unrelated_flag", true)
+	await _settle()
+	_stop_listening()
+	assert_array(_steps).contains_exactly(["The Broken Muster|Break the demon vanguard."])
+
+
+## The step that finishes a quest is the turn-in itself; the reward reveal already speaks for it.
+func test_a_step_that_completes_the_quest_in_the_same_moment_is_not_announced() -> void:
+	var companion := QuestRegistry.SERAI_LUN_QUEST
+	QuestRegistry.offer(companion)
+	await _settle()
+	_listen_for_quest_news()
+	assert_bool(
+		QuestRegistry.resolve_companion_quest("serai-lun", companion, 6.0, "Held the line with her")
+	).is_true()
+	await _settle()
+	_stop_listening()
+	assert_array(_steps).is_empty()
+
+
+## Loading restores flags before quest pools, and GameState.from_dict() emits party_changed, which
+## offers companion quests against the pools the load is about to replace. None of it is news.
+func test_loading_a_save_announces_nothing() -> void:
+	var road := QuestRegistry.DORTHKOR_ROAD
+	QuestRegistry.offer(road)
+	await _settle()
+	road.current_stage = 2
+	var saved := {"active": [{"id": road.id, "data": road.serialize()}]}
+	road.current_stage = 0
+	_listen_for_quest_news()
+	# What a load does, in the order SaveGame.load does it, in one frame.
+	GameState.set_flag("chapter_dorthkor_reached", true)
+	GameState.set_flag("defeated_breach_hound", true)
+	QuestRegistry.offer(QuestRegistry.SERAI_LUN_QUEST)
+	QuestRegistry.from_dict(saved)
+	await _settle()
+	_stop_listening()
+	assert_array(_taken_up).is_empty()
+	assert_array(_steps).is_empty()
+	assert_int(road.current_stage).is_equal(2)
+

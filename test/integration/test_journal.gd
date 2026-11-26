@@ -6,6 +6,7 @@ var _quest_pools_before: Dictionary
 var _quest_resources_before: Dictionary
 var _reputation_before: Dictionary
 var _renown_before: Dictionary
+var _flags_before: Dictionary
 
 
 func before_test() -> void:
@@ -18,6 +19,7 @@ func before_test() -> void:
 		_quest_resources_before[quest.id] = quest.serialize().duplicate(true)
 	_reputation_before = Reputation.to_dict().duplicate(true)
 	_renown_before = Renown.to_dict().duplicate(true)
+	_flags_before = GameState.flags.duplicate(true)
 	QuestRegistry.reset()
 	Reputation.from_dict({})
 	Renown.from_dict({})
@@ -33,6 +35,7 @@ func after_test() -> void:
 	QuestRegistry.from_dict(_quest_pools_before)
 	Reputation.from_dict(_reputation_before)
 	Renown.from_dict(_renown_before)
+	GameState.flags = _flags_before
 
 
 func test_lists_active_and_completed_quests_with_journal_context() -> void:
@@ -54,13 +57,83 @@ func test_lists_active_and_completed_quests_with_journal_context() -> void:
 
 	var completed_text := _label_text(completed)
 	assert_str(completed_text).contains("The Bell That Won't Ring")
-	assert_str(completed_text).contains("Return to Sella Varn with what you found.")
+	# Q1: a completed quest no longer prints its turn-in step. The bell quest records no choice,
+	# so its entry is the title, the state and the who/where line.
+	assert_str(completed_text).not_contains("Return to Sella Varn with what you found.")
 	assert_str(completed_text).contains("Sella Varn  ·  Dom bell house")
 	assert_str(completed_text).contains("COMPLETED")
 
 
+## Q1: a resolved side quest shows the choice the player made, with what the world shows for it
+## on the tooltip, instead of "Return to Droma Flintjaw and decide the armor's fate."
+func test_completed_quests_show_how_they_ended() -> void:
+	var side: DomSideQuest = QuestRegistry.LIVING_TAG
+	var stub: StubSideQuest = QuestRegistry.STUB_CADENCE
+	var muster := QuestRegistry.DORTHKOR_ROAD
+	for quest: FlagQuest in [side, stub, muster]:
+		quest.current_stage = quest.required_flags.size()
+		quest.objective_completed = true
+	GameState.set_flag(side.resolution_flag, "restore-the-name")
+	GameState.set_flag("chapter_one_resolution", "hold-both")
+	QuestRegistry.from_dict(
+		{
+			"completed": [
+				{"id": side.id, "data": side.serialize()},
+				{"id": stub.id, "data": stub.serialize()},
+				{"id": muster.id, "data": muster.serialize()},
+			],
+		}
+	)
+	var runner := scene_runner("res://ui/screens/journal.tscn")
+	await runner.simulate_frames(2)
+
+	var completed := runner.find_child("CompletedQuests", true, false) as VBoxContainer
+	var completed_text := _label_text(completed)
+	assert_str(completed_text).contains(side.outcome_labels[1])
+	assert_str(completed_text).not_contains(side.objectives[side.objectives.size() - 1])
+	var stub_entry := completed.find_child("Quest%d" % stub.id, true, false)
+	assert_str(_label_text(stub_entry)).contains("TO BE CONTINUED")
+	assert_str(_label_text(stub_entry)).not_contains("COMPLETED")
+	assert_str(completed_text).contains("Dom accepts the cost of holding both fronts.")
+	assert_str(completed_text).not_contains("Return to Marshal Coiljaw in Dom.")
+
+	var side_entry := completed.find_child("Quest%d" % side.id, true, false)
+	var outcome := side_entry.find_child("QuestOutcome", true, false) as Label
+	assert_object(outcome).is_not_null()
+	assert_str(outcome.tooltip_text).is_equal(side.outcome_readbacks[1])
+	assert_int(outcome.mouse_filter).is_equal(Control.MOUSE_FILTER_PASS)
+
+
+## Q1: the main thread leads, commissions follow, companions' own quests close the column.
+func test_active_quests_list_the_main_thread_first_and_companions_last() -> void:
+	var companion := QuestRegistry.SERAI_LUN_QUEST
+	var commission: DomSideQuest = QuestRegistry.ASH_IN_THE_RAIN
+	var main := QuestRegistry.UNANSWERED_ROAR
+	QuestRegistry.from_dict(
+		{
+			"active": [
+				{"id": companion.id, "data": companion.serialize()},
+				{"id": commission.id, "data": commission.serialize()},
+				{"id": main.id, "data": main.serialize()},
+			],
+		}
+	)
+	var runner := scene_runner("res://ui/screens/journal.tscn")
+	await runner.simulate_frames(2)
+
+	var active := runner.find_child("ActiveQuests", true, false) as VBoxContainer
+	var order: Array[String] = []
+	for child: Node in active.get_children():
+		if child.name.begins_with("Quest"):
+			order.append(str(child.name))
+	assert_array(order).is_equal(
+		["Quest%d" % main.id, "Quest%d" % commission.id, "Quest%d" % companion.id]
+	)
+
+
 func test_every_registered_quest_has_giver_and_location_metadata() -> void:
-	for quest: Quest in QuestRegistry.ALL_QUESTS:
+	# known_quests(): the stubs show in the journal too, so they need the same who/where line.
+	for quest: Quest in QuestRegistry.known_quests():
 		assert_str(JournalUI.quest_giver(quest)).is_not_equal("Unentered")
 		assert_str(JournalUI.quest_location(quest)).is_not_equal("Unentered")
 

@@ -6,6 +6,9 @@ extends Screen
 const StandingScreen := preload("res://ui/screens/standing.gd")
 const RECENT_CONSEQUENCE_LIMIT := 6
 
+## Q3: the Track toggle on each active entry, by quest id.
+var _track_buttons: Dictionary = {}
+
 
 func _uses_ledger_style() -> bool:
 	return true
@@ -18,8 +21,8 @@ func _build() -> void:
 	# The ledger shell does not scroll on its own; the journal's record can outgrow a page.
 	var scroll := ScrollContainer.new()
 	scroll.name = "JournalScroll"
-	# The first focusable is the Standing button at the foot of the record; following focus
-	# would open the journal scrolled past its own thread.
+	# Focus moves between Track toggles and the Standing button at the foot of the record;
+	# following it would scroll the journal past its own thread.
 	scroll.follow_focus = false
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -79,6 +82,7 @@ func _build() -> void:
 	standing_button.theme_type_variation = "BronzeButton"
 	standing_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_add_back_button(shell)
+	_refresh_track_buttons()
 
 
 func _add_quest_column(
@@ -152,12 +156,37 @@ func _add_quest(box: VBoxContainer, quest: Quest) -> void:
 			"PositiveLabel" if state == "READY TO REPORT" else "MutedLabel"
 		)
 		head.add_child(state_label)
+	if QuestRegistry.is_active(quest):
+		# Q3: tracking puts this quest on the field's objective line in place of the chapter.
+		var track := Button.new()
+		track.name = "TrackButton"
+		track.toggle_mode = true
+		track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		track.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		track.tooltip_text = "Show this quest on the field's objective line."
+		track.toggled.connect(_on_track_toggled.bind(quest))
+		head.add_child(track)
+		_track_buttons[quest.id] = track
 
-	var objective := Label.new()
-	objective.name = "QuestObjective"
-	objective.text = QuestRegistry.objective_for(quest)
-	objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	entry.add_child(objective)
+	# An active quest's line is its current step. A completed quest's line is how it ended: its
+	# last step is the turn-in ("Return to Droma Flintjaw and decide…"), which stops being true
+	# the moment the choice is made. What the world shows for that choice waits on the tooltip,
+	# as the description does on the title (U3). A quest that records no choice gets no line.
+	var line_text := QuestRegistry.objective_for(quest)
+	var line_detail := ""
+	if QuestRegistry.is_done(quest):
+		var record := QuestRegistry.resolution_record(quest)
+		line_text = str(record["label"])
+		line_detail = str(record["detail"])
+	if not line_text.is_empty():
+		var objective := Label.new()
+		objective.name = "QuestObjective" if not QuestRegistry.is_done(quest) else "QuestOutcome"
+		objective.text = line_text
+		objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		if not line_detail.is_empty():
+			objective.tooltip_text = line_detail
+			objective.mouse_filter = Control.MOUSE_FILTER_PASS
+		entry.add_child(objective)
 
 	var context := Label.new()
 	context.name = "QuestContext"
@@ -194,6 +223,26 @@ func _add_recent_consequences(container: VBoxContainer) -> void:
 				renown_event.delta
 			)
 		container.add_child(event_label)
+
+
+func _on_track_toggled(pressed: bool, quest: Quest) -> void:
+	if pressed:
+		QuestRegistry.pin(quest)
+	elif QuestRegistry.pinned_quest() == quest:
+		QuestRegistry.unpin()
+	_refresh_track_buttons()
+
+
+## One quest is tracked at a time: tracking another releases the first, and every toggle shows it.
+func _refresh_track_buttons() -> void:
+	var tracked := QuestRegistry.pinned_quest()
+	for quest_id: Variant in _track_buttons:
+		var button := _track_buttons[quest_id] as Button
+		if not is_instance_valid(button):
+			continue
+		var on := tracked != null and tracked.id == int(quest_id)
+		button.set_pressed_no_signal(on)
+		button.text = "Tracking" if on else "Track"
 
 
 func _open_standing() -> void:
@@ -236,7 +285,8 @@ static func recent_consequences(limit: int = RECENT_CONSEQUENCE_LIMIT) -> Array[
 
 static func quest_state(quest: Quest) -> String:
 	if QuestRegistry.is_done(quest):
-		return "COMPLETED"
+		# S8: a stub ends on an honest "to be continued", not a completion (owner, 2026-09-04).
+		return "TO BE CONTINUED" if quest is StubSideQuest else "COMPLETED"
 	if QuestRegistry.is_active(quest):
 		return "READY TO REPORT" if quest.objective_completed else "ACTIVE"
 	return "UNTRACKED"
@@ -283,23 +333,43 @@ static func quest_location(quest: Quest) -> String:
 
 func _active_quests() -> Array[Quest]:
 	var quests: Array[Quest] = []
-	for quest: Quest in QuestRegistry.all_quests():
+	for quest: Quest in QuestRegistry.known_quests():
 		if QuestRegistry.is_active(quest):
 			quests.append(quest)
-	quests.sort_custom(_quest_name_before)
+	quests.sort_custom(quest_before)
 	return quests
 
 
 func _completed_quests() -> Array[Quest]:
 	var quests: Array[Quest] = []
-	for quest: Quest in QuestRegistry.all_quests():
+	for quest: Quest in QuestRegistry.known_quests():
 		if QuestRegistry.is_done(quest):
 			quests.append(quest)
-	quests.sort_custom(_quest_name_before)
+	quests.sort_custom(quest_before)
 	return quests
 
 
-static func _quest_name_before(left: Quest, right: Quest) -> bool:
+## Journal order: the main thread, then commissions, then companions' own quests. No group
+## headers (U3 keeps an entry to three lines); the order alone keeps the story quest from
+## sinking among a dozen commissions sorted by name.
+const KIND_MAIN := 0
+const KIND_COMMISSION := 1
+const KIND_COMPANION := 2
+
+
+static func quest_kind(quest: Quest) -> int:
+	if QuestRegistry.STORY_QUESTS.has(quest):
+		return KIND_MAIN
+	if QuestRegistry.COMPANION_QUESTS.values().has(quest):
+		return KIND_COMPANION
+	return KIND_COMMISSION
+
+
+static func quest_before(left: Quest, right: Quest) -> bool:
+	var left_kind := quest_kind(left)
+	var right_kind := quest_kind(right)
+	if left_kind != right_kind:
+		return left_kind < right_kind
 	return left.quest_name.naturalnocasecmp_to(right.quest_name) < 0
 
 

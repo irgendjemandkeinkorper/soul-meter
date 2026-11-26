@@ -190,14 +190,12 @@ func _ruling_label() -> String:
 
 
 func _ruling_sentence() -> String:
-	match str(GameState.get_flag("chapter_one_resolution", "")):
-		"demons-first":
-			return "Coiljaw turns Dom's shield toward the Breach first."
-		"dead-first":
-			return "The Ironbrand Sentinels take the deeper investigation."
-		"hold-both":
-			return "Dom accepts the cost of holding both fronts."
-	return ""
+	# The journal prints the same line as the quest's outcome; the registry holds it once.
+	return str(
+		QuestRegistry.BROKEN_MUSTER_RULING_LINES.get(
+			str(GameState.get_flag("chapter_one_resolution", "")), ""
+		)
+	)
 
 
 func _playtest_summary() -> String:

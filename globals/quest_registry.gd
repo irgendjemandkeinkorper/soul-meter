@@ -7,6 +7,13 @@ extends Node
 ## inventory changes.
 
 signal quest_rewards_granted(summary: Dictionary)
+## Quest news for the field (Q2, docs/design/quest-system-sprint-2026-11-26.md). Both arrive one
+## idle frame after the change, never for a quest a load restored, and never for a quest that
+## finished in the same moment: completion has its own reward reveal.
+signal quest_taken_up(quest: Quest)
+signal quest_step_reached(quest: Quest, objective: String)
+## Q3: the quest the player tracks changed; null when tracking let go.
+signal pinned_quest_changed(quest: Quest)
 
 const LOAMROOT_SPRIGS: FetchQuest = preload("res://quests/loamroot_sprigs.tres")
 const DORTHKOR_ROAD: FlagQuest = preload("res://quests/dorthkor_road.tres")
@@ -135,6 +142,15 @@ const STORY_QUESTS: Array[Quest] = [DEEP_TRIAL, DORTHKOR_ROAD, UNANSWERED_ROAR]
 
 var _runtime_quests: Array[DomSideQuest] = []
 var _runtime_dialogue_resources: Dictionary = {}
+## Quest news waiting for the end of the frame (see `quest_taken_up`). `_told_stage` is the step
+## each active FlagQuest was last announced (or restored, or offered) at, by quest id; a step is
+## news only when the quest has moved past it.
+var _news_taken_up: Array[Quest] = []
+var _told_stage: Dictionary = {}
+var _news_queued := false
+## Q3: the id of the quest the player tracks, -1 for none. It rides in the save as the optional
+## `quests.pinned` key; a save without it (or with an id that is not active) tracks nothing.
+var _pinned_id := -1
 
 const BROKEN_MUSTER_RULINGS := {
 	"demons-first": {
@@ -279,6 +295,7 @@ func _ready() -> void:
 	GameState.inventory_changed.connect(_on_inventory_changed)
 	GameState.flag_changed.connect(_on_flag_changed)
 	GameState.party_changed.connect(_offer_companion_quests_for_party)
+	QuestSystem.quest_completed.connect(_on_quest_completed)
 
 
 func register_runtime_quests(
@@ -345,8 +362,23 @@ func runtime_quests() -> Array[DomSideQuest]:
 	return _runtime_quests.duplicate()
 
 
+## The completable quests: ALL_QUESTS plus any loaded campaign quests. The six stubs stay out,
+## as they do of ALL_QUESTS (they pay no quest XP and cannot be force-completed), so the debug
+## menu and the dev console list only what can actually finish.
 func all_quests() -> Array[Quest]:
 	var quests: Array[Quest] = ALL_QUESTS.duplicate()
+	for runtime_quest: DomSideQuest in _runtime_quests:
+		quests.append(runtime_quest)
+	return quests
+
+
+## Every quest resource a run can hold in a pool: the completable quests AND the stubs. Saves,
+## `reset()` and the journal go through this. Restoring through `all_quests()` dropped a stub the
+## player had taken up (its id was "missing") and the giver offered it again.
+func known_quests() -> Array[Quest]:
+	var quests: Array[Quest] = ALL_QUESTS.duplicate()
+	for stub: StubSideQuest in STUB_SIDE_QUESTS:
+		quests.append(stub)
 	for runtime_quest: DomSideQuest in _runtime_quests:
 		quests.append(runtime_quest)
 	return quests
@@ -388,6 +420,10 @@ func offer(quest: Quest) -> void:
 	QuestSystem.update_quest(quest)
 	if not newly_started:
 		return
+	# The step it starts on is part of taking it up, not a step reached.
+	_told_stage[quest.id] = (quest as FlagQuest).current_stage if quest is FlagQuest else 0
+	_news_taken_up.append(quest)
+	_queue_quest_news()
 	if quest == DORTHKOR_ROAD:
 		GameState.set_flag("chapter_dorthkor_commissioned", true)
 		SaveGame.request_checkpoint(SaveGame.Checkpoint.COMMISSION)
@@ -1061,6 +1097,64 @@ func side_quest_readback(quest: DomSideQuest) -> String:
 	return str(outcome.get("readback", ""))
 
 
+## The Broken Muster's rulings, one line each. The chapter recap prints these after its outcome
+## sentence and the journal prints them as the quest's outcome, so both read the same words.
+const BROKEN_MUSTER_RULING_LINES := {
+	"demons-first": "Coiljaw turns Dom's shield toward the Breach first.",
+	"dead-first": "The Ironbrand Sentinels take the deeper investigation.",
+	"hold-both": "Dom accepts the cost of holding both fronts.",
+}
+
+
+## How a completed quest ended, as `{"label": String, "detail": String}`; both are "" when the
+## quest is not done or records no choice (a single-outcome FlagQuest, a fetch, a companion
+## bond). `label` is the choice in one line; `detail` is what the world shows for it now.
+##
+## Every string comes from data the resolution already wrote: the side quest's outcome label and
+## read-back, a ruling's ledger cause, the field-debt reward title. Nothing here is new prose,
+## and nothing is derived from the quest's last objective, which describes the turn-in step.
+func resolution_record(quest: Quest) -> Dictionary:
+	var record := {"label": "", "detail": ""}
+	if quest == null or not is_done(quest):
+		return record
+	# Before DomSideQuest: a stub IS one, and carries no outcome arrays to read. A suspended stub
+	# made no choice; the journal states it as "TO BE CONTINUED" in place of "COMPLETED".
+	if quest is StubSideQuest:
+		return record
+	if quest is DomSideQuest:
+		var side := quest as DomSideQuest
+		var outcome := side.outcome_for(str(GameState.get_flag(side.resolution_flag, "")))
+		record["label"] = str(outcome.get("label", ""))
+		record["detail"] = str(outcome.get("readback", ""))
+		return record
+	if quest == DORTHKOR_ROAD:
+		var muster_ruling := str(GameState.get_flag("chapter_one_resolution", ""))
+		record["label"] = str(BROKEN_MUSTER_RULING_LINES.get(muster_ruling, ""))
+		return record
+	if quest == UNANSWERED_ROAR:
+		var roar_ruling: Variant = ACT_ONE_HOOK_RULINGS.get(
+			str(GameState.get_flag("chapter_roar_resolution", "")), {}
+		)
+		if roar_ruling is Dictionary:
+			record["label"] = _as_sentence(str((roar_ruling as Dictionary).get("karma_cause", "")))
+		return record
+	if quest == FIELD_DEBT:
+		var reward: Variant = FIELD_DEBT_REWARDS.get(str(GameState.get_flag("field_debt_reward", "")), {})
+		if reward is Dictionary:
+			record["label"] = _as_sentence(str((reward as Dictionary).get("title", "")))
+			record["detail"] = str((reward as Dictionary).get("consequence", ""))
+	return record
+
+
+## A ledger cause or reward title reads as a fragment ("Split the credit honestly"); the
+## journal's outcome lines are sentences, like the side quests' authored labels.
+static func _as_sentence(text: String) -> String:
+	var trimmed := text.strip_edges()
+	if trimmed.is_empty() or trimmed.ends_with(".") or trimmed.ends_with("!") or trimmed.ends_with("?"):
+		return trimmed
+	return trimmed + "."
+
+
 func active_side_quests() -> Array[DomSideQuest]:
 	var result: Array[DomSideQuest] = []
 	for quest: DomSideQuest in _registered_side_quests():
@@ -1090,6 +1184,45 @@ func _on_flag_changed(_flag: String, _value: Variant) -> void:
 	for quest in QuestSystem.get_active_quests():
 		if quest is FlagQuest:
 			quest.update()
+	_queue_quest_news()
+
+
+func _queue_quest_news() -> void:
+	if _news_queued:
+		return
+	_news_queued = true
+	_publish_quest_news.call_deferred()
+
+
+## Deferred to the end of the frame so a load, which restores flags (and re-offers companion
+## quests through party_changed) before it restores the pools, can cancel everything it caused:
+## `from_dict()` clears the queue and re-baselines every restored step.
+func _publish_quest_news() -> void:
+	_news_queued = false
+	var taken_up := _news_taken_up.duplicate()
+	_news_taken_up.clear()
+	for quest: Quest in taken_up:
+		if is_active(quest):
+			quest_taken_up.emit(quest)
+	for quest: Quest in QuestSystem.get_active_quests():
+		if not quest is FlagQuest:
+			continue
+		# Only the active pool is walked: a quest that finished this frame (a companion bond sets
+		# its flag and completes at once) has left it, and its reward reveal speaks for it. The
+		# turn-in step ("Return to Droma Flintjaw…") is still news while the quest waits on it.
+		var stage := (quest as FlagQuest).current_stage
+		var told := int(_told_stage.get(quest.id, stage))
+		_told_stage[quest.id] = stage
+		if stage > told:
+			quest_step_reached.emit(quest, objective_for(quest))
+
+
+func _rebaseline_quest_news() -> void:
+	_news_taken_up.clear()
+	_told_stage.clear()
+	for quest: Quest in QuestSystem.get_active_quests():
+		if quest is FlagQuest:
+			_told_stage[quest.id] = (quest as FlagQuest).current_stage
 
 
 func objective_for(quest: Quest) -> String:
@@ -1103,7 +1236,64 @@ func flags_met(quest: FlagQuest) -> bool:
 	return true
 
 
+## Q3: track an active quest. The field HUD's objective line follows it until the player lets
+## go or the quest completes. Returns false (and changes nothing) for a quest that is not active.
+func pin(quest: Quest) -> bool:
+	if quest == null or not is_active(quest) or _quest_by_id(quest.id) != quest:
+		return false
+	if _pinned_id == quest.id:
+		return true
+	_pinned_id = quest.id
+	pinned_quest_changed.emit(quest)
+	return true
+
+
+func unpin() -> void:
+	if _pinned_id < 0:
+		return
+	_pinned_id = -1
+	pinned_quest_changed.emit(null)
+
+
+## The tracked quest while it is active; null otherwise (nothing tracked follows the chapter).
+func pinned_quest() -> Quest:
+	if _pinned_id < 0:
+		return null
+	var quest := _quest_by_id(_pinned_id)
+	return quest if quest != null and is_active(quest) else null
+
+
+func _on_quest_completed(quest: Quest) -> void:
+	if quest != null and quest.id == _pinned_id:
+		unpin()
+
+
+## Where to go for a quest, as the HUD's GO TO names it: an area or place name the field HUD
+## compares with the area it is in (`FieldHUD.destination_is_here`). A side quest is found where
+## its giver stands; the area, not the building, because a step can send the player to another
+## participant in the same hub. A companion's quest goes where the party goes, so it has none.
+func destination_for(quest: Quest) -> String:
+	if quest == null or COMPANION_QUESTS.values().has(quest):
+		return ""
+	if quest is DomSideQuest:
+		var row := NpcRoster.get_npc((quest as DomSideQuest).giver_actor_id)
+		var placement: Variant = row.get("placement", {})
+		if placement is Dictionary:
+			return LocationRegistry.area_name(str((placement as Dictionary).get("scene", "")))
+		return ""
+	if quest is FlagQuest:
+		return (quest as FlagQuest).quest_location
+	if quest is FetchQuest:
+		return (quest as FetchQuest).quest_location
+	return ""
+
+
+## The quest a single-line tracker should follow: the player's tracked quest, else the active
+## story quest, else the first active quest.
 func tracked_quest() -> Quest:
+	var pinned := pinned_quest()
+	if pinned != null:
+		return pinned
 	for quest in STORY_QUESTS:
 		if is_active(quest):
 			return quest
@@ -1112,11 +1302,17 @@ func tracked_quest() -> Quest:
 
 
 func to_dict() -> Dictionary:
-	return {
+	var data := {
 		"available": _serialize_pool(QuestSystem.get_available_quests()),
 		"active": _serialize_pool(QuestSystem.get_active_quests()),
 		"completed": _serialize_pool(QuestSystem.completed.get_all_quests()),
 	}
+	# Optional, and written only while something is tracked, so a save with nothing tracked keeps
+	# exactly the shape older builds wrote and read.
+	var pinned := pinned_quest()
+	if pinned != null:
+		data["pinned"] = pinned.id
+	return data
 
 
 func from_dict(data: Dictionary) -> void:
@@ -1126,16 +1322,34 @@ func from_dict(data: Dictionary) -> void:
 	_restore_pool(QuestSystem.available, data.get("available", []), "available")
 	_restore_pool(QuestSystem.active, data.get("active", []), "active")
 	_restore_pool(QuestSystem.completed, data.get("completed", []), "completed")
+	_rebaseline_quest_news()
+	_restore_pinned(data.get("pinned", null))
 
 
 func reset() -> void:
 	QuestSystem.available.reset()
 	QuestSystem.active.reset()
 	QuestSystem.completed.reset()
-	for quest: Quest in all_quests():
+	for quest: Quest in known_quests():
 		quest.objective_completed = false
 		if quest is FlagQuest:
 			quest.current_stage = 0
+	_rebaseline_quest_news()
+	unpin()
+
+
+## A JSON save brings an int back as a float. Anything that is not a whole number naming an active
+## quest restores as nothing tracked; tracking is a convenience and never fails a load.
+func _restore_pinned(value: Variant) -> void:
+	var restored := -1
+	if (value is int or value is float) and is_finite(float(value)) and float(value) == floorf(float(value)):
+		var quest := _quest_by_id(int(value))
+		if quest != null and is_active(quest):
+			restored = quest.id
+	if restored == _pinned_id:
+		return
+	_pinned_id = restored
+	pinned_quest_changed.emit(pinned_quest())
 
 
 func _serialize_pool(quests: Array[Quest]) -> Array[Dictionary]:
@@ -1181,7 +1395,7 @@ func _restore_pool(pool: BaseQuestPool, rows: Array, pool_name: String) -> void:
 
 
 func _quest_by_id(id: int) -> Quest:
-	for quest: Quest in all_quests():
+	for quest: Quest in known_quests():
 		if quest.id == id:
 			return quest
 	return null

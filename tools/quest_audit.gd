@@ -74,8 +74,12 @@ const FLAG_DOMAINS := [
 	"dorthkor",
 	"encounter",
 	"field_debt",
+	# A hub, as `dom` is: its side quest's flags (owner item 25, 2026-10-30).
+	"hollowmere",
 	"party",
 	"soul",
+	# The Trial Hall's rooms: the Lower Trial Hall's store, alarm and blast door (2026-11-04).
+	"trial",
 	"tutorial",
 	"undertakers",
 	"zhavar",
@@ -96,6 +100,13 @@ const LEGACY_FLAGS := {
 	"safe_flag": "audit self-test fixture name",
 	"write_only": "audit self-test fixture name",
 	"written_and_read": "audit self-test fixture name",
+}
+
+## Quests the owner ruled keep a single ending. Each is still reported, as `info` naming its
+## ruling, so the outcome-count warnings list only what nobody has decided; the same reasoning
+## keeps the stubs (which carry no outcomes by ruling) out of it.
+const RULED_SINGLE_OUTCOME := {
+	"bellhouse_repair": "owner item 10a, 2026-10-22: keeps one ending",
 }
 
 ## Directories scanned for the grammar check.
@@ -230,7 +241,20 @@ static func build_report(
 		# into the list an author actually reads, which is how a warning list stops
 		# being worth reading. Duck-typed on `resume_flag` to match this file's
 		# convention of not depending on class registration.
-		if distinct_count < 2 and not bool(quest.get("is_stub", false)):
+		var ruling := str(RULED_SINGLE_OUTCOME.get(str(quest.get("quest_id", "")), ""))
+		if distinct_count < 2 and not ruling.is_empty():
+			_add_finding(
+				categories["outcome_count"],
+				"info",
+				"quest_has_one_outcome_by_ruling",
+				{
+					"quest_id": quest.get("quest_id", ""),
+					"quest_name": quest.get("quest_name", ""),
+					"outcome_count": outcomes.size(),
+					"ruling": ruling,
+				}
+			)
+		elif distinct_count < 2 and not bool(quest.get("is_stub", false)):
 			_add_finding(
 				categories["outcome_count"],
 				"warning",
@@ -658,6 +682,8 @@ static func scan_flag_sources(paths: PackedStringArray) -> Dictionary:
 	var written_prefixes := {}
 	for path: String in paths:
 		var source := FileAccess.get_file_as_string(path)
+		if path.get_extension().to_lower() == "gd":
+			source = strip_gd_comments(source)
 		for result: RegExMatch in set_regex.search_all(source):
 			# A "%s" / "%d" literal is a format-string site; the prefix rule below owns it.
 			if "%" in result.get_string(1):
@@ -1225,6 +1251,10 @@ static func _project_flag_access(
 
 
 static func _source_reads_flag(source: String, flag: String) -> bool:
+	# A scene node gated on a flag: Hostile, Interactable and TravelExit read their
+	# `required_flag` through flag_is_true().
+	if 'required_flag = "%s"' % flag in source:
+		return true
 	if 'get_flag("%s"' % flag in source:
 		return true
 	if 'flag_is_true("%s"' % flag in source:
@@ -1476,8 +1506,39 @@ static func _readback_sources(dialogue_sources: Dictionary) -> Dictionary:
 	for directory: String in ["res://globals", "res://ui", "res://world", "res://actors", QUEST_DIRECTORY]:
 		var directory_sources := _source_files(directory, PackedStringArray(["gd", "tres", "tscn"]))
 		for path: String in directory_sources:
-			sources[path] = directory_sources[path]
+			var source := str(directory_sources[path])
+			sources[path] = strip_gd_comments(source) if path.get_extension() == "gd" else source
 	return sources
+
+
+## GDScript with its comments removed: a flag call quoted in a comment is prose, not flag
+## access. `ui/dialogue/dialogue_choice_info.gd` quotes `GameState.get_flag("f") == "returned"`
+## to explain short-circuiting, and the grammar check reported a flag named `f`. A '#' inside a
+## string literal is kept. (Multi-line strings are not tracked across lines; no flag call sits in
+## one.)
+static func strip_gd_comments(source: String) -> String:
+	var lines := source.split("\n")
+	for index in lines.size():
+		lines[index] = _strip_gd_line_comment(lines[index])
+	return "\n".join(lines)
+
+
+static func _strip_gd_line_comment(line: String) -> String:
+	var quote := ""
+	var index := 0
+	while index < line.length():
+		var character := line[index]
+		if quote.is_empty():
+			if character == "#":
+				return line.left(index)
+			if character == '"' or character == "'":
+				quote = character
+		elif character == "\\":
+			index += 1
+		elif character == quote:
+			quote = ""
+		index += 1
+	return line
 
 
 static func _source_files(directory: String, extensions: PackedStringArray) -> Dictionary:

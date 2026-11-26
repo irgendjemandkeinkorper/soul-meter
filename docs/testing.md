@@ -269,6 +269,14 @@ through autoloads were found and closed on 2026-10-21; both are the shape to exp
   A suite that grants quest rewards now calls `UIManager.reset_reward_reveals()` in
   `after_test()`; an input-driven HUD suite calls `UIManager.close_all()` and
   `UIManager.reset_reward_reveals()` in `before_test()`.
+- **Signal connections between autoloads** (found 2026-11-26, #672). `test_interactive_props`
+  disconnected `QuestRegistry` from `GameState.flag_changed` and `inventory_changed` and never
+  reconnected them, so every later suite had a registry that ignored flag and inventory changes:
+  a quest's step never advanced. It went unnoticed from 2026-08-09 until #672's tests relied on
+  the live signal in a suite that runs after it. A suite that disconnects an autoload's
+  handler records whether it was connected and reconnects it in `after_test()`;
+  `test_the_registry_listens_to_flag_and_inventory_changes` fails, naming the cause, if the
+  registry's two connections are missing.
 
 `test_consequence_notices` and `test_field_room`, listed here in September, have not failed in
 recent whole-tree runs. When a suite fails only in the full run, do not relabel it flaky: the

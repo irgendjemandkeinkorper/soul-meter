@@ -33,6 +33,12 @@ func _ready() -> void:
 	var xp_handler := Callable(self, "_on_xp_awarded")
 	if not GameState.xp_awarded.is_connected(xp_handler):
 		GameState.xp_awarded.connect(xp_handler)
+	var taken_up_handler := Callable(self, "_on_quest_taken_up")
+	if not QuestRegistry.quest_taken_up.is_connected(taken_up_handler):
+		QuestRegistry.quest_taken_up.connect(taken_up_handler)
+	var step_handler := Callable(self, "_on_quest_step_reached")
+	if not QuestRegistry.quest_step_reached.is_connected(step_handler):
+		QuestRegistry.quest_step_reached.connect(step_handler)
 	_flush_pending()
 
 
@@ -49,6 +55,12 @@ func _exit_tree() -> void:
 	var xp_handler := Callable(self, "_on_xp_awarded")
 	if GameState.xp_awarded.is_connected(xp_handler):
 		GameState.xp_awarded.disconnect(xp_handler)
+	var taken_up_handler := Callable(self, "_on_quest_taken_up")
+	if QuestRegistry.quest_taken_up.is_connected(taken_up_handler):
+		QuestRegistry.quest_taken_up.disconnect(taken_up_handler)
+	var step_handler := Callable(self, "_on_quest_step_reached")
+	if QuestRegistry.quest_step_reached.is_connected(step_handler):
+		QuestRegistry.quest_step_reached.disconnect(step_handler)
 
 
 func _notification(what: int) -> void:
@@ -130,6 +142,25 @@ func _on_xp_awarded(_amount: int, _cause: String, levels_gained: Dictionary) -> 
 		_enqueue(
 			"%s REACHES LEVEL %d — %s" % [_member_name(str(member_id)).to_upper(), level, hint]
 		)
+
+
+## Q2 (docs/design/quest-system-sprint-2026-11-26.md): taking up a quest, and each step it moves
+## to, used to change only a line in the journal. Neither carries a number. A conversation pauses
+## the tree, so news from one waits here and shows when it closes.
+func _on_quest_taken_up(quest: Quest) -> void:
+	_enqueue(quest_taken_up_text(quest))
+
+
+func _on_quest_step_reached(quest: Quest, objective: String) -> void:
+	_enqueue(quest_step_text(quest, objective))
+
+
+static func quest_taken_up_text(quest: Quest) -> String:
+	return "NEW QUEST — %s" % quest.quest_name
+
+
+static func quest_step_text(quest: Quest, objective: String) -> String:
+	return "%s — %s" % [quest.quest_name.to_upper(), objective.strip_edges()]
 
 
 func _member_name(member_id: String) -> String:

@@ -299,3 +299,43 @@ func test_every_stub_records_what_the_update_is_meant_to_open() -> void:
 		assert_str(stub.continuation_note.strip_edges()).override_failure_message(
 			"'%s' ships unfinished with no note on what finishes it" % stub.stable_id
 		).is_not_empty()
+
+
+# --- Saves --------------------------------------------------------------------
+
+
+## Regression (quest-system sprint, 2026-11-26): save restore looked quests up through
+## `all_quests()`, which leaves the stubs out (they pay no XP and cannot be force-completed, so
+## `ALL_QUESTS` omits them on purpose). A stub taken up, saved and loaded was dropped with a
+## "missing quest id" warning, and its giver offered it again.
+func test_a_stub_survives_a_save_round_trip_in_either_pool() -> void:
+	var taken: StubSideQuest = QuestRegistry.STUB_LEDGE
+	var suspended: StubSideQuest = QuestRegistry.STUB_TALLY
+	QuestRegistry.offer(taken)
+	_open(suspended)
+	assert_bool(QuestRegistry.suspend_stub(suspended)).is_true()
+	var saved := QuestRegistry.to_dict().duplicate(true)
+
+	QuestRegistry.reset()
+	QuestRegistry.from_dict(saved)
+
+	assert_bool(QuestRegistry.is_active(taken)).override_failure_message(
+		"a stub the player took up vanished from the active pool on load"
+	).is_true()
+	assert_bool(QuestRegistry.is_done(suspended)).override_failure_message(
+		"a suspended stub vanished from the completed pool on load"
+	).is_true()
+
+
+## `reset()` clears every quest resource a run can touch, the stubs included; a new game must not
+## start with a stub still marked as met by the previous run.
+func test_reset_clears_stub_progress() -> void:
+	var stub: StubSideQuest = QuestRegistry.STUB_ROLLS
+	_open(stub)
+	stub.update()
+	assert_bool(stub.objective_completed).is_true()
+
+	QuestRegistry.reset()
+
+	assert_bool(stub.objective_completed).is_false()
+	assert_int(stub.current_stage).is_equal(0)
