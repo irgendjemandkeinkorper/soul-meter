@@ -95,6 +95,27 @@ Captures: `q3-journal-tracking-1920x1080.jpg`, `q3-field-tracked-in-dom.jpg`,
 - `tracked_quest()` (unused by the game) now prefers the tracked quest.
 - A disk round trip of a tracked stub is in `test_save_game.gd`.
 
+## Q4 as built
+
+Audit before: 0 errors, 10 warnings. After: 0 errors, 0 warnings, 1 info. Flags read 81 → 82 of
+82 written; read-back still 9/9 main, 42/42 side. Strict mode exits 0.
+
+- **False positive `f`.** `ui/dialogue/dialogue_choice_info.gd` quotes
+  `GameState.get_flag("f") == "returned"` in a comment, and the scan read it as a flag. GDScript
+  comments are now stripped before flag scanning (`strip_gd_comments`); a `#` inside a string is
+  kept. No real flag was lost: 82 written before and after.
+- **Domains.** `hollowmere` (a hub like `dom`; the stake quest, owner item 25) and `trial` (the
+  Lower Trial Hall's rooms) were in use without being registered. Both are now registered, which
+  clears the other seven grammar warnings. No flag was renamed, so no save is affected.
+- **Orphan `trial_store_alarm`.** It is not one. The store wardens wait on it through
+  `required_flag = "trial_store_alarm"` in `lower_trial_hall.tscn`, which `Hostile` reads with
+  `flag_is_true`. The audit now counts a scene's `required_flag` as a read. No content needed.
+- **Bell quest.** `bellhouse_repair` keeps one ending by owner ruling (item 10a, 2026-10-22). It
+  is still reported, as `info` naming the ruling, so the warning list holds only undecided items,
+  as the stubs already are. Any other single-outcome quest still warns.
+- `test_production_zhavar_routes_are_all_written` pinned `quest_registry.gd:551`; Q1's
+  `known_quests()` moved that line. It now finds both writer lines by their text.
+
 ## New UI copy (for owner review)
 
 | Where | Text | Note |

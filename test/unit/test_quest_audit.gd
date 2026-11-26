@@ -121,6 +121,35 @@ func test_report_has_categories_metrics_and_severity_split() -> void:
 	assert_bool(report["summary"]["severity"].has("info")).is_true()
 
 
+## Q4: a single-outcome quest the owner ruled on (item 10a: the bell quest keeps one ending) is
+## reported as info naming the ruling; any other single-outcome quest still warns.
+func test_a_ruled_single_outcome_is_info_and_an_unruled_one_warns() -> void:
+	var quest_results: Array[Dictionary] = [
+		{
+			"quest_id": "bellhouse_repair",
+			"quest_name": "The Bell That Won't Ring",
+			"kind": "side",
+			"outcomes": [_outcome("returned", true, true)],
+		},
+		{
+			"quest_id": "unruled-quest",
+			"quest_name": "Unruled",
+			"kind": "side",
+			"outcomes": [_outcome("only", true, true)],
+		},
+	]
+	var flags := QuestAuditScript.scan_flag_sources(PackedStringArray([FLAG_FIXTURE]))
+	var report := QuestAuditScript.build_report(quest_results, flags, false)
+	var findings: Array = report["categories"]["outcome_count"]["findings"]
+	assert_int(findings.size()).is_equal(2)
+	for finding: Dictionary in findings:
+		if finding["quest_id"] == "bellhouse_repair":
+			assert_str(finding["severity"]).is_equal("info")
+			assert_str(finding["ruling"]).contains("item 10a")
+		else:
+			assert_str(finding["severity"]).is_equal("warning")
+
+
 func test_exit_code_is_zero_by_default_and_nonzero_only_for_strict_findings() -> void:
 	var finding_report := {
 		"summary": {"severity": {"error": 0, "warning": 1, "info": 0}}
@@ -647,6 +676,45 @@ func _ready() -> void:
 	assert_array(access["written_never_read"]).not_contains(["write_only"])
 
 
+## Quest-system sprint Q4: `ui/dialogue/dialogue_choice_info.gd` quotes
+## `GameState.get_flag("f") == "returned"` in a comment, and the grammar check reported a flag
+## named `f`. A call in a comment is prose; a '#' inside a string literal is not a comment.
+func test_flag_calls_inside_gdscript_comments_are_not_flag_access() -> void:
+	var flags := QuestAuditScript.scan_flag_sources(
+		PackedStringArray(["res://test/fixtures/quest_audit/comment_mentions.gd"])
+	)
+	assert_array(flags["written"]).contains(["live_write"])
+	assert_array(flags["read"]).contains(["live_read"])
+	assert_array(flags["written"]).not_contains(["commented_write", "trailing_comment_write"])
+	assert_array(flags["read"]).not_contains(["trailing_comment_read"])
+
+
+## Q4: a scene gates a node on `required_flag = "<flag>"` (Hostile, Interactable, TravelExit all
+## read it through flag_is_true). The Lower Trial Hall's wardens wait on `trial_store_alarm`,
+## which the orphan check reported as written and never read.
+func test_a_scene_required_flag_counts_as_a_read() -> void:
+	var quest_results: Array[Dictionary] = []
+	var dialogue_sources := {FLAG_FIXTURE: FileAccess.get_file_as_string(FLAG_FIXTURE)}
+	var scene := '[node name="Warden" type="Node2D"]\nrequired_flag = "write_only"\n'
+	var access := QuestAuditScript._project_flag_access(quest_results, dialogue_sources, {})
+	assert_array(access["written_never_read"]).contains(["write_only"])
+	access = QuestAuditScript._project_flag_access(
+		quest_results, dialogue_sources, {"res://world/room.tscn": scene}
+	)
+	assert_array(access["written_never_read"]).not_contains(["write_only"])
+
+
+## Q4: Hollowmere is a hub like Dom, and `trial` names the Trial Hall's rooms; both namespaces
+## were in use (2026-10-30, 2026-11-04) without being registered.
+func test_hub_and_trial_hall_domains_are_registered() -> void:
+	var violations: Array[Dictionary] = QuestAuditScript.flag_grammar_violations(
+		PackedStringArray(
+			["hollowmere_instrument_stake_resolution", "trial_store_alarm", "trial_blast_charge_set"]
+		)
+	)
+	assert_array(violations).is_empty()
+
+
 func test_format_string_flag_writes_are_prefix_sites_not_literal_orphans() -> void:
 	var flags := QuestAuditScript.scan_flag_sources(
 		PackedStringArray(["res://quests/fetch_quest.gd"])
@@ -778,9 +846,23 @@ func test_production_zhavar_routes_are_all_written() -> void:
 
 	assert_array(Array(routes["unwritten_zones"])).is_empty()
 	assert_array(zones.keys()).contains_exactly(["wilds"])
+	# The writer sites are found by content, not pinned line numbers: any edit above the call
+	# (2026-11-26: QuestRegistry.known_quests()) moved the registry's line and broke this check.
 	assert_array(zones["wilds"]["writers"]).contains_exactly_in_any_order(
-		["res://dialogue/sella_varn.dialogue:12", "res://globals/quest_registry.gd:551"]
+		[
+			_site_of("res://dialogue/sella_varn.dialogue", 'raise_zhavar("wilds")'),
+			_site_of("res://globals/quest_registry.gd", 'SaveGame.raise_zhavar("wilds")'),
+		]
 	)
 	assert_array(zones["wilds"]["routes"].keys()).contains_exactly_in_any_order(
 		["rumour", "telegraph", "toll"]
 	)
+
+
+## "<path>:<line>" of the first line containing `needle`, as the audit reports a site.
+func _site_of(path: String, needle: String) -> String:
+	var lines := FileAccess.get_file_as_string(path).split("\n")
+	for index in lines.size():
+		if lines[index].contains(needle):
+			return "%s:%d" % [path, index + 1]
+	return "%s:<missing %s>" % [path, needle]
