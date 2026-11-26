@@ -429,3 +429,63 @@ func test_resolve_field_debt_rejects_an_unknown_reward_id() -> void:
 
 	assert_bool(accepted).is_false()
 	assert_bool(QuestRegistry.is_done(quest)).is_false()
+
+
+## Q1 (docs/design/quest-system-sprint-2026-11-26.md): the journal asks the registry how a quest
+## ended. Each resolver's own write is the source, driven through the resolver real play uses.
+func test_resolution_record_reads_the_choice_each_resolver_wrote() -> void:
+	var empty := {"label": "", "detail": ""}
+	var side: DomSideQuest = QuestRegistry.LIVING_TAG
+	assert_dict(QuestRegistry.resolution_record(side)).is_equal(empty)
+	assert_bool(QuestRegistry.offer_side_quest(side)).is_true()
+	for flag in side.required_flags:
+		GameState.set_flag(flag, true)
+	# Active with every step met is still not an outcome.
+	assert_dict(QuestRegistry.resolution_record(side)).is_equal(empty)
+	assert_bool(QuestRegistry.resolve_side_quest(side, &"restore-the-name")).is_true()
+	assert_dict(QuestRegistry.resolution_record(side)).is_equal(
+		{"label": side.outcome_labels[1], "detail": side.outcome_readbacks[1]}
+	)
+
+	var stub: StubSideQuest = QuestRegistry.STUB_CADENCE
+	assert_bool(QuestRegistry.offer_side_quest(stub)).is_true()
+	for flag in stub.required_flags:
+		GameState.set_flag(flag, true)
+	assert_bool(QuestRegistry.suspend_stub(stub)).is_true()
+	# A suspended stub chose nothing; the journal says "TO BE CONTINUED" in its state instead.
+	assert_dict(QuestRegistry.resolution_record(stub)).is_equal(empty)
+
+	assert_bool(QuestRegistry.debug_force_complete(QuestRegistry.FIELD_DEBT)).is_true()
+	assert_dict(QuestRegistry.resolution_record(QuestRegistry.FIELD_DEBT)).is_equal(
+		{
+			"label": "Split the credit honestly.",
+			"detail": QuestRegistry.FIELD_DEBT_REWARDS["balance"]["consequence"],
+		}
+	)
+
+	_prepare_dorthkor_road_for_ruling()
+	assert_bool(QuestRegistry.resolve_broken_muster(&"dead-first")).is_true()
+	assert_str(QuestRegistry.resolution_record(QuestRegistry.DORTHKOR_ROAD)["label"]).is_equal(
+		"The Ironbrand Sentinels take the deeper investigation."
+	)
+
+	QuestRegistry.offer(QuestRegistry.UNANSWERED_ROAR)
+	GameState.set_flag("chapter_roar_measured", true)
+	QuestRegistry.UNANSWERED_ROAR.update()
+	assert_bool(QuestRegistry.resolve_unanswered_roar(&"carry-it-yourself")).is_true()
+	assert_str(QuestRegistry.resolution_record(QuestRegistry.UNANSWERED_ROAR)["label"]).is_equal(
+		"Carried the shortfall alone, where no one would see it."
+	)
+
+
+## A quest that records no choice has no outcome line, rather than one read off its turn-in step.
+func test_resolution_record_is_empty_for_quests_that_record_no_choice() -> void:
+	var empty := {"label": "", "detail": ""}
+	for quest: Quest in [
+		QuestRegistry.BELLHOUSE_REPAIR, QuestRegistry.LOAMROOT_SPRIGS, QuestRegistry.SERAI_LUN_QUEST
+	]:
+		assert_bool(QuestRegistry.debug_force_complete(quest)).is_true()
+		assert_dict(QuestRegistry.resolution_record(quest)).override_failure_message(
+			"%s recorded an outcome it never chose" % quest.quest_name
+		).is_equal(empty)
+	assert_dict(QuestRegistry.resolution_record(null)).is_equal(empty)

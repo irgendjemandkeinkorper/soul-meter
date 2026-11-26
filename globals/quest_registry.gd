@@ -345,8 +345,23 @@ func runtime_quests() -> Array[DomSideQuest]:
 	return _runtime_quests.duplicate()
 
 
+## The completable quests: ALL_QUESTS plus any loaded campaign quests. The six stubs stay out,
+## as they do of ALL_QUESTS (they pay no quest XP and cannot be force-completed), so the debug
+## menu and the dev console list only what can actually finish.
 func all_quests() -> Array[Quest]:
 	var quests: Array[Quest] = ALL_QUESTS.duplicate()
+	for runtime_quest: DomSideQuest in _runtime_quests:
+		quests.append(runtime_quest)
+	return quests
+
+
+## Every quest resource a run can hold in a pool: the completable quests AND the stubs. Saves,
+## `reset()` and the journal go through this. Restoring through `all_quests()` dropped a stub the
+## player had taken up (its id was "missing") and the giver offered it again.
+func known_quests() -> Array[Quest]:
+	var quests: Array[Quest] = ALL_QUESTS.duplicate()
+	for stub: StubSideQuest in STUB_SIDE_QUESTS:
+		quests.append(stub)
 	for runtime_quest: DomSideQuest in _runtime_quests:
 		quests.append(runtime_quest)
 	return quests
@@ -1061,6 +1076,64 @@ func side_quest_readback(quest: DomSideQuest) -> String:
 	return str(outcome.get("readback", ""))
 
 
+## The Broken Muster's rulings, one line each. The chapter recap prints these after its outcome
+## sentence and the journal prints them as the quest's outcome, so both read the same words.
+const BROKEN_MUSTER_RULING_LINES := {
+	"demons-first": "Coiljaw turns Dom's shield toward the Breach first.",
+	"dead-first": "The Ironbrand Sentinels take the deeper investigation.",
+	"hold-both": "Dom accepts the cost of holding both fronts.",
+}
+
+
+## How a completed quest ended, as `{"label": String, "detail": String}`; both are "" when the
+## quest is not done or records no choice (a single-outcome FlagQuest, a fetch, a companion
+## bond). `label` is the choice in one line; `detail` is what the world shows for it now.
+##
+## Every string comes from data the resolution already wrote: the side quest's outcome label and
+## read-back, a ruling's ledger cause, the field-debt reward title. Nothing here is new prose,
+## and nothing is derived from the quest's last objective, which describes the turn-in step.
+func resolution_record(quest: Quest) -> Dictionary:
+	var record := {"label": "", "detail": ""}
+	if quest == null or not is_done(quest):
+		return record
+	# Before DomSideQuest: a stub IS one, and carries no outcome arrays to read. A suspended stub
+	# made no choice; the journal states it as "TO BE CONTINUED" in place of "COMPLETED".
+	if quest is StubSideQuest:
+		return record
+	if quest is DomSideQuest:
+		var side := quest as DomSideQuest
+		var outcome := side.outcome_for(str(GameState.get_flag(side.resolution_flag, "")))
+		record["label"] = str(outcome.get("label", ""))
+		record["detail"] = str(outcome.get("readback", ""))
+		return record
+	if quest == DORTHKOR_ROAD:
+		var muster_ruling := str(GameState.get_flag("chapter_one_resolution", ""))
+		record["label"] = str(BROKEN_MUSTER_RULING_LINES.get(muster_ruling, ""))
+		return record
+	if quest == UNANSWERED_ROAR:
+		var roar_ruling: Variant = ACT_ONE_HOOK_RULINGS.get(
+			str(GameState.get_flag("chapter_roar_resolution", "")), {}
+		)
+		if roar_ruling is Dictionary:
+			record["label"] = _as_sentence(str((roar_ruling as Dictionary).get("karma_cause", "")))
+		return record
+	if quest == FIELD_DEBT:
+		var reward: Variant = FIELD_DEBT_REWARDS.get(str(GameState.get_flag("field_debt_reward", "")), {})
+		if reward is Dictionary:
+			record["label"] = _as_sentence(str((reward as Dictionary).get("title", "")))
+			record["detail"] = str((reward as Dictionary).get("consequence", ""))
+	return record
+
+
+## A ledger cause or reward title reads as a fragment ("Split the credit honestly"); the
+## journal's outcome lines are sentences, like the side quests' authored labels.
+static func _as_sentence(text: String) -> String:
+	var trimmed := text.strip_edges()
+	if trimmed.is_empty() or trimmed.ends_with(".") or trimmed.ends_with("!") or trimmed.ends_with("?"):
+		return trimmed
+	return trimmed + "."
+
+
 func active_side_quests() -> Array[DomSideQuest]:
 	var result: Array[DomSideQuest] = []
 	for quest: DomSideQuest in _registered_side_quests():
@@ -1132,7 +1205,7 @@ func reset() -> void:
 	QuestSystem.available.reset()
 	QuestSystem.active.reset()
 	QuestSystem.completed.reset()
-	for quest: Quest in all_quests():
+	for quest: Quest in known_quests():
 		quest.objective_completed = false
 		if quest is FlagQuest:
 			quest.current_stage = 0
@@ -1181,7 +1254,7 @@ func _restore_pool(pool: BaseQuestPool, rows: Array, pool_name: String) -> void:
 
 
 func _quest_by_id(id: int) -> Quest:
-	for quest: Quest in all_quests():
+	for quest: Quest in known_quests():
 		if quest.id == id:
 			return quest
 	return null

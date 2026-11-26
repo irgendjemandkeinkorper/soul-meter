@@ -153,11 +153,25 @@ func _add_quest(box: VBoxContainer, quest: Quest) -> void:
 		)
 		head.add_child(state_label)
 
-	var objective := Label.new()
-	objective.name = "QuestObjective"
-	objective.text = QuestRegistry.objective_for(quest)
-	objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	entry.add_child(objective)
+	# An active quest's line is its current step. A completed quest's line is how it ended: its
+	# last step is the turn-in ("Return to Droma Flintjaw and decide…"), which stops being true
+	# the moment the choice is made. What the world shows for that choice waits on the tooltip,
+	# as the description does on the title (U3). A quest that records no choice gets no line.
+	var line_text := QuestRegistry.objective_for(quest)
+	var line_detail := ""
+	if QuestRegistry.is_done(quest):
+		var record := QuestRegistry.resolution_record(quest)
+		line_text = str(record["label"])
+		line_detail = str(record["detail"])
+	if not line_text.is_empty():
+		var objective := Label.new()
+		objective.name = "QuestObjective" if not QuestRegistry.is_done(quest) else "QuestOutcome"
+		objective.text = line_text
+		objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		if not line_detail.is_empty():
+			objective.tooltip_text = line_detail
+			objective.mouse_filter = Control.MOUSE_FILTER_PASS
+		entry.add_child(objective)
 
 	var context := Label.new()
 	context.name = "QuestContext"
@@ -236,7 +250,8 @@ static func recent_consequences(limit: int = RECENT_CONSEQUENCE_LIMIT) -> Array[
 
 static func quest_state(quest: Quest) -> String:
 	if QuestRegistry.is_done(quest):
-		return "COMPLETED"
+		# S8: a stub ends on an honest "to be continued", not a completion (owner, 2026-09-04).
+		return "TO BE CONTINUED" if quest is StubSideQuest else "COMPLETED"
 	if QuestRegistry.is_active(quest):
 		return "READY TO REPORT" if quest.objective_completed else "ACTIVE"
 	return "UNTRACKED"
@@ -283,23 +298,43 @@ static func quest_location(quest: Quest) -> String:
 
 func _active_quests() -> Array[Quest]:
 	var quests: Array[Quest] = []
-	for quest: Quest in QuestRegistry.all_quests():
+	for quest: Quest in QuestRegistry.known_quests():
 		if QuestRegistry.is_active(quest):
 			quests.append(quest)
-	quests.sort_custom(_quest_name_before)
+	quests.sort_custom(quest_before)
 	return quests
 
 
 func _completed_quests() -> Array[Quest]:
 	var quests: Array[Quest] = []
-	for quest: Quest in QuestRegistry.all_quests():
+	for quest: Quest in QuestRegistry.known_quests():
 		if QuestRegistry.is_done(quest):
 			quests.append(quest)
-	quests.sort_custom(_quest_name_before)
+	quests.sort_custom(quest_before)
 	return quests
 
 
-static func _quest_name_before(left: Quest, right: Quest) -> bool:
+## Journal order: the main thread, then commissions, then companions' own quests. No group
+## headers (U3 keeps an entry to three lines); the order alone keeps the story quest from
+## sinking among a dozen commissions sorted by name.
+const KIND_MAIN := 0
+const KIND_COMMISSION := 1
+const KIND_COMPANION := 2
+
+
+static func quest_kind(quest: Quest) -> int:
+	if QuestRegistry.STORY_QUESTS.has(quest):
+		return KIND_MAIN
+	if QuestRegistry.COMPANION_QUESTS.values().has(quest):
+		return KIND_COMPANION
+	return KIND_COMMISSION
+
+
+static func quest_before(left: Quest, right: Quest) -> bool:
+	var left_kind := quest_kind(left)
+	var right_kind := quest_kind(right)
+	if left_kind != right_kind:
+		return left_kind < right_kind
 	return left.quest_name.naturalnocasecmp_to(right.quest_name) < 0
 
 
