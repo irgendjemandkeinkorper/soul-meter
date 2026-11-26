@@ -7,6 +7,11 @@ extends Node
 ## inventory changes.
 
 signal quest_rewards_granted(summary: Dictionary)
+## Quest news for the field (Q2, docs/design/quest-system-sprint-2026-11-26.md). Both arrive one
+## idle frame after the change, never for a quest a load restored, and never for a quest that
+## finished in the same moment: completion has its own reward reveal.
+signal quest_taken_up(quest: Quest)
+signal quest_step_reached(quest: Quest, objective: String)
 
 const LOAMROOT_SPRIGS: FetchQuest = preload("res://quests/loamroot_sprigs.tres")
 const DORTHKOR_ROAD: FlagQuest = preload("res://quests/dorthkor_road.tres")
@@ -135,6 +140,12 @@ const STORY_QUESTS: Array[Quest] = [DEEP_TRIAL, DORTHKOR_ROAD, UNANSWERED_ROAR]
 
 var _runtime_quests: Array[DomSideQuest] = []
 var _runtime_dialogue_resources: Dictionary = {}
+## Quest news waiting for the end of the frame (see `quest_taken_up`). `_told_stage` is the step
+## each active FlagQuest was last announced (or restored, or offered) at, by quest id; a step is
+## news only when the quest has moved past it.
+var _news_taken_up: Array[Quest] = []
+var _told_stage: Dictionary = {}
+var _news_queued := false
 
 const BROKEN_MUSTER_RULINGS := {
 	"demons-first": {
@@ -403,6 +414,10 @@ func offer(quest: Quest) -> void:
 	QuestSystem.update_quest(quest)
 	if not newly_started:
 		return
+	# The step it starts on is part of taking it up, not a step reached.
+	_told_stage[quest.id] = (quest as FlagQuest).current_stage if quest is FlagQuest else 0
+	_news_taken_up.append(quest)
+	_queue_quest_news()
 	if quest == DORTHKOR_ROAD:
 		GameState.set_flag("chapter_dorthkor_commissioned", true)
 		SaveGame.request_checkpoint(SaveGame.Checkpoint.COMMISSION)
@@ -1163,6 +1178,45 @@ func _on_flag_changed(_flag: String, _value: Variant) -> void:
 	for quest in QuestSystem.get_active_quests():
 		if quest is FlagQuest:
 			quest.update()
+	_queue_quest_news()
+
+
+func _queue_quest_news() -> void:
+	if _news_queued:
+		return
+	_news_queued = true
+	_publish_quest_news.call_deferred()
+
+
+## Deferred to the end of the frame so a load, which restores flags (and re-offers companion
+## quests through party_changed) before it restores the pools, can cancel everything it caused:
+## `from_dict()` clears the queue and re-baselines every restored step.
+func _publish_quest_news() -> void:
+	_news_queued = false
+	var taken_up := _news_taken_up.duplicate()
+	_news_taken_up.clear()
+	for quest: Quest in taken_up:
+		if is_active(quest):
+			quest_taken_up.emit(quest)
+	for quest: Quest in QuestSystem.get_active_quests():
+		if not quest is FlagQuest:
+			continue
+		# Only the active pool is walked: a quest that finished this frame (a companion bond sets
+		# its flag and completes at once) has left it, and its reward reveal speaks for it. The
+		# turn-in step ("Return to Droma Flintjaw…") is still news while the quest waits on it.
+		var stage := (quest as FlagQuest).current_stage
+		var told := int(_told_stage.get(quest.id, stage))
+		_told_stage[quest.id] = stage
+		if stage > told:
+			quest_step_reached.emit(quest, objective_for(quest))
+
+
+func _rebaseline_quest_news() -> void:
+	_news_taken_up.clear()
+	_told_stage.clear()
+	for quest: Quest in QuestSystem.get_active_quests():
+		if quest is FlagQuest:
+			_told_stage[quest.id] = (quest as FlagQuest).current_stage
 
 
 func objective_for(quest: Quest) -> String:
@@ -1199,6 +1253,7 @@ func from_dict(data: Dictionary) -> void:
 	_restore_pool(QuestSystem.available, data.get("available", []), "available")
 	_restore_pool(QuestSystem.active, data.get("active", []), "active")
 	_restore_pool(QuestSystem.completed, data.get("completed", []), "completed")
+	_rebaseline_quest_news()
 
 
 func reset() -> void:
@@ -1209,6 +1264,7 @@ func reset() -> void:
 		quest.objective_completed = false
 		if quest is FlagQuest:
 			quest.current_stage = 0
+	_rebaseline_quest_news()
 
 
 func _serialize_pool(quests: Array[Quest]) -> Array[Dictionary]:

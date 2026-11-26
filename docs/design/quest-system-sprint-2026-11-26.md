@@ -59,8 +59,24 @@ Captures: `docs/qa/quest-sprint-2026-11-26/q1-journal-*.jpg` (`test/manual/quest
   e2e "every quest reachable" check and the debug menu are unaffected.
 - Order: main thread, commissions (stubs among them), companions; by name within each.
 
+## Q2 as built
+
+- `QuestRegistry.quest_taken_up(quest)` and `quest_step_reached(quest, objective)` publish one
+  idle frame after the change. The field's `ConsequenceNotices` show them; a conversation
+  pauses the tree, so news from one waits and shows when it closes.
+- Nothing is announced on load. `SaveGame.load()` restores flags before quest pools, and
+  `GameState.from_dict()` emits `party_changed`, which re-offers companion quests against the
+  pools about to be replaced; `from_dict()` drops that queued news and re-baselines every
+  restored step.
+- A step that finishes the quest in the same moment (a companion bond sets its flag and
+  completes at once) is not announced; the reward reveal speaks for it. The turn-in step
+  ("Return to Droma Flintjaw…") is announced, since the quest is still waiting on the player.
+- Checked against the e2e chapter journey and every suite that reads the notice stack.
+
 ## New UI copy (for owner review)
 
 | Where | Text | Note |
 |---|---|---|
 | Journal state, suspended stub | TO BE CONTINUED | The phrase the stub's own reward reveal already uses. |
+| Field notice, quest taken up | NEW QUEST — *The Living Tag* | Same shape as "WORD OF YOU SPREADS — …". |
+| Field notice, new step | *THE BROKEN MUSTER* — *Break the demon vanguard.* | The step is the authored objective, unchanged. |

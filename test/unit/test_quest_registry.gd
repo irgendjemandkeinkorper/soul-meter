@@ -489,3 +489,96 @@ func test_resolution_record_is_empty_for_quests_that_record_no_choice() -> void:
 			"%s recorded an outcome it never chose" % quest.quest_name
 		).is_equal(empty)
 	assert_dict(QuestRegistry.resolution_record(null)).is_equal(empty)
+
+
+# --- Q2: quest news -----------------------------------------------------------
+
+var _taken_up: Array[Quest] = []
+var _steps: Array[String] = []
+
+
+func _listen_for_quest_news() -> void:
+	_taken_up.clear()
+	_steps.clear()
+	QuestRegistry.quest_taken_up.connect(_on_taken_up)
+	QuestRegistry.quest_step_reached.connect(_on_step)
+
+
+func _stop_listening() -> void:
+	QuestRegistry.quest_taken_up.disconnect(_on_taken_up)
+	QuestRegistry.quest_step_reached.disconnect(_on_step)
+
+
+func _on_taken_up(quest: Quest) -> void:
+	_taken_up.append(quest)
+
+
+func _on_step(quest: Quest, objective: String) -> void:
+	_steps.append("%s|%s" % [quest.quest_name, objective])
+
+
+func _settle() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+func test_taking_up_a_quest_is_announced_once() -> void:
+	_listen_for_quest_news()
+	QuestRegistry.offer(QuestRegistry.LIVING_TAG)
+	QuestRegistry.offer(QuestRegistry.LIVING_TAG)
+	await _settle()
+	QuestRegistry.offer(QuestRegistry.LIVING_TAG)
+	await _settle()
+	_stop_listening()
+	assert_array(_taken_up).contains_exactly([QuestRegistry.LIVING_TAG])
+	assert_array(_steps).is_empty()
+
+
+func test_reaching_a_step_announces_the_new_objective() -> void:
+	QuestRegistry.offer(QuestRegistry.DORTHKOR_ROAD)
+	await _settle()
+	_listen_for_quest_news()
+	GameState.set_flag("chapter_dorthkor_reached", true)
+	await _settle()
+	# A flag that changes nothing about the quest says nothing.
+	GameState.set_flag("some_unrelated_flag", true)
+	await _settle()
+	_stop_listening()
+	assert_array(_steps).contains_exactly(["The Broken Muster|Break the demon vanguard."])
+
+
+## The step that finishes a quest is the turn-in itself; the reward reveal already speaks for it.
+func test_a_step_that_completes_the_quest_in_the_same_moment_is_not_announced() -> void:
+	var companion := QuestRegistry.SERAI_LUN_QUEST
+	QuestRegistry.offer(companion)
+	await _settle()
+	_listen_for_quest_news()
+	assert_bool(
+		QuestRegistry.resolve_companion_quest("serai-lun", companion, 6.0, "Held the line with her")
+	).is_true()
+	await _settle()
+	_stop_listening()
+	assert_array(_steps).is_empty()
+
+
+## Loading restores flags before quest pools, and GameState.from_dict() emits party_changed, which
+## offers companion quests against the pools the load is about to replace. None of it is news.
+func test_loading_a_save_announces_nothing() -> void:
+	var road := QuestRegistry.DORTHKOR_ROAD
+	QuestRegistry.offer(road)
+	await _settle()
+	road.current_stage = 2
+	var saved := {"active": [{"id": road.id, "data": road.serialize()}]}
+	road.current_stage = 0
+	_listen_for_quest_news()
+	# What a load does, in the order SaveGame.load does it, in one frame.
+	GameState.set_flag("chapter_dorthkor_reached", true)
+	GameState.set_flag("defeated_breach_hound", true)
+	QuestRegistry.offer(QuestRegistry.SERAI_LUN_QUEST)
+	QuestRegistry.from_dict(saved)
+	await _settle()
+	_stop_listening()
+	assert_array(_taken_up).is_empty()
+	assert_array(_steps).is_empty()
+	assert_int(road.current_stage).is_equal(2)
+
